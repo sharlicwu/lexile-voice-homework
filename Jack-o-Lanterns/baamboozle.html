@@ -30,7 +30,7 @@ body{font-family:-apple-system,"Segoe UI",Roboto,"Microsoft JhengHei",sans-serif
 .card{aspect-ratio:4/3;perspective:600px;cursor:pointer}
 .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s}
 .card.open .inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;overflow:hidden;text-align:center}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 8px;overflow:hidden;text-align:center}
 .backnum{font-size:clamp(24px,3.4vw,40px);font-weight:900;color:#4a2f00;text-shadow:0 2px 3px rgba(255,255,255,.55);line-height:1.1}
 .backsub{font-size:clamp(11px,1.2vw,14px);color:#6b4600;font-weight:700}
 .c0{background:linear-gradient(135deg,#ffe27a,#ffc400)}
@@ -40,8 +40,8 @@ body{font-family:-apple-system,"Segoe UI",Roboto,"Microsoft JhengHei",sans-serif
 .c4{background:linear-gradient(135deg,#ffe27a,#ffc400)}
 .front{background:#f4f7fb;color:#0b1c30;transform:rotateY(180deg);border:4px solid #90a4ae}
 .front .fw{font-size:clamp(15px,2vw,26px);font-weight:900;color:#0d47a1;line-height:1.15;overflow-wrap:break-word;max-width:100%}
-.front .fz{font-size:clamp(11px,1.4vw,16px);color:#546e7a;line-height:1.25;overflow-wrap:break-word;max-width:100%}
-.front .fzh{font-size:clamp(10px,1.1vw,13px);color:#90a4ae;line-height:1.25;overflow-wrap:break-word;max-width:100%;font-weight:600}
+.front .fz{font-size:clamp(11px,1.3vw,16px);color:#546e7a;line-height:1.2;overflow-wrap:break-word;max-width:100%;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.front .fzh{font-size:clamp(11px,1.4vw,17px);color:#607d8b;line-height:1.25;overflow-wrap:break-word;max-width:100%;font-weight:700}
 .front .fi{font-size:clamp(24px,3vw,38px)}
 .card.done-ok .front{border-color:#1e88e5;background:#e3f2fd}
 .card.done-bad .front{border-color:#e53935;background:#ffebee}
@@ -54,7 +54,7 @@ body{font-family:-apple-system,"Segoe UI",Roboto,"Microsoft JhengHei",sans-serif
 .arow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;max-width:620px}
 .arow button{flex:1 1 40%;font-size:16px;font-weight:800;padding:12px;border-radius:12px;border:2px solid var(--gold);background:#fff;color:#0b1c30;cursor:pointer;min-width:150px}
 .arow button:active{transform:scale(.97)}
-.arow button .ozh{display:block;font-size:12px;font-weight:600;color:#64748b;margin-top:4px}
+.arow button .ozh{display:block;font-size:15px;font-weight:700;color:#475569;margin-top:5px}
 .arow button.good{background:#bbf7d0;border-color:#16a34a;color:#065f46}
 .arow button.good .ozh{color:#065f46}
 .arow button.bad{background:#fecaca;border-color:#dc2626;color:#991b1b}
@@ -80,10 +80,11 @@ body{font-family:-apple-system,"Segoe UI",Roboto,"Microsoft JhengHei",sans-serif
 .team .tn{font-size:14px}
 .backnum{font-size:20px}
 .front .fw{font-size:13px}
-.front .fz{font-size:11px}
-.front .fzh{font-size:10px}
+.front .fz{font-size:12px}
+.front .fzh{font-size:12px}
 .front .fi{font-size:20px}
 .arow button{font-size:14px;padding:10px;min-width:120px}
+.arow button .ozh{font-size:13px}
 }
 </style>
 </head>
