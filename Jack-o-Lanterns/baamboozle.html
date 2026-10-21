@@ -143,6 +143,7 @@ const TEAMS = [
 ];
 let deck = [], teams = [], turn = 0, lock = false, waiting = false;
 let soundOn = true, speakOn = true, actx = null;
+let countTimer = null;
 
 function ac(){
 if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -193,6 +194,7 @@ function toggleSpeak(){ speakOn = !speakOn; document.getElementById("spkBtn").te
 function shuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
 function resetGame(){
+if(countTimer){ clearInterval(countTimer); countTimer = null; }
 let d = WORDS.map(w => ({type:"word", en:w.en, def:w.def, zh:w.zh, used:false}));
 d = d.concat(FUNCS.map(f => ({type:"func", fid:f.id, icon:f.icon, fname:f.name, used:false})));
 deck = shuffle(d);
@@ -332,6 +334,22 @@ function nextTurn(){
 renderAll();
 if(deck.every(c => c.used)){
 lock = true;
+hideBar();
+// 最後一張牌先留在桌上停留 5 秒，讓大家看清楚，再跳 prize 畫面
+let n = 5;
+setStatus("🏁 All 15 cards are used! The last card stays on the table — prize in <b>" + n + "</b>…");
+countTimer = setInterval(() => {
+n--;
+if(n > 0){ setStatus("🏁 All 15 cards are used! The last card stays on the table — prize in <b>" + n + "</b>…"); }
+else { clearInterval(countTimer); countTimer = null; showGameOver(); }
+}, 1000);
+return;
+}
+turn = (turn + 1) % teams.length;
+renderTeams();
+setStatus("🎲 " + teams[turn].name + " Team: flip a card!");
+}
+function showGameOver(){
 const mx = Math.max.apply(null, teams.map(t => t.score));
 const win = teams.filter(t => t.score === mx).map(t => t.name + " Team").join(", ");
 sfxFanfare();
@@ -342,11 +360,6 @@ const medals = ["🥇","🥈","🥉","4th","5th"];
 document.getElementById("gorank").innerHTML = teams.slice().sort((a,b)=>b.score-a.score).map((t,i)=>'<div class="gr">' + medals[i] + ' <span style="color:' + t.c + '">⬤</span> ' + t.name + ' Team — ' + t.score + ' pts</div>').join("");
 document.getElementById("gover").classList.remove("hidden");
 hideBar();
-return;
-}
-turn = (turn + 1) % teams.length;
-renderTeams();
-setStatus("🎲 " + teams[turn].name + " Team: flip a card!");
 }
 function playAgain(){ document.getElementById("gover").classList.add("hidden"); resetGame(); }
 function exitOver(){ document.getElementById("gover").classList.add("hidden"); }
