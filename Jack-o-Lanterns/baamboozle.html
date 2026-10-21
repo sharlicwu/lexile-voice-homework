@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baamboozle Flip Game — Jack-o'-Lanterns</title>
+<style>
+:root{ --bw: min(1400px, calc((100vh - 370px) * 2.1)); --gold:#ffd600; --bg:#0b1c30; --panel:#102842; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",Roboto,"Microsoft JhengHei",sans-serif;background:var(--bg);color:#fff;min-height:100vh;padding:10px 10px 190px;display:flex;flex-direction:column;align-items:center}
+.topbar,.players,.status,.board{width:100%;max-width:var(--bw)}
+.topbar{display:flex;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid #1e4a73;border-radius:12px;padding:8px 12px}
+.topbar h1{font-size:17px;color:var(--gold)}
+.topbar h1 small{font-size:11px;color:#9db8d2;font-weight:normal}
+.tbtns{display:flex;gap:6px}
+.tbtns button{background:#1e4a73;color:#fff;border:1px solid #2f6aa3;border-radius:9px;font-size:14px;font-weight:bold;padding:7px 10px;cursor:pointer}
+.tbtns button.off{color:#5b7a99;border-color:#2a4a68}
+.players{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.team{background:var(--panel);border:2px solid #1e4a73;border-radius:10px;padding:6px 4px;text-align:center}
+.team .tn{font-size:17px;font-weight:800}
+.team .ts{font-size:18px;font-weight:900;color:var(--gold)}
+.team .tc{font-size:11px;color:#9db8d2}
+.team.active{border-color:var(--gold);animation:flash 1s infinite}
+.team.active .tn::after{content:" ◀"}
+.team.behind{background:#0d2138}
+.team.behind .tn,.team.behind .ts,.team.behind .tc{color:#5b7a99}
+@keyframes flash{0%,100%{box-shadow:0 0 0 2px #fff}50%{box-shadow:0 0 0 3px var(--gold)}}
+.status{background:var(--panel);border:1px solid #1e4a73;border-radius:10px;margin-top:8px;padding:9px 12px;font-size:14px;min-height:40px;text-align:center}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.card{aspect-ratio:4/3;perspective:600px;cursor:pointer}
+.inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s}
+.card.open .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;overflow:hidden;text-align:center}
+.backnum{font-size:clamp(24px,3.4vw,40px);font-weight:900;color:#4a2f00;text-shadow:0 2px 3px rgba(255,255,255,.55);line-height:1.1}
+.backsub{font-size:clamp(11px,1.2vw,14px);color:#6b4600;font-weight:700}
+.c0{background:linear-gradient(135deg,#ffe27a,#ffc400)}
+.c1{background:linear-gradient(135deg,#ffe27a,#ffc400)}
+.c2{background:linear-gradient(135deg,#ffe27a,#ffc400)}
+.c3{background:linear-gradient(135deg,#ffe27a,#ffc400)}
+.c4{background:linear-gradient(135deg,#ffe27a,#ffc400)}
+.front{background:#f4f7fb;color:#0b1c30;transform:rotateY(180deg);border:4px solid #90a4ae}
+.front .fw{font-size:clamp(15px,2vw,26px);font-weight:900;color:#0d47a1;line-height:1.15;overflow-wrap:break-word;max-width:100%}
+.front .fz{font-size:clamp(11px,1.4vw,16px);color:#546e7a;line-height:1.25;overflow-wrap:break-word;max-width:100%}
+.front .fzh{font-size:clamp(10px,1.1vw,13px);color:#90a4ae;line-height:1.25;overflow-wrap:break-word;max-width:100%;font-weight:600}
+.front .fi{font-size:clamp(24px,3vw,38px)}
+.card.done-ok .front{border-color:#1e88e5;background:#e3f2fd}
+.card.done-bad .front{border-color:#e53935;background:#ffebee}
+.card.done-fx .front{border-color:var(--gold);background:#3a3a20;color:#ffe9a8}
+.card.done-fx .front .fw,.card.done-fx .front .fz,.card.done-fx .front .fzh{color:#ffe9a8}
+.badge{position:absolute;top:4px;right:8px;font-size:20px;font-weight:900;z-index:2}
+.answerbar{position:fixed;left:0;right:0;bottom:0;background:rgba(16,40,66,.98);border-top:2px solid var(--gold);padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:10;min-height:150px}
+.answerbar.hidden{display:none}
+.aq{font-size:15px;font-weight:800;color:var(--gold);text-align:center}
+.arow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;max-width:620px}
+.arow button{flex:1 1 40%;font-size:16px;font-weight:800;padding:12px;border-radius:12px;border:2px solid var(--gold);background:#fff;color:#0b1c30;cursor:pointer;min-width:150px}
+.arow button:active{transform:scale(.97)}
+.arow button .ozh{display:block;font-size:12px;font-weight:600;color:#64748b;margin-top:4px}
+.arow button.good{background:#bbf7d0;border-color:#16a34a;color:#065f46}
+.arow button.good .ozh{color:#065f46}
+.arow button.bad{background:#fecaca;border-color:#dc2626;color:#991b1b}
+.arow button.bad .ozh{color:#991b1b}
+.arow button.hearbtn{flex:1 1 100%;font-size:14px;padding:8px;background:#1e4a73;color:#fff;border-color:#2f6aa3;min-width:0}
+.arow button.nextbtn{background:linear-gradient(135deg,#ffd600,#ff9d00);border-color:#fff;color:#0b1c30;font-size:19px;animation:npulse 1s infinite}
+@keyframes npulse{0%,100%{box-shadow:0 0 0 2px #fff}50%{box-shadow:0 0 0 5px #ff9d00}}
+.gover{position:fixed;inset:0;background:rgba(4,12,24,.88);display:flex;align-items:center;justify-content:center;z-index:50}
+.gover.hidden{display:none}
+.gocard{background:var(--panel);border:3px solid var(--gold);border-radius:20px;padding:32px 40px;text-align:center;box-shadow:0 0 40px rgba(255,214,0,.4);max-width:92vw;max-height:92vh;overflow-y:auto}
+.gowin{font-size:30px;font-weight:900;color:var(--gold);margin-top:8px}
+.goscore{font-size:18px;margin-top:6px}
+.gorank{margin:12px auto 0;font-size:18px;font-weight:800;text-align:left;display:inline-block}
+.gorank .gr{padding:4px 0;white-space:nowrap}
+.gobtn{margin-top:18px;font-size:19px;font-weight:900;padding:13px 30px;border-radius:14px;border:none;background:linear-gradient(135deg,#ffd600,#ff9d00);color:#0b1c30;cursor:pointer}
+.gobtn.exit{background:#334155;color:#fff}
+@media (max-width:480px){
+:root{ --bw: min(100%, calc((100vh - 365px) * 1.0667)); }
+.topbar h1{font-size:14px}
+.tbtns button{font-size:12px;padding:6px 8px}
+.players{grid-template-columns:repeat(5,1fr);gap:4px}
+.team .ts{font-size:15px}
+.team .tn{font-size:14px}
+.backnum{font-size:20px}
+.front .fw{font-size:13px}
+.front .fz{font-size:11px}
+.front .fzh{font-size:10px}
+.front .fi{font-size:20px}
+.arow button{font-size:14px;padding:10px;min-width:120px}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+<h1>🎃 Flip &amp; Answer <small>Jack-o'-Lanterns・5 teams x 3 rounds</small></h1>
+<div class="tbtns">
+<button onclick="resetGame()">↻Restart</button>
+<button id="sndBtn" onclick="toggleSound()">🔊Sound</button>
+<button id="spkBtn" onclick="toggleSpeak()">🗣Voice</button>
+</div>
+</div>
+<div class="players" id="players"></div>
+<div class="status" id="status">Press ↻Restart to start!</div>
+<div class="board" id="board"></div>
+<div class="answerbar hidden" id="abar">
+<div class="aq" id="aq"></div>
+<div class="arow" id="arow"></div>
+</div>
+<div class="gover hidden" id="gover">
+<div class="gocard">
+<div style="font-size:64px">🏆</div>
+<div class="gowin" id="gowin">Winner!</div>
+<div class="goscore" id="goscore"></div>
+<div class="gorank" id="gorank"></div>
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+<button class="gobtn" onclick="playAgain()">▶ Play Again</button>
+<button class="gobtn exit" onclick="exitOver()">✕ Exit</button>
+</div>
+</div>
+</div>
+<script>
+// ===== 8 單字：英文 + 簡單英文字義 + 中文小字 =====
+const WORDS = [
+{en:"decorate", def:"to make something look nicer", zh:"裝飾"},
+{en:"carving",  def:"cutting a design into a pumpkin", zh:"雕刻"},
+{en:"fable",    def:"a short story that teaches a lesson", zh:"寓言故事"},
+{en:"stingy",   def:"not willing to share or give", zh:"吝嗇的"},
+{en:"cursed",   def:"hit by a magic spell; very bad luck", zh:"被詛咒的"},
+{en:"scoop",    def:"to take out the inside with a spoon", zh:"挖出、舀出"},
+{en:"design",   def:"a plan of how something will look", zh:"設計圖案"},
+{en:"display",  def:"a show of things for people to see", zh:"展示、展出"}
+];
+// ===== 7 張功能牌（8 單字 + 7 功能 = 15 張，5 隊 x 3 回合）=====
+const FUNCS = [
+{id:"plus50", icon:"🎯", name:"+50 pts"},
+{id:"give",   icon:"🎁", name:"Give points"},
+{id:"steal",  icon:"🐴", name:"Steal points"},
+{id:"bomb",   icon:"💣", name:"Bomb"},
+{id:"swap",   icon:"🔄", name:"Swap scores"},
+{id:"lucky",  icon:"🍀", name:"Lucky"},
+{id:"double", icon:"⭐", name:"Double"}
+];
+const TEAMS = [
+{name:"Red", c:"#e53935"},{name:"Blue", c:"#1e88e5"},{name:"Green", c:"#43a047"},
+{name:"Purple", c:"#8e24aa"},{name:"Yellow", c:"#fdd835"}
+];
+let deck = [], teams = [], turn = 0, lock = false, waiting = false;
+let soundOn = true, speakOn = true, actx = null;
+
+function ac(){
+if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+if(actx.state === "suspended") actx.resume();
+return actx;
+}
+function tone(f, t0, d, type, g){
+if(!soundOn) return;
+try{
+const a = ac(), o = a.createOscillator(), v = a.createGain();
+o.type = type || "sine"; o.frequency.value = f;
+v.gain.setValueAtTime(g || 0.2, a.currentTime + t0);
+v.gain.exponentialRampToValueAtTime(0.001, a.currentTime + t0 + d);
+o.connect(v); v.connect(a.destination);
+o.start(a.currentTime + t0); o.stop(a.currentTime + t0 + d + 0.05);
+}catch(e){}
+}
+function noiseBurst(t0, d, g){
+if(!soundOn) return;
+try{
+const a = ac(), len = Math.floor(a.sampleRate * d), buf = a.createBuffer(1, len, a.sampleRate), ch = buf.getChannelData(0);
+for(let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len);
+const s = a.createBufferSource(), v = a.createGain();
+s.buffer = buf; v.gain.value = g || 0.5;
+s.connect(v); v.connect(a.destination); s.start(a.currentTime + t0);
+}catch(e){}
+}
+const sfxClick = () => tone(650, 0, 0.08, "square", 0.12);
+const sfxGood = () => { tone(523,0,0.15,"sine",0.25); tone(659,0.12,0.15,"sine",0.25); tone(784,0.24,0.3,"sine",0.3); };
+const sfxBad = () => { tone(200,0,0.3,"sawtooth",0.25); tone(150,0.15,0.35,"sawtooth",0.25); };
+const sfxBig = () => { [523,659,784].forEach(f=>{ tone(f,0,0.5,"square",0.3); tone(f,0.15,0.5,"square",0.3); tone(f,0.3,0.6,"square",0.3); }); };
+const sfxSteal = () => { [600,500,400,300,200,150].forEach((f,i)=>tone(f,i*0.15,0.18,"sine",0.25)); };
+const sfxBomb = () => { noiseBurst(0,0.8,0.6); [60,55,50,45].forEach((f,i)=>tone(f,i*0.15,0.4,"sine",0.5)); };
+const sfxFanfare = () => { [523,523,659,784,784,1047].forEach((f,i)=>tone(f,i*0.18,0.25,"triangle",0.3)); tone(1319,1.1,0.8,"triangle",0.3); };
+const rnd = n => Math.floor(Math.random() * n);
+
+function speak(t){
+if(!speakOn) return;
+try{
+speechSynthesis.cancel();
+const u = new SpeechSynthesisUtterance(t);
+u.lang = "en-US"; u.rate = 0.85;
+speechSynthesis.speak(u);
+}catch(e){}
+}
+function toggleSound(){ soundOn = !soundOn; document.getElementById("sndBtn").textContent = soundOn ? "🔊Sound" : "🔇Sound"; document.getElementById("sndBtn").classList.toggle("off", !soundOn); }
+function toggleSpeak(){ speakOn = !speakOn; document.getElementById("spkBtn").textContent = speakOn ? "🗣Voice" : "🚫Voice"; document.getElementById("spkBtn").classList.toggle("off", !speakOn); }
+function shuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+function resetGame(){
+let d = WORDS.map(w => ({type:"word", en:w.en, def:w.def, zh:w.zh, used:false}));
+d = d.concat(FUNCS.map(f => ({type:"func", fid:f.id, icon:f.icon, fname:f.name, used:false})));
+deck = shuffle(d);
+teams = TEAMS.map(t => ({name:t.name, c:t.c, score:0, coins:0}));
+turn = 0; lock = false; waiting = false;
+document.getElementById("gover").classList.add("hidden");
+hideBar();
+renderAll();
+setStatus("🎲 " + teams[turn].name + " Team goes first! Flip 1 card per turn. (15 cards = 3 per team)");
+}
+function setStatus(t){ document.getElementById("status").innerHTML = t; }
+function hideBar(){ document.getElementById("abar").classList.add("hidden"); }
+function showBar(q){ document.getElementById("aq").innerHTML = q; document.getElementById("arow").innerHTML = ""; document.getElementById("abar").classList.remove("hidden"); }
+function addBtn(label, fn, cls){
+const b = document.createElement("button");
+b.textContent = label;
+if(cls) b.className = cls;
+b.onclick = fn;
+document.getElementById("arow").appendChild(b);
+}
+function addBtnHTML(html, fn, cls, ok){
+const b = document.createElement("button");
+b.innerHTML = html;
+if(cls) b.className = cls;
+if(ok) b.setAttribute("data-ok", "1");
+b.onclick = fn;
+document.getElementById("arow").appendChild(b);
+}
+function renderAll(){ renderTeams(); renderBoard(); }
+function renderTeams(){
+const box = document.getElementById("players");
+box.innerHTML = "";
+const mx = Math.max.apply(null, teams.map(t => t.score));
+teams.forEach((t, i) => {
+const d = document.createElement("div");
+d.className = "team" + (i === turn ? " active" : "") + ((i !== turn && t.score < mx) ? " behind" : "");
+d.innerHTML = '<div class="tn" style="color:' + t.c + '">' + t.name + '</div><div class="ts">' + t.score + '</div><div class="tc">🪙' + t.coins + '</div>';
+box.appendChild(d);
+});
+}
+function renderBoard(){
+const b = document.getElementById("board");
+b.innerHTML = "";
+deck.forEach((c, i) => {
+const el = document.createElement("div");
+el.className = "card" + (c.used ? (c.result === "ok" ? " done-ok" : (c.result === "bad" ? " done-bad" : " done-fx")) : "") + (c.used ? " open" : "");
+let inner;
+if(!c.used){
+inner = '<div class="face c' + (i % 5) + '"><div class="backnum">' + (i + 1) + '</div><div class="backsub">Pick me!</div></div><div class="face front"></div>';
+} else if(c.type === "word"){
+if(c.result){ inner = '<div class="face c' + (i % 5) + '"></div><div class="face front"><div class="badge">' + (c.result === "ok" ? "✓" : "✕") + '</div><div class="fw">' + c.en + '</div><div class="fz">' + c.def + '</div><div class="fzh">' + c.zh + '</div></div>'; }
+else { inner = '<div class="face c' + (i % 5) + '"></div><div class="face front"><div class="fw">' + c.en + '</div></div>'; }
+} else {
+inner = '<div class="face c' + (i % 5) + '"></div><div class="face front"><div class="badge">✓</div><div class="fi">' + c.icon + '</div><div class="fw" style="font-size:15px">' + c.fname + '</div></div>';
+}
+el.innerHTML = '<div class="inner">' + inner + '</div>';
+el.onclick = () => flip(i);
+b.appendChild(el);
+});
+}
+function flip(i){
+const c = deck[i];
+if(!c || c.used || lock || waiting) return;
+sfxClick();
+c.used = true;
+lock = true;                 // 功能牌選對象時也不能再翻別張
+renderBoard();
+document.querySelectorAll(".card")[i].classList.add("open");
+if(c.type === "word") askWord(i);
+else doFunc(i);
+}
+function askWord(i){
+const c = deck[i];
+speak(c.en);
+const others = WORDS.filter(w => w.en !== c.en);
+const wrong = others[rnd(others.length)];
+const opts = shuffle([
+{en:c.def, zh:c.zh, ok:true},
+{en:wrong.def, zh:wrong.zh, ok:false}
+]);
+showBar("🔊 " + teams[turn].name + " Team: what does \"" + c.en + "\" mean?");
+addBtn("🔊 Hear it again", () => speak(c.en), "hearbtn");
+opts.forEach(op => addBtnHTML(
+'<span>' + op.en + '</span><span class="ozh">' + op.zh + '</span>',
+(ev) => {
+if(c.result) return;
+c.result = op.ok ? "ok" : "bad";
+document.querySelectorAll("#arow button[data-ok='1']").forEach(b => b.classList.add("good"));
+if(op.ok){
+lock = false;
+teams[turn].score += 20; teams[turn].coins += 1;
+sfxGood();
+setStatus("✅ Correct! \"" + c.en + " = " + c.def + "（" + c.zh + "）\" " + teams[turn].name + " Team +20 pts!");
+renderBoard();
+hideBar();
+nextTurn();
+} else {
+waiting = true;
+teams[turn].score -= 10;
+sfxBad();
+if(ev && ev.target) ev.target.closest("button").classList.add("bad");
+renderBoard();
+setStatus("❌ Wrong! " + teams[turn].name + " Team -10 pts!");
+document.getElementById("aq").innerHTML = "❌ The correct answer is: <b>\"" + c.def + "\"</b>（" + c.zh + "） — press Next ▶";
+addBtn("Next ▶", () => { waiting = false; lock = false; hideBar(); nextTurn(); }, "nextbtn");
+}
+},
+"", op.ok
+));
+}
+function doneFx(i){
+deck[i].result = "fx";
+lock = false;
+hideBar();
+nextTurn();
+}
+function doFunc(i){
+const c = deck[i];
+const me = teams[turn];
+if(c.fid === "plus50"){ me.score += 50; sfxBig(); setStatus("🎯 " + me.name + " Team gets +50 pts!"); doneFx(i); }
+else if(c.fid === "bomb"){ me.score = 0; me.coins = 0; sfxBomb(); setStatus("💣 " + me.name + " Team hit a bomb! Score reset to 0!"); doneFx(i); }
+else if(c.fid === "lucky"){ const g = [10,30,50][rnd(3)]; me.score += g; sfxGood(); setStatus("🍀 Lucky! " + me.name + " Team +" + g + " pts!"); doneFx(i); }
+else if(c.fid === "double"){ me.score *= 2; sfxBig(); setStatus("⭐ " + me.name + " Team score doubled! Now " + me.score + " pts!"); doneFx(i); }
+else if(c.fid === "give"){ pickTeam("🎁 " + me.name + " Team: give points to which team?", (ti) => pickAmt("How many points? (you lose, they gain)", (amt) => { me.score -= amt; teams[ti].score += amt; sfxGood(); setStatus("🎁 " + me.name + " Team gives " + teams[ti].name + " Team " + amt + " pts!"); doneFx(i); })); }
+else if(c.fid === "steal"){ pickTeam("🐴 " + me.name + " Team: steal from which team?", (ti) => pickAmt("How many points? (they lose, you gain)", (amt) => { teams[ti].score -= amt; me.score += amt; sfxSteal(); setStatus("🐴 " + me.name + " Team steals " + amt + " pts from " + teams[ti].name + " Team!"); doneFx(i); })); }
+else if(c.fid === "swap"){ pickTeam("🔄 " + me.name + " Team: swap scores with which team?", (ti) => { const t = me.score; me.score = teams[ti].score; teams[ti].score = t; sfxGood(); setStatus("🔄 " + me.name + " Team swaps scores with " + teams[ti].name + " Team!"); doneFx(i); }); }
+}
+function pickTeam(q, cb){
+showBar(q);
+teams.forEach((t, ti) => { if(ti !== turn) addBtn(t.name + " (" + t.score + " pts)", () => cb(ti)); });
+}
+function pickAmt(q, cb){
+showBar(q);
+[10, 20, 50].forEach(a => addBtn(a + " pts", () => cb(a)));
+}
+function nextTurn(){
+renderAll();
+if(deck.every(c => c.used)){
+lock = true;
+const mx = Math.max.apply(null, teams.map(t => t.score));
+const win = teams.filter(t => t.score === mx).map(t => t.name + " Team").join(", ");
+sfxFanfare();
+setStatus("🏆 Game over! Winner: " + win + " (" + mx + " pts)!");
+document.getElementById("gowin").textContent = "🏆 " + win + " Wins!";
+document.getElementById("goscore").textContent = mx + " pts — great job!";
+const medals = ["🥇","🥈","🥉","4th","5th"];
+document.getElementById("gorank").innerHTML = teams.slice().sort((a,b)=>b.score-a.score).map((t,i)=>'<div class="gr">' + medals[i] + ' <span style="color:' + t.c + '">⬤</span> ' + t.name + ' Team — ' + t.score + ' pts</div>').join("");
+document.getElementById("gover").classList.remove("hidden");
+hideBar();
+return;
+}
+turn = (turn + 1) % teams.length;
+renderTeams();
+setStatus("🎲 " + teams[turn].name + " Team: flip a card!");
+}
+function playAgain(){ document.getElementById("gover").classList.add("hidden"); resetGame(); }
+function exitOver(){ document.getElementById("gover").classList.add("hidden"); }
+resetGame();
+</script>
+</body>
+</html>
