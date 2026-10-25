@@ -147,6 +147,33 @@
   .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .upload-status { font-size: 13px; font-weight: 600; margin-top: 8px; min-height: 20px; }
   .uploaded { color: var(--success); }
+
+  /* Celebration effects for great scores */
+  .celebration {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 9999; overflow: hidden;
+  }
+  .celebration-text {
+    position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 64px; font-weight: 900; color: var(--pumpkin-dark);
+    pointer-events: none; z-index: 10000;
+    animation: celebrationFloat 2s ease-out forwards;
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 rgba(0,0,0,0.1);
+  }
+  @keyframes celebrationFloat {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -60%) scale(1); opacity: 0; }
+  }
+  .confetti {
+    position: fixed; width: 10px; height: 10px; background: #ff9f43;
+    pointer-events: none; z-index: 9999;
+    animation: confettiFall 3s linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
   .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 3px dashed #fdcb6e; }
   .nav-btn {
     background: var(--pumpkin); color: #fff; border: none; padding: 10px 20px; border-radius: 14px;
@@ -609,6 +636,38 @@
     }
 
     scorePanel.classList.add('show');
+
+    // 高分 ≥ 90 觸發曬花曬星期慶祝效果
+    if (score >= 90) {
+      triggerCelebration();
+    }
+  }
+
+  function triggerCelebration() {
+    // 移除舊的慶祝元素
+    const old = document.querySelectorAll('.celebration, .celebration-text, .confetti');
+    old.forEach(el => el.remove());
+
+    const colors = ['#ff9f43', '#ff7675', '#fd79a8', '#fdcb6e', '#81ecec', '#55efc4', '#a29bfe', '#ffeaa7'];
+
+    // 大字「太棒了！」
+    const bigText = document.createElement('div');
+    bigText.className = 'celebration-text';
+    bigText.textContent = '🌟 太棒了！🌟';
+    document.body.appendChild(bigText);
+    setTimeout(() => bigText.remove(), 2000);
+
+    // 彩帶效果
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (2 + Math.random() * 2) + 's';
+      c.style.animationDelay = Math.random() * 0.5 + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }
   }
 
   // ---------- Playback & Upload ----------
@@ -634,7 +693,11 @@
       quizSheet: QUIZ_SHEET
     };
 
-    fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
+    // 用 FormData 傳送，讓 GAS 可透過 e.parameter.data 讀取 JSON
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(payload));
+
+    fetch(scriptURL, { method: 'POST', body: formData })
       .then(res => res.json())
       .then(data => {
         if (data.result === 'success') {
@@ -722,7 +785,9 @@
       recordingSheet: REC_SHEET,
       quizSheet: QUIZ_SHEET
     };
-    fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(payload));
+    fetch(scriptURL, { method: 'POST', body: formData })
       .then(res => res.json())
       .then(data => {
         if (data.result === 'success') {
