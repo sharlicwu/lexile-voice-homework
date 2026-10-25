@@ -240,6 +240,7 @@
           <div class="score-big" id="scoreBig">--</div>
           <div class="feedback-text" id="feedbackText">--</div>
         </div>
+        <div id="retryHint" style="font-size:13px;color:#636e72;margin-top:6px;display:none;">💡 可以再按「🎤 開始錄音」重錄喔！</div>
         <div class="playback-box" id="playbackBox" style="display:none;">
           <audio id="audioPreview" controls></audio>
         </div>
@@ -381,8 +382,28 @@
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.onstart = () => { isRecognizing = true; };
-    recognition.onend = () => { isRecognizing = false; };
-    recognition.onerror = () => { isRecognizing = false; };
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      window._lastTranscript = transcript;
+      const recStatus = document.getElementById('recStatus');
+      if (recStatus) recStatus.innerText = '🔊 聆聽中：' + transcript;
+    };
+    recognition.onend = () => {
+      isRecognizing = false;
+      // 辨識結束後自動停止錄音並評分
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    };
+    recognition.onerror = (event) => {
+      isRecognizing = false;
+      console.error('Speech recognition error:', event.error);
+      const recStatus = document.getElementById('recStatus');
+      if (recStatus) recStatus.innerText = '⚠️ 辨識錯誤，請重試';
+    };
   }
 
   function loadCard(index, autoSpeak = false) {
@@ -420,6 +441,8 @@
     uploadStatus.innerText = '';
     playbackBox.style.display = 'none';
     currentAudioBlob = null;
+    window._lastTranscript = '';
+    document.getElementById('retryHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     if (recognition && isRecognizing) recognition.stop();
   }
@@ -483,11 +506,12 @@
     };
     mediaRecorder.start();
 
-    recordBtn.innerText = '⏹️ 停止錄音';
+    recordBtn.innerText = '🔊 聆聽中，請說單字';
     recordBtn.classList.add('recording');
     recStatus.classList.add('active');
 
     // Start speech recognition simultaneously
+    window._lastTranscript = '';
     if (recognition) {
       recognition.start();
     }
@@ -513,7 +537,7 @@
           clearInterval(check);
           const transcript = window._lastTranscript || '';
           const result = scorePronunciation(transcript, cardsData[currentIndex].word);
-          showScore(result.score, result.feedback, result.isBad);
+          showScore(result.score, result.feedback, result.isBad, result.retry);
           resolve();
         }
       }, 100);
@@ -527,28 +551,29 @@
     const t = clean(transcript);
     const targetClean = clean(target);
     if (!t) {
-      return { score: 30, feedback: '沒偵測到聲音，請靠近麥克風再試一次', isBad: true };
+      return { score: 30, feedback: '😴 沒偵測到聲音，請靠近麥克風大聲說一次', isBad: true, retry: true };
     }
     if (t === targetClean) {
-      return { score: 100, feedback: '完美發音！🌟', isBad: false };
+      return { score: 100, feedback: '🎉 完美發音！太棒了！', isBad: false, retry: false };
     }
     if (t.includes(targetClean) || targetClean.includes(t)) {
-      return { score: 88, feedback: '幾乎正確，再用力一點！', isBad: false };
+      return { score: 90, feedback: '🌟 幾乎正確，再大聲一點就是滿分！', isBad: false, retry: false };
     }
     const tWords = t.split(' ');
     const targetWords = targetClean.split(' ');
     const matches = tWords.filter(w => targetWords.includes(w)).length;
     const ratio = matches / Math.max(tWords.length, targetWords.length);
     if (ratio >= 0.7) {
-      return { score: 75, feedback: '大部分正確，小小調整就好', isBad: false };
+      return { score: 80, feedback: '👍 大部分正確，再微調一下就更棒！', isBad: false, retry: false };
     }
     if (ratio >= 0.4) {
-      return { score: 55, feedback: '可以再練習，對著口型慢慢念', isBad: true };
+      return { score: 60, feedback: '💪 不錯喔，再多練習幾次會更好！', isBad: false, retry: false };
     }
-    return { score: 35, feedback: '聽不太清楚，請靠近麥克風再試一次', isBad: true };
+    // 辨識結果跟目標差太遠，可能是辨識亂碼，建議重錄
+    return { score: 40, feedback: '🎤 聽不太清楚，可能是麥克風距離或辨識問題，請再試一次', isBad: true, retry: true };
   }
 
-  function showScore(score, feedback, isBad) {
+  function showScore(score, feedback, isBad, retry) {
     const scorePanel = document.getElementById('scorePanel');
     const scoreBig = document.getElementById('scoreBig');
     const scoreLabel = document.getElementById('scoreLabel');
@@ -574,6 +599,14 @@
     if (isBad) feedbackText.classList.add('score-red');
 
     recordedScores[cardsData[currentIndex].word] = { score, feedback };
+
+    // 顯示重錄提示
+    const retryHint = document.getElementById('retryHint');
+    if (retry) {
+      retryHint.style.display = 'block';
+    } else {
+      retryHint.style.display = 'none';
+    }
 
     scorePanel.classList.add('show');
   }
