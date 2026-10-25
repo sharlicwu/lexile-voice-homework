@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jack-o'-Lanterns 語音作業 (中級)</title>
+<style>
+  :root {
+    --pumpkin: #ff9f43;
+    --pumpkin-dark: #e67e22;
+    --mint: #a8e6cf;
+    --pink: #ffd3b6;
+    --lavender: #dcd6f7;
+    --cream: #fdfffc;
+    --sky: #81ecec;
+    --text-dark: #2d3436;
+    --success: #00b894;
+    --warning: #fdcb6e;
+    --danger: #e17055;
+    --bg-gradient: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #a8e6cf 100%);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Microsoft JhengHei", Arial, sans-serif;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 20px 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .presentation-container {
+    width: 94%;
+    max-width: 820px;
+    background: var(--cream);
+    border-radius: 30px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    padding: 30px 24px;
+    position: relative;
+    min-height: 640px;
+    overflow: hidden;
+  }
+  .page { display: none; flex-direction: column; justify-content: space-between; flex-grow: 1; animation: cutePop 0.4s ease; }
+  .page.active { display: flex; }
+  @keyframes cutePop {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px dashed #fdcb6e; padding-bottom: 12px; margin-bottom: 18px; }
+  .student-tag {
+    font-size: 15px; font-weight: 800; color: var(--pumpkin-dark);
+    background: #fff3cd; padding: 6px 14px; border-radius: 20px; border: 2px solid var(--pumpkin);
+  }
+  .page-indicator { font-size: 14px; font-weight: 600; color: #636e72; }
+  .nav-btn-group { display: flex; gap: 8px; align-items: center; }
+  .home-btn {
+    background-color: #fff; color: var(--pumpkin-dark); border: 2px solid var(--pumpkin);
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
+  }
+  .home-btn:hover { background: var(--pumpkin); color: #fff; }
+  /* Welcome */
+  .welcome-screen { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 520px; gap: 16px; }
+  .cute-title { font-size: 40px; font-weight: 900; color: var(--pumpkin-dark); line-height: 1.1; text-shadow: 3px 3px 0 #fab1a0; margin: 0; }
+  .subtitle { font-size: 17px; color: #636e72; font-weight: 600; }
+  .welcome-input { padding: 14px 22px; font-size: 19px; border: 3px dashed #fab1a0; border-radius: 16px; outline: none; text-align: center; width: 280px; transition: 0.2s; background: #fff; }
+  .welcome-input:focus { border-color: var(--pumpkin-dark); box-shadow: 0 0 0 4px rgba(255,159,67,0.2); }
+  .btn-group { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+  .cute-btn {
+    padding: 14px 26px; font-size: 16px; font-weight: 800; border-radius: 16px; cursor: pointer;
+    border: none; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .cute-btn:active { transform: scale(0.95); }
+  .btn-listen { background: linear-gradient(135deg, #81ecec, #55efc4); }
+  .btn-record { background: linear-gradient(135deg, #fab1a0, #ff7675); }
+  .btn-quiz { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+  .cute-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+  /* Listen grid */
+  .listen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 10px; margin-top: 10px; }
+  .listen-card {
+    background: #fff; border: 3px solid #ffeaa7; border-radius: 18px; padding: 14px; text-align: center; cursor: pointer;
+    transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .listen-card:hover { border-color: var(--pumpkin); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .listen-icon { font-size: 30px; margin-bottom: 6px; display: block; }
+  .listen-word { font-size: 15px; font-weight: 800; color: var(--pumpkin-dark); margin-bottom: 3px; }
+  .listen-zh { font-size: 12px; color: #636e72; }
+  /* Card page */
+  .word-section { text-align: center; margin: 8px 0 16px 0; }
+  .icon-large { font-size: 64px; margin-bottom: 8px; display: inline-block; filter: drop-shadow(3px 3px 2px rgba(0,0,0,0.15)); }
+  .word-title { font-size: 34px; font-weight: 900; color: var(--pumpkin-dark); margin: 4px 0; }
+  .word-translation { font-size: 20px; color: #636e72; font-weight: 600; margin-bottom: 12px; }
+  .word-audio-btn { background: var(--pumpkin); color: #fff; border: none; padding: 10px 24px; border-radius: 22px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.3); }
+  .word-audio-btn:hover { background: var(--pumpkin-dark); }
+  .sentence-container {
+    background: linear-gradient(135deg, #fff5ba, #ffeaa7); border-left: 8px solid var(--pumpkin);
+    border-radius: 16px; padding: 18px 22px; margin-top: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  }
+  .sentence-en { font-size: 16px; line-height: 1.5; color: #2d3436; font-weight: 600; margin-bottom: 6px; }
+  .sentence-zh { font-size: 14px; color: #636e72; line-height: 1.4; }
+  .highlight { color: var(--pumpkin-dark); font-weight: 800; text-decoration: underline; }
+  .sentence-audio-area { display: flex; flex-direction: column; align-items: center; margin-top: 14px; }
+  .btn-subtle {
+    background: #fff; color: var(--pumpkin-dark); border: 2px solid var(--pumpkin); padding: 9px 22px; border-radius: 22px;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .btn-subtle:hover { background: var(--pumpkin); color: #fff; }
+  /* Recording */
+  .record-box {
+    margin-top: 14px; background: #fff; border: 3px solid #81ecec; border-radius: 22px; padding: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  }
+  .rec-status { font-size: 14px; font-weight: 800; color: var(--danger); display: none; animation: pulse 1s infinite; }
+  .rec-status.active { display: inline-block; }
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  .record-actions { display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+  .record-action-btn {
+    background: var(--success); color: #fff; border: none; padding: 12px 28px; border-radius: 22px;
+    font-size: 16px; font-weight: 800; cursor: pointer; width: 100%; max-width: 300px; box-shadow: 0 4px 12px rgba(0,184,148,0.3);
+  }
+  .record-action-btn:active { transform: scale(0.97); }
+  .record-action-btn.recording { background: var(--danger); animation: recordPulse 1.5s infinite; }
+  @keyframes recordPulse { 0% { box-shadow: 0 0 0 0 rgba(225,112,85,0.7); } 70% { box-shadow: 0 0 0 12px rgba(225,112,85,0); } 100% { box-shadow: 0 0 0 0 rgba(225,112,85,0); } }
+  /* Score display */
+  .score-panel {
+    margin-top: 12px; width: 100%; border-radius: 18px; padding: 16px; text-align: center; display: none;
+  }
+  .score-panel.show { display: block; animation: scorePop 0.5s ease; }
+  @keyframes scorePop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .score-panel.good { background: #e9fcf0; border: 3px solid var(--success); color: #1e7e56; }
+  .score-panel.warn { background: #fdf6e3; border: 3px solid var(--warning); color: #b7950b; }
+  .score-panel.bad { background: #fdecea; border: 3px solid var(--danger); color: #c23616; }
+  .score-big { font-size: 44px; font-weight: 900; margin: 4px 0; }
+  .score-label { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .feedback-text { font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.4; }
+  .score-red { color: var(--danger) !important; font-weight: 800; }
+  /* Playback */
+  .playback-box { margin-top: 10px; width: 100%; text-align: center; }
+  audio { width: 100%; max-width: 320px; margin-top: 6px; }
+  /* Upload */
+  .upload-btn {
+    background: var(--pumpkin-dark); color: #fff; border: none; padding: 12px 30px; border-radius: 22px;
+    font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 12px; box-shadow: 0 4px 12px rgba(230,126,34,0.3);
+  }
+  .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .upload-status { font-size: 13px; font-weight: 600; margin-top: 8px; min-height: 20px; }
+  .uploaded { color: var(--success); }
+  .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 3px dashed #fdcb6e; }
+  .nav-btn {
+    background: var(--pumpkin); color: #fff; border: none; padding: 10px 20px; border-radius: 14px;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .nav-btn:disabled { background: #dfe6e9; color: #b2bec3; cursor: not-allowed; }
+  .nav-btn:hover:not(:disabled) { background: var(--pumpkin-dark); }
+  /* Quiz */
+  .quiz-container { display: flex; flex-direction: column; gap: 18px; align-items: center; margin-top: 18px; }
+  .quiz-word { font-size: 38px; font-weight: 900; color: var(--pumpkin-dark); }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 520px; }
+  .option-btn {
+    background: #fff; border: 3px solid #ffeaa7; padding: 18px; border-radius: 16px; font-size: 17px; font-weight: 700;
+    cursor: pointer; transition: 0.2s; color: var(--text-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .option-btn:hover { border-color: var(--pumpkin); background: #ffeaa7; transform: translateY(-2px); }
+  .option-btn.wrong { border-color: var(--danger) !important; background: #fdecea !important; color: var(--danger) !important; font-weight: 800; }
+  .option-btn.correct { border-color: var(--success) !important; background: #e9fcf0 !important; color: #1e7e56 !important; font-weight: 800; }
+  .quiz-result { text-align: center; display: none; flex-direction: column; gap: 16px; align-items: center; }
+  .result-emoji { font-size: 64px; }
+  .score-display { font-size: 44px; font-weight: 900; color: var(--pumpkin-dark); }
+  .keyboard-hint { font-size: 13px; color: #636e72; text-align: center; margin-top: 10px; font-weight: 600; }
+  /* Mobile */
+  @media (max-width: 480px) {
+    .presentation-container { width: 98%; padding: 20px 14px; min-height: auto; }
+    .cute-title { font-size: 30px; }
+    .word-title { font-size: 26px; }
+    .options-grid { grid-template-columns: 1fr; }
+    .listen-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="presentation-container">
+  <!-- Welcome -->
+  <div class="page active" id="welcome-page">
+    <div class="welcome-screen">
+      <div class="cute-title">🎃 Jack-o'-Lanterns</div>
+      <div class="subtitle">藍思中級語音作業 · 單字卡朗讀與 AI 評分系統</div>
+      <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
+      <div class="btn-group">
+        <button class="cute-btn btn-listen" onclick="checkNameAndRun(openListeningMode)">🎧 聽力練習</button>
+        <button class="cute-btn btn-record" onclick="checkNameAndRun(startPractice)">🎤 開始錄音作業</button>
+        <button class="cute-btn btn-quiz" onclick="checkNameAndRun(startQuiz)">📝 單字測驗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listening -->
+  <div class="page" id="listening-page">
+    <div>
+      <div class="top-bar">
+        <span class="student-tag">🎧 藍思中級 - 聽力自主練習區</span>
+        <div class="nav-btn-group"><button class="home-btn" onclick="goHome()">🏠 首頁</button></div>
+      </div>
+      <div class="listen-grid" id="listenGrid"></div>
+    </div>
+    <div class="sentence-audio-area">
+      <button class="cute-btn btn-record" onclick="startPractice()">準備好了，開始錄音作業 🎤</button>
+    </div>
+  </div>
+
+  <!-- Recording Card -->
+  <div class="page" id="card-page">
+    <div>
+      <div class="top-bar">
+        <span class="student-tag" id="displayStudentName">學生：--</span>
+        <div class="nav-btn-group"><button class="home-btn" onclick="goHome()">🏠 首頁</button></div>
+      </div>
+      <div class="word-section">
+        <div class="icon-large" id="cardIcon">🎃</div>
+        <div class="word-title" id="cardWord">Word</div>
+        <div class="word-translation" id="cardTranslation">中文</div>
+        <button class="word-audio-btn" onclick="speakCurrentWord()">🔊 朗讀單字</button>
+      </div>
+      <div class="sentence-container">
+        <div class="sentence-en" id="cardSentenceEn">...</div>
+        <div class="sentence-zh" id="cardSentenceZh">...</div>
+      </div>
+      <div class="sentence-audio-area">
+        <button class="btn-subtle" onclick="speakCurrentSentence()">🔊 朗讀課文例句</button>
+      </div>
+      <div class="record-box">
+        <div class="rec-status" id="recStatus">🔴 正在錄音中... 說出單字！</div>
+        <div class="record-actions">
+          <button class="record-action-btn" id="recordBtn" onclick="toggleRecording()">🎤 開始錄音</button>
+        </div>
+        <div class="score-panel" id="scorePanel">
+          <div class="score-label" id="scoreLabel">AI 評分</div>
+          <div class="score-big" id="scoreBig">--</div>
+          <div class="feedback-text" id="feedbackText">--</div>
+        </div>
+        <div class="playback-box" id="playbackBox" style="display:none;">
+          <audio id="audioPreview" controls></audio>
+        </div>
+        <button class="upload-btn" id="uploadBtn" onclick="uploadCurrentScore()" disabled>☁️ 上傳這個單字成績</button>
+        <div class="upload-status" id="uploadStatus"></div>
+      </div>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn" id="prevBtn" onclick="changeCard(-1)">← 上一個</button>
+      <span style="font-weight: 800; color: #636e72;" id="pageCounter">1 / 18</span>
+      <button class="nav-btn" id="nextBtn" onclick="changeCard(1)">下一個 →</button>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div class="page" id="quiz-page">
+    <div>
+      <div class="top-bar">
+        <span class="student-tag" id="quizStudentName">學生：--</span>
+        <div class="nav-btn-group">
+          <span class="page-indicator" id="quizProgress">第 1 / 18 題</span>
+          <button class="home-btn" onclick="goHome()">🏠 首頁</button>
+        </div>
+      </div>
+      <div class="quiz-container" id="quizBox">
+        <div class="quiz-word" id="quizWord">Word</div>
+        <button class="btn-subtle" onclick="speakQuizWord()">🔊 發音</button>
+        <div class="options-grid" id="optionsGrid"></div>
+      </div>
+      <div class="quiz-result" id="quizResultBox">
+        <div class="result-emoji">🏆</div>
+        <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">測驗完成！</h2>
+        <div class="score-display" id="finalScore">答對 0 / 18 題</div>
+        <div class="upload-status" id="quizUploadStatus" style="font-size:15px;">⏳ 正在上傳成績至雲端...</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top: 10px;">
+          <button class="cute-btn btn-quiz" onclick="startQuiz()">🔄 再測驗一次</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="keyboard-hint" id="keyboardHint">💡 提示：切換單字時會自動發音，亦可使用鍵盤 ← → 切換單字</div>
+
+<script>
+  const cardsData = [
+    { word: "porches", zh: "門廊；走廊", icon: "🏠", enSent: "They are a festive sight in windows and on doorsteps and <span class='highlight'>porches</span>.", zhSent: "它們是窗戶、門口和門廊上喜慶的景象。", rawSent: "They are a festive sight in windows and on doorsteps and porches." },
+    { word: "stingy", zh: "吝嗇的", icon: "💰", enSent: "A common one from the nineteenth century tells of a man named <span class='highlight'>Stingy</span> Jack.", zhSent: "十九世紀的一個常見故事講的是一個名叫「吝嗇傑克」的男人。", rawSent: "A common one from the nineteenth century tells of a man named Stingy Jack." },
+    { word: "mischievous", zh: "愛惡作劇的", icon: "😈", enSent: "Stingy Jack was so <span class='highlight'>mischievous</span> that when he died, he was cursed to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，以至於他死了以後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
+    { word: "cursed", zh: "被詛咒的", icon: "👻", enSent: "Stingy Jack was so mischievous that when he died, he was <span class='highlight'>cursed</span> to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，以至於他死了以後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
+    { word: "throughout", zh: "遍及；在…期間", icon: "🌍", enSent: "People <span class='highlight'>throughout</span> Europe lit bonfires.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
+    { word: "bonfires", zh: "篝火", icon: "🔥", enSent: "People throughout Europe lit <span class='highlight'>bonfires</span>.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
+    { word: "immigrated", zh: "移民；遷居", icon: "✈️", enSent: "When Irish, English, and Scottish people <span class='highlight'>immigrated</span> to the United States, they brought the jack-o'-lantern tradition with them.", zhSent: "當愛爾蘭、英格蘭和蘇格蘭人移民到美國時，他們把燈籠南瓜的傳統帶了過去。", rawSent: "When Irish, English, and Scottish people immigrated to the United States, they brought the jack-o'-lantern tradition with them." },
+    { word: "pumpkin patches", zh: "南瓜田", icon: "🎃", enSent: "Every autumn, people visit <span class='highlight'>pumpkin patches</span>, farms, and vegetable stands to pick just the right pumpkin.", zhSent: "每年秋天，人們會去南瓜田、農場和蔬菜攤挑選剛好的南瓜。", rawSent: "Every autumn, people visit pumpkin patches, farms, and vegetable stands to pick just the right pumpkin." },
+    { word: "firm", zh: "堅實的；結實的", icon: "💪", enSent: "Pumpkins that are <span class='highlight'>firm</span>, smooth, and free of marks work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
+    { word: "free of marks", zh: "沒有瑕疵的", icon: "✨", enSent: "Pumpkins that are firm, smooth, and <span class='highlight'>free of marks</span> work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
+    { word: "tilts", zh: "傾斜；斜著", icon: "➡️", enSent: "If it <span class='highlight'>tilts</span> to one side, the light inside may not stay in place.", zhSent: "如果它斜向一側，裡面的燈光可能就不會固定。", rawSent: "If it tilts to one side, the light inside may not stay in place." },
+    { word: "art patterns", zh: "藝術圖樣", icon: "🎨", enSent: "Some people buy carving kits with tools and <span class='highlight'>art patterns</span> to make a great jack-o'-lantern.", zhSent: "有些人會買附有工具和藝術圖樣的雕刻組，來做出精美的燈籠南瓜。", rawSent: "Some people buy carving kits with tools and art patterns to make a great jack-o'-lantern." },
+    { word: "feature", zh: "具有；特色", icon: "⭐", enSent: "Some of the pumpkins <span class='highlight'>feature</span> traditional scary faces.", zhSent: "有些南瓜上畫有傳統的恐怖面孔。", rawSent: "Some of the pumpkins feature traditional scary faces." },
+    { word: "characters", zh: "角色；人物", icon: "👥", enSent: "Creative carvers have also fashioned cartoon <span class='highlight'>characters</span>, animals, and other detailed designs.", zhSent: "有創意的雕刻者也雕刻了卡通角色、動物和其他細緻設計。", rawSent: "Creative carvers have also fashioned cartoon characters, animals, and other detailed designs." },
+    { word: "planetarium", zh: "天象館", icon: "🪐", enSent: "The event even has a pumpkin <span class='highlight'>planetarium</span>!", zhSent: "這個活動甚至還有南瓜天象館呢！", rawSent: "The event even has a pumpkin planetarium!" },
+    { word: "boasted", zh: "誇耀；吹噓", icon: "🗣️", enSent: "The town <span class='highlight'>boasted</span> a whopping thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀自己有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
+    { word: "whopping", zh: "驚人的；巨大的", icon: "📈", enSent: "The town boasted a <span class='highlight'>whopping</span> thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀自己有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
+    { word: "stencils", zh: "模板；刻字板", icon: "🧩", enSent: "They can also use <span class='highlight'>stencils</span> or even paint.", zhSent: "他們也可以使用模板，甚至直接塗色。", rawSent: "They can also use stencils or even paint." }
+  ];
+
+  let currentIndex = 0;
+  let studentName = "";
+  let uploadCount = 0;
+  let recordedScores = {};
+
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbxmbXKYvXQaeakJGCz_AIrHvNmFje8GWCE_uVDcyy6zoi5zJHlJUKA9XsZ4lBFYAZfOKw/exec';
+  const TOPIC = 'Jack-o-Lanterns-T';
+  const REC_SHEET = '藍思中級';
+  const QUIZ_SHEET = '藍思中級單字成績';
+
+  let audioStream = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recognition = null;
+  let isRecognizing = false;
+  let currentAudioBlob = null;
+
+  function checkNameAndRun(callback) {
+    const nameInput = document.getElementById('studentNameInput').value.trim();
+    if (!nameInput && !studentName) { alert('請先輸入學生姓名喔！'); return; }
+    if (nameInput) studentName = nameInput;
+    callback();
+  }
+
+  function goHome() {
+    switchPage('welcome-page');
+    document.getElementById('keyboardHint').style.display = 'none';
+    if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); }
+    if (recognition) { recognition.stop(); }
+  }
+
+  function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.getElementById('keyboardHint').style.display = pageId === 'card-page' ? 'block' : 'none';
+  }
+
+  function openListeningMode() {
+    const grid = document.getElementById('listenGrid');
+    grid.innerHTML = '';
+    cardsData.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'listen-card';
+      card.innerHTML = `<div class="listen-icon">${item.icon}</div><div class="listen-word">${item.word}</div><div class="listen-zh">${item.zh}</div>`;
+      card.onclick = () => speak(item.word);
+      grid.appendChild(card);
+    });
+    switchPage('listening-page');
+  }
+
+  async function startPractice() {
+    try {
+      if (!audioStream) { audioStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    } catch (err) {
+      alert('無法獲取麥克風權限，請確認瀏覽器已允許使用麥克風！'); return;
+    }
+    setupRecognition();
+    switchPage('card-page');
+    document.getElementById('keyboardHint').style.display = 'block';
+    document.getElementById('displayStudentName').innerText = `學生：${studentName}`;
+    loadCard(0, true);
+  }
+
+  function setupRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn('SpeechRecognition not supported');
+      return;
+    }
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => { isRecognizing = true; };
+    recognition.onend = () => { isRecognizing = false; };
+    recognition.onerror = () => { isRecognizing = false; };
+  }
+
+  function loadCard(index, autoSpeak = false) {
+    currentIndex = index;
+    const data = cardsData[currentIndex];
+    document.getElementById('cardIcon').innerText = data.icon;
+    document.getElementById('cardWord').innerText = data.word;
+    document.getElementById('cardTranslation').innerText = data.zh;
+    document.getElementById('cardSentenceEn').innerHTML = data.enSent;
+    document.getElementById('cardSentenceZh').innerText = data.zhSent;
+    document.getElementById('pageCounter').innerText = `${currentIndex + 1} / ${cardsData.length}`;
+    document.getElementById('prevBtn').disabled = (currentIndex === 0);
+    document.getElementById('nextBtn').disabled = (currentIndex === cardsData.length - 1);
+    resetRecordingUI();
+    if (autoSpeak) speak(data.word);
+  }
+
+  function resetRecordingUI() {
+    const recordBtn = document.getElementById('recordBtn');
+    const scorePanel = document.getElementById('scorePanel');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const playbackBox = document.getElementById('playbackBox');
+    const recStatus = document.getElementById('recStatus');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    recordBtn.innerText = '🎤 開始錄音';
+    recordBtn.classList.remove('recording');
+    recordBtn.disabled = false;
+    recStatus.classList.remove('active');
+    scorePanel.classList.remove('show', 'good', 'warn', 'bad');
+    document.getElementById('scoreBig').innerText = '--';
+    document.getElementById('scoreLabel').innerText = 'AI 評分';
+    document.getElementById('feedbackText').innerText = '--';
+    uploadBtn.disabled = true;
+    uploadStatus.innerText = '';
+    playbackBox.style.display = 'none';
+    currentAudioBlob = null;
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    if (recognition && isRecognizing) recognition.stop();
+  }
+
+  function changeCard(direction) {
+    let newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < cardsData.length) loadCard(newIndex, true);
+  }
+
+  function speakCurrentWord() { speak(cardsData[currentIndex].word); }
+  function speakCurrentSentence() { speak(cardsData[currentIndex].rawSent); }
+
+  function speak(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // ---------- Recording + AI Scoring ----------
+  function toggleRecording() {
+    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  }
+
+  async function startRecording() {
+    audioChunks = [];
+    const recordBtn = document.getElementById('recordBtn');
+    const recStatus = document.getElementById('recStatus');
+    const scorePanel = document.getElementById('scorePanel');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    try {
+      if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      alert('無法獲取麥克風權限！'); return;
+    }
+
+    mediaRecorder = new MediaRecorder(audioStream);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      currentAudioBlob = blob;
+      const preview = document.getElementById('audioPreview');
+      preview.src = URL.createObjectURL(blob);
+      preview.load();
+
+      recordBtn.innerText = '🎤 開始錄音';
+      recordBtn.classList.remove('recording');
+      recStatus.classList.remove('active');
+
+      // AI scoring
+      await runSpeechRecognitionOnAudio(blob);
+      uploadBtn.disabled = false;
+    };
+    mediaRecorder.start();
+
+    recordBtn.innerText = '⏹️ 停止錄音';
+    recordBtn.classList.add('recording');
+    recStatus.classList.add('active');
+
+    // Start speech recognition simultaneously
+    if (recognition) {
+      recognition.start();
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    if (recognition && isRecognizing) {
+      recognition.stop();
+    }
+  }
+
+  function runSpeechRecognitionOnAudio(blob) {
+    return new Promise((resolve) => {
+      // Use the live recognition result (already started). Fallback: use file-based recognition not supported in browser.
+      // We wait a short time for recognition to finish, then score.
+      let waited = 0;
+      const check = setInterval(() => {
+        waited += 100;
+        if (!isRecognizing || waited > 5000) {
+          clearInterval(check);
+          const transcript = window._lastTranscript || '';
+          const result = scorePronunciation(transcript, cardsData[currentIndex].word);
+          showScore(result.score, result.feedback, result.isBad);
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  window._lastTranscript = '';
+
+  function scorePronunciation(transcript, target) {
+    const clean = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+    const t = clean(transcript);
+    const targetClean = clean(target);
+    if (!t) {
+      return { score: 30, feedback: '沒偵測到聲音，請靠近麥克風再試一次', isBad: true };
+    }
+    if (t === targetClean) {
+      return { score: 100, feedback: '完美發音！🌟', isBad: false };
+    }
+    if (t.includes(targetClean) || targetClean.includes(t)) {
+      return { score: 88, feedback: '幾乎正確，再用力一點！', isBad: false };
+    }
+    const tWords = t.split(' ');
+    const targetWords = targetClean.split(' ');
+    const matches = tWords.filter(w => targetWords.includes(w)).length;
+    const ratio = matches / Math.max(tWords.length, targetWords.length);
+    if (ratio >= 0.7) {
+      return { score: 75, feedback: '大部分正確，小小調整就好', isBad: false };
+    }
+    if (ratio >= 0.4) {
+      return { score: 55, feedback: '可以再練習，對著口型慢慢念', isBad: true };
+    }
+    return { score: 35, feedback: '聽不太清楚，請靠近麥克風再試一次', isBad: true };
+  }
+
+  function showScore(score, feedback, isBad) {
+    const scorePanel = document.getElementById('scorePanel');
+    const scoreBig = document.getElementById('scoreBig');
+    const scoreLabel = document.getElementById('scoreLabel');
+    const feedbackText = document.getElementById('feedbackText');
+
+    scoreBig.innerText = score + ' 分';
+    scoreLabel.innerText = 'AI 評分結果';
+    feedbackText.innerText = feedback;
+
+    scorePanel.classList.remove('good', 'warn', 'bad');
+    if (score >= 80) {
+      scorePanel.classList.add('good');
+      scoreLabel.innerText = '🎉 太棒了！';
+    } else if (score >= 60) {
+      scorePanel.classList.add('warn');
+      scoreLabel.innerText = '👍 不錯，再努力！';
+    } else {
+      scorePanel.classList.add('bad');
+      scoreLabel.innerText = '💪 加油！';
+    }
+
+    feedbackText.style.color = isBad ? 'var(--danger)' : '';
+    if (isBad) feedbackText.classList.add('score-red');
+
+    recordedScores[cardsData[currentIndex].word] = { score, feedback };
+
+    scorePanel.classList.add('show');
+  }
+
+  // ---------- Playback & Upload ----------
+  function uploadCurrentScore() {
+    const data = cardsData[currentIndex];
+    const rec = recordedScores[data.word];
+    if (!rec) { alert('請先錄音並等待評分！'); return; }
+
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+    uploadBtn.disabled = true;
+    uploadStatus.innerText = '⏳ 正在上傳成績...';
+    uploadStatus.className = 'upload-status';
+
+    const payload = {
+      topic: TOPIC,
+      type: 'recording',
+      studentName: studentName,
+      word: data.word,
+      score: rec.score,
+      feedback: rec.feedback,
+      recordingSheet: REC_SHEET,
+      quizSheet: QUIZ_SHEET
+    };
+
+    fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
+      .then(res => res.json())
+      .then(data => {
+        if (data.result === 'success') {
+          uploadStatus.innerText = '✅ 成績已上傳至藍思中級表格！';
+          uploadStatus.className = 'upload-status uploaded';
+        } else {
+          uploadStatus.innerText = '❌ 上傳失敗：' + (data.error || '未知錯誤');
+        }
+      })
+      .catch(err => {
+        uploadStatus.innerText = '❌ 上傳發生網路錯誤，請檢查連線';
+      });
+  }
+
+  // ---------- Quiz ----------
+  function startQuiz() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    if (recognition && isRecognizing) recognition.stop();
+    quizIndex = 0;
+    quizScore = 0;
+    quizList = [...cardsData].sort(() => Math.random() - 0.5);
+    switchPage('quiz-page');
+    document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
+    document.getElementById('quizBox').style.display = 'flex';
+    document.getElementById('quizResultBox').style.display = 'none';
+    loadQuizQuestion();
+  }
+
+  let quizIndex = 0, quizScore = 0, quizList = [], canAnswer = true;
+
+  function loadQuizQuestion() {
+    canAnswer = true;
+    const currentQ = quizList[quizIndex];
+    document.getElementById('quizProgress').innerText = `第 ${quizIndex + 1} / ${quizList.length} 題`;
+    document.getElementById('quizWord').innerText = currentQ.word;
+    speak(currentQ.word);
+    let options = [currentQ.zh];
+    let otherZhs = cardsData.map(c => c.zh).filter(z => z !== currentQ.zh).sort(() => Math.random() - 0.5);
+    options.push(...otherZhs.slice(0, 3));
+    options.sort(() => Math.random() - 0.5);
+    const optionsGrid = document.getElementById('optionsGrid');
+    optionsGrid.innerHTML = '';
+    options.forEach(optText => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerText = optText;
+      btn.onclick = () => checkAnswer(btn, optText, currentQ.zh);
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function speakQuizWord() { speak(quizList[quizIndex].word); }
+
+  function checkAnswer(selectedBtn, selectedText, correctText) {
+    if (!canAnswer) return;
+    canAnswer = false;
+    if (selectedText === correctText) {
+      selectedBtn.classList.add('correct');
+      quizScore++;
+    } else {
+      selectedBtn.classList.add('wrong');
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        if (btn.innerText === correctText) btn.classList.add('correct');
+      });
+    }
+    setTimeout(() => {
+      quizIndex++;
+      if (quizIndex < quizList.length) { loadQuizQuestion(); }
+      else { showQuizResult(); }
+    }, 1200);
+  }
+
+  function showQuizResult() {
+    document.getElementById('quizBox').style.display = 'none';
+    document.getElementById('quizResultBox').style.display = 'flex';
+    document.getElementById('finalScore').innerText = `答對 ${quizScore} / ${quizList.length} 題`;
+    const uploadStatus = document.getElementById('quizUploadStatus');
+    uploadStatus.innerText = '⏳ 正在上傳成績至雲端...';
+    const payload = {
+      topic: TOPIC,
+      type: 'quiz',
+      studentName: studentName,
+      score: quizScore,
+      total: quizList.length,
+      recordingSheet: REC_SHEET,
+      quizSheet: QUIZ_SHEET
+    };
+    fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
+      .then(res => res.json())
+      .then(data => {
+        if (data.result === 'success') {
+          uploadStatus.innerText = '✅ 成績已上傳至藍思中級表格！';
+          uploadStatus.className = 'uploaded';
+        } else {
+          uploadStatus.innerText = '❌ 上傳失敗：' + (data.error || '未知錯誤');
+        }
+      })
+      .catch(err => { uploadStatus.innerText = '❌ 上傳發生網路錯誤，請檢查連線'; });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('card-page').classList.contains('active')) return;
+    if (e.key === 'ArrowLeft') changeCard(-1);
+    if (e.key === 'ArrowRight') changeCard(1);
+  });
+</script>
+</body>
+</html>
