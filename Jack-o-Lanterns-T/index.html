@@ -258,7 +258,10 @@
         <button class="cute-btn btn-sentence" onclick="checkNameAndRun(() => startPractice('sentence'))">📖 句子錄音</button>
         <button class="cute-btn btn-quiz" onclick="checkNameAndRun(startQuiz)">📝 單字測驗</button>
       </div>
-      <button class="clear-progress-btn" onclick="clearProgress()">🗑 清除這個姓名的上次進度</button>
+      <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:4px;">
+        <button class="clear-progress-btn" onclick="checkNameAndRun(() => startPractice('word', true))">🔁 重頭全部練習</button>
+        <button class="clear-progress-btn" onclick="clearProgress()">🗑 清除這個姓名的上次進度</button>
+      </div>
     </div>
   </div>
 
@@ -344,7 +347,7 @@
       </div>
       <div class="autosend-note" id="autoSendNote"></div>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-        <button class="cute-btn btn-record" onclick="startPractice(recMode)">🔄 回去再錄</button>
+        <button class="cute-btn btn-record" onclick="startPractice(recMode, true)">🔄 回去重頭再錄</button>
         <button class="cute-btn btn-quiz" onclick="startQuiz()">📝 去做單字測驗</button>
       </div>
     </div>
@@ -468,7 +471,7 @@
     switchPage('listening-page');
   }
 
-  async function startPractice(mode) {
+  async function startPractice(mode, forceRestart) {
     if (mode) recMode = mode;
     try {
       if (!audioStream) { audioStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
@@ -480,12 +483,18 @@
     document.getElementById('displayStudentName').innerText = `學生：${studentName}`;
     document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
     updateModeTabs();
+    if (forceRestart) {
+      // 強制重頭練：從第 1 張開始，可重新錄音（舊成績會被新錄的覆蓋）
+      loadCard(0, true);
+      toast('🔁 重新開始練習！錄的新成績會覆蓋舊成績');
+      return;
+    }
     // 載入上次進度：做到一半的學生從沒完成的字繼續
     const restored = loadProgress();
     if (restored) {
       const idx = firstIncomplete(recMode);
       if (idx === -1) {
-        toast(`🎉 歡迎回來！${studentName} 上次的進度已全部完成，這是你的成績總覽`);
+        toast(`🎉 歡迎回來！${studentName} 上次的進度已全部完成，這是你的成績總覽（可用下方按鈕重新練習）`);
         showSummary();
       } else {
         loadCard(idx, false);
