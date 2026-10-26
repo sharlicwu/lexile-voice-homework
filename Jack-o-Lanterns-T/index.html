@@ -180,6 +180,20 @@
   .chip.low { background: #fdecea; color: #c23616; }
   .chip.none { background: #f1f2f6; color: #b2bec3; }
   .autosend-note { text-align: center; font-size: 13px; font-weight: 700; color: #1e7e56; min-height: 18px; }
+  .done-tag { font-size: 13px; font-weight: 800; color: var(--success); background: #e9fcf0; padding: 5px 12px; border-radius: 16px; }
+  .clear-progress-btn {
+    margin-top: 4px; background: #fff; color: #636e72; border: 2px solid #dfe6e9;
+    padding: 6px 16px; border-radius: 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .clear-progress-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .toast {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    background: #fff; border: 3px solid var(--pumpkin); color: var(--pumpkin-dark);
+    padding: 10px 22px; border-radius: 18px; font-weight: 800; font-size: 15px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18); z-index: 10001; animation: toastIn 0.3s ease;
+    max-width: 90%; line-height: 1.4;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -16px); } to { opacity: 1; transform: translate(-50%, 0); } }
   /* Quiz */
   .quiz-container { display: flex; flex-direction: column; gap: 18px; align-items: center; margin-top: 18px; }
   .quiz-word { font-size: 38px; font-weight: 900; color: var(--pumpkin-dark); }
@@ -244,6 +258,7 @@
         <button class="cute-btn btn-sentence" onclick="checkNameAndRun(() => startPractice('sentence'))">📖 句子錄音</button>
         <button class="cute-btn btn-quiz" onclick="checkNameAndRun(startQuiz)">📝 單字測驗</button>
       </div>
+      <button class="clear-progress-btn" onclick="clearProgress()">🗑 清除這個姓名的上次進度</button>
     </div>
   </div>
 
@@ -266,6 +281,7 @@
     <div>
       <div class="top-bar">
         <span class="student-tag" id="displayStudentName">學生：--</span>
+        <span class="done-tag" id="doneTag"></span>
         <div class="nav-btn-group">
           <button class="summary-link-btn" onclick="showSummary()">📊 我的成績</button>
           <button class="home-btn" onclick="goHome()">🏠 首頁</button>
@@ -423,6 +439,7 @@
   }
 
   function goHome() {
+    saveProgress();
     switchPage('welcome-page');
     document.getElementById('keyboardHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
@@ -454,7 +471,70 @@
     document.getElementById('displayStudentName').innerText = `學生：${studentName}`;
     document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
     updateModeTabs();
-    loadCard(0, true);
+    // 載入上次進度：做到一半的學生從沒完成的字繼續
+    const restored = loadProgress();
+    if (restored) {
+      const idx = firstIncomplete(recMode);
+      if (idx === -1) {
+        toast(`🎉 歡迎回來！${studentName} 上次的進度已全部完成，這是你的成績總覽`);
+        showSummary();
+      } else {
+        loadCard(idx, false);
+        toast(`📖 歡迎回來！已載入上次進度（完成 ${doneCount(recMode)}/18），從「${cardsData[idx].word}」繼續`);
+        speak(mainText(cardsData[currentIndex]));
+      }
+    } else {
+      loadCard(0, true);
+    }
+  }
+
+  // ---------- 進度保存（依姓名存在這台裝置的瀏覽器） ----------
+  function progressKey() { return 'jolT_progress_' + encodeURIComponent(studentName); }
+  function saveProgress() {
+    if (!studentName) return;
+    try {
+      localStorage.setItem(progressKey(), JSON.stringify({
+        recorded: recordedScores, sentence: sentenceScores, ts: Date.now()
+      }));
+    } catch (e) { /* 儲存失敗不影響使用 */ }
+  }
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(progressKey());
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      const hasR = p && p.recorded && Object.keys(p.recorded).length;
+      const hasS = p && p.sentence && Object.keys(p.sentence).length;
+      if (!hasR && !hasS) return null;
+      recordedScores = Object.assign({}, p.recorded || {});
+      sentenceScores = Object.assign({}, p.sentence || {});
+      return p;
+    } catch (e) { return null; }
+  }
+  function doneCount(mode) {
+    const store = mode === 'word' ? recordedScores : sentenceScores;
+    return Object.keys(store).filter(k => cardsData.some(d => d.word === k)).length;
+  }
+  function firstIncomplete(mode) {
+    const store = mode === 'word' ? recordedScores : sentenceScores;
+    for (let i = 0; i < cardsData.length; i++) { if (!store[cardsData[i].word]) return i; }
+    return -1;
+  }
+  function clearProgress() {
+    const nameInput = document.getElementById('studentNameInput').value.trim() || studentName;
+    if (!nameInput) { alert('請先輸入姓名喔！'); return; }
+    if (!confirm(`真的要清除「${nameInput}」在這台裝置上的上次進度嗎？`)) return;
+    studentName = nameInput;
+    try { localStorage.removeItem(progressKey()); } catch (e) {}
+    recordedScores = {}; sentenceScores = {};
+    alert('✨ 已清除！可以重新開始囉');
+  }
+  function toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4500);
   }
 
   function updateModeTabs() {
@@ -545,6 +625,7 @@
     document.getElementById('recordBtn').className = 'record-action-btn' + (wordMode ? '' : ' blue');
     document.getElementById('recordBtn').innerText = wordMode ? '🎤 開始錄音（念單字）' : '🎤 開始錄音（念整句）';
     document.getElementById('pageCounter').innerText = `${currentIndex + 1} / ${cardsData.length}`;
+    document.getElementById('doneTag').innerText = `✅ 已完成 ${doneCount(recMode)} / ${cardsData.length}`;
     document.getElementById('prevBtn').disabled = (currentIndex === 0);
     const nextBtn = document.getElementById('nextBtn');
     nextBtn.disabled = false;
@@ -774,6 +855,7 @@
     const fbFull = feedback + (missing.length ? ` ｜加強:${missing.join(',')}` : '');
     store[cardsData[currentIndex].word] = { score, feedback: fbFull, mode: recMode };
     pendingSend = true;
+    saveProgress();
     // 發音處方籤：點一下聽正確發音
     const weakBox = document.getElementById('weakWords');
     const heardText = document.getElementById('heardText');
@@ -965,6 +1047,8 @@
     if (e.key === 'ArrowLeft') changeCard(-1);
     if (e.key === 'ArrowRight') changeCard(1);
   });
+
+  window.addEventListener('beforeunload', saveProgress);
 </script>
 </body>
 </html>
