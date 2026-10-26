@@ -317,7 +317,6 @@
           <div class="heard-text" id="heardText"></div>
         </div>
         <div id="retryHint">💡 可以再按錄音鍵重錄喔！</div>
-        <div class="auto-advance-note" id="autoAdvanceNote">▶ 自動播放你的回音中…播完會自動到下一字</div>
         <div class="playback-box" id="playbackBox" style="display:none;">
           <div class="playback-label">🎧 聽聽看自己的錄音</div>
           <audio id="audioPreview" controls></audio>
@@ -426,7 +425,6 @@
   let recognition = null;
   let isRecognizing = false;
   let currentAudioBlob = null;
-  let recGuard = null;
   window._lastTranscript = '';
   // 手機端：依裝置挑可用的錄音格式（iPhone 是 mp4，桌上型是 webm）
   const REC_MIME = (function () {
@@ -456,7 +454,6 @@
 
   function goHome() {
     saveProgress();
-    cancelAutoAdvance();
     switchPage('welcome-page');
     document.getElementById('keyboardHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
@@ -689,23 +686,6 @@
       }
     }
   });
-  let autoAdvTimer = null;
-  function cancelAutoAdvance() {
-    if (autoAdvTimer) { clearTimeout(autoAdvTimer); autoAdvTimer = null; }
-    const note = document.getElementById('autoAdvanceNote');
-    if (note) note.classList.remove('show');
-  }
-  function scheduleAutoAdvance() {
-    cancelAutoAdvance();
-    document.getElementById('autoAdvanceNote').classList.add('show');
-    // 不自動播放回音（手機 Chrome 需使用者手勢才能播放，自動播放會導致下一輪錄音失敗）
-    // 改為讓學生自己點 ▶ 播放，播完後若要繼續請按下一個
-    // 保底：7 秒後仍然自動前進（可選，視測試結果而定）
-    autoAdvTimer = setTimeout(() => {
-      autoAdvTimer = null;
-      if (!document.getElementById('card-page').classList.contains('active')) return;
-      changeCard(1);
-    }, 7000);
   }
 
   function resetRecordingUI() {
@@ -737,7 +717,6 @@
     currentAudioBlob = null;
     window._lastTranscript = '';
     window._lastAlts = [];
-    cancelAutoAdvance();
     if (recGuard) { clearTimeout(recGuard); recGuard = null; }    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     if (recognition && isRecognizing) recognition.stop();
   }
@@ -780,7 +759,6 @@
     const recordBtn = document.getElementById('recordBtn');
     const recStatus = document.getElementById('recStatus');
     const scorePanel = document.getElementById('scorePanel');
-    cancelAutoAdvance();
     // 先清掉上一輪的音頻預覽，避免手機上殘留音頻通道導致下一輪錄音失敗
     const preview = document.getElementById('audioPreview');
     preview.pause();
@@ -1194,14 +1172,7 @@
 
   window.addEventListener('beforeunload', saveProgress);
 
-  // 回音播完 → 提早自動下一字（不用等保底 7 秒）
-  document.getElementById('audioPreview').addEventListener('ended', () => {
-    if (autoAdvTimer) {
-      clearTimeout(autoAdvTimer);
-      autoAdvTimer = null;
-      if (document.getElementById('card-page').classList.contains('active')) changeCard(1);
-    }
-  });
+  
 </script>
 </body>
 </html>
