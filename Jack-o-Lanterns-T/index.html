@@ -657,7 +657,38 @@
     nextBtn.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
   }
 
-  // ---------- 錄完自動聽回音 + 自動下一個 ----------
+  // 錄完後自動刷新頁面：手機 Chrome 的 media/speech 狀態連續重複使用會殘留，
+  // 刷新頁面是徹底重置的最可靠方法（成績已存 localStorage，不會丟失）
+  let shouldAutoReloadOnScore = false;
+  window.addEventListener('pageshow', (e) => {
+    if (sessionStorage.getItem('jolT_autoResume') === '1') {
+      sessionStorage.removeItem('jolT_autoResume');
+      shouldAutoReloadOnScore = true;
+    }
+    if (shouldAutoReloadOnScore) {
+      shouldAutoReloadOnScore = false;
+      // 從 sessionStorage 恢復姓名與模式（location.reload 會重置變數）
+      const savedName = sessionStorage.getItem('jolT_studentName');
+      const savedMode = sessionStorage.getItem('jolT_recMode');
+      if (savedName) {
+        studentName = savedName;
+        if (savedMode) recMode = savedMode;
+        setupRecognition();
+        switchPage('card-page');
+        document.getElementById('displayStudentName').innerText = `學生：${studentName}`;
+        document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
+        updateModeTabs();
+        const idx = firstIncomplete(recMode);
+        if (idx === -1) {
+          showSummary();
+        } else {
+          loadCard(idx, false);
+          toast(`📖 已恢復進度（完成 ${doneCount(recMode)}/18），從「${cardsData[idx].word}」繼續`);
+          speak(mainText(cardsData[currentIndex]));
+        }
+      }
+    }
+  });
   let autoAdvTimer = null;
   function cancelAutoAdvance() {
     if (autoAdvTimer) { clearTimeout(autoAdvTimer); autoAdvTimer = null; }
@@ -778,13 +809,18 @@
       recStatus.classList.remove('active');
       const result = scoreAndShow();
       document.getElementById('playbackBox').style.display = 'block';
-      // 关键：錄完立刻把麥克風完全放掉！
-      // 手機佔住麥克風時，TTS 會被降成又小又悶的通話音量，語音辨識也會搶不到裝置
+      // 錄完立刻放掉麥克風
       try { if (audioStream) audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
       audioStream = null;
-      // ≥60 分：自動播回音 + 播完自動下一字；<60 分留在本字重錄
+      // ≥60 分：刷新頁面徹底重置手機 Chrome 媒體狀態，避免第二輪錄音失敗；
+      // <60 分留在本字重錄（不刷新，讓學生立即重試）
       const cardActive = document.getElementById('card-page').classList.contains('active');
-      if (cardActive && result && result.score >= 60) scheduleAutoAdvance();
+      if (cardActive && result && result.score >= 60) {
+        sessionStorage.setItem('jolT_autoResume', '1');
+        sessionStorage.setItem('jolT_studentName', studentName);
+        sessionStorage.setItem('jolT_recMode', recMode);
+        location.reload();
+      }
     };
     mediaRecorder.start();
 
