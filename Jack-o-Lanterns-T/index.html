@@ -426,6 +426,7 @@
   let recognition = null;
   let isRecognizing = false;
   let currentAudioBlob = null;
+  let recGuard = null;
   window._lastTranscript = '';
   // 手機端：依裝置挑可用的錄音格式（iPhone 是 mp4，桌上型是 webm）
   const REC_MIME = (function () {
@@ -579,9 +580,10 @@
   function mainText(data) { return recMode === 'word' ? data.word : data.rawSent; }
 
   // ---------- Speech recognition setup ----------
+  // 每次錄音都重建新的辨識器：Chrome 重複使用同一物件容易卡死（啟動但聽不到）
   function setupRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) { console.warn('SpeechRecognition not supported'); return; }
+    if (!SpeechRecognition) { console.warn('SpeechRecognition not supported'); recognition = null; return; }
     recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.continuous = false;
@@ -702,7 +704,8 @@
     currentAudioBlob = null;
     window._lastTranscript = '';
     window._lastAlts = [];
-    cancelAutoAdvance();    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    cancelAutoAdvance();
+    if (recGuard) { clearTimeout(recGuard); recGuard = null; }    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     if (recognition && isRecognizing) recognition.stop();
   }
 
@@ -713,14 +716,21 @@
   }
 
   // ---------- Speak ----------
+  // 关键修復：播放過<audio>回音後，Chrome 的 speechSynthesis 會假死。
+  // cancel 後必须延遲再 speak 並 resume() 才會恢復發聲。
   function speak(text) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = recMode === 'sentence' ? 0.85 : 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
+    if (!('speechSynthesis' in window)) return;
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    setTimeout(() => {
+      try {
+        synth.resume();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = recMode === 'sentence' ? 0.85 : 0.9;
+        synth.speak(utterance);
+      } catch (e) { console.error('speak failed', e); }
+    }, 180);
   }
   function speakMain() { speak(mainText(cardsData[currentIndex])); }
   function speakCurrentWord() { speak(cardsData[currentIndex].word); }
@@ -748,6 +758,7 @@
       const actualType = (mediaRecorder && mediaRecorder.mimeType) || REC_MIME || 'audio/webm';
       const blob = new Blob(audioChunks, { type: actualType });
       currentAudioBlob = blob;
+      if (recGuard) { clearTimeout(recGuard); recGuard = null; }
       const preview = document.getElementById('audioPreview');
       preview.src = URL.createObjectURL(blob);
       preview.load();
@@ -767,12 +778,17 @@
     window._lastTranscript = '';
     window._lastAlts = [];
     if (recognition) {
+      setupRecognition();      // 重建全新的辨識器再啟動，避免連錄多字後失靈
       recognition.start();
     } else {
       // 手機端沒有語音辨識功能：仍可錄音播放，但無法評分
       recStatus.innerText = '⚠️ 此裝置不支援語音偵測（無法自動評分），錄完可直接播放';
       recStatus.classList.add('active');
     }
+    recGuard = setTimeout(() => {
+      // 保底：15 秒沒有任何結果，強制收音，不讓紅燈一直閃
+      if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    }, 15000);
   }
 
   function stopRecording() {
