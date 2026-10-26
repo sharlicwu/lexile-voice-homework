@@ -144,6 +144,8 @@
   .score-label { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
   .feedback-text { font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.4; }
   .score-red { color: var(--danger) !important; font-weight: 800; }
+  .auto-advance-note { display: none; font-size: 13px; color: #1e7e56; font-weight: 700; margin-top: 4px; text-align: center; animation: pulse 2s infinite; }
+  .auto-advance-note.show { display: block; }
   .weak-words { margin-top: 8px; display: none; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
   .weak-words.show { display: flex; }
   .weak-label { font-size: 13px; font-weight: 800; color: var(--pumpkin-dark); }
@@ -315,6 +317,7 @@
           <div class="heard-text" id="heardText"></div>
         </div>
         <div id="retryHint">💡 可以再按錄音鍵重錄喔！</div>
+        <div class="auto-advance-note" id="autoAdvanceNote">▶ 自動播放你的回音中…播完會自動到下一字</div>
         <div class="playback-box" id="playbackBox" style="display:none;">
           <div class="playback-label">🎧 聽聽看自己的錄音</div>
           <audio id="audioPreview" controls></audio>
@@ -452,6 +455,7 @@
 
   function goHome() {
     saveProgress();
+    cancelAutoAdvance();
     switchPage('welcome-page');
     document.getElementById('keyboardHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
@@ -650,6 +654,29 @@
     nextBtn.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
   }
 
+  // ---------- 錄完自動聽回音 + 自動下一個 ----------
+  let autoAdvTimer = null;
+  function cancelAutoAdvance() {
+    if (autoAdvTimer) { clearTimeout(autoAdvTimer); autoAdvTimer = null; }
+    const note = document.getElementById('autoAdvanceNote');
+    if (note) note.classList.remove('show');
+  }
+  function scheduleAutoAdvance() {
+    cancelAutoAdvance();
+    document.getElementById('autoAdvanceNote').classList.add('show');
+    // 盡量自動播回音（部分手機可能擋自動播放，此時學生自己按 ▶）
+    try {
+      const pr = document.getElementById('audioPreview').play();
+      if (pr && pr.catch) pr.catch(() => {});
+    } catch (e) {}
+    // 保底：7 秒後仍然自動前進
+    autoAdvTimer = setTimeout(() => {
+      autoAdvTimer = null;
+      if (!document.getElementById('card-page').classList.contains('active')) return;
+      changeCard(1);
+    }, 7000);
+  }
+
   function resetRecordingUI() {
     const recordBtn = document.getElementById('recordBtn');
     const scorePanel = document.getElementById('scorePanel');
@@ -675,7 +702,7 @@
     currentAudioBlob = null;
     window._lastTranscript = '';
     window._lastAlts = [];
-    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    cancelAutoAdvance();    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     if (recognition && isRecognizing) recognition.stop();
   }
 
@@ -726,8 +753,11 @@
       preview.load();
       recordBtn.innerText = '🎤 再錄一次';
       recStatus.classList.remove('active');
-      scoreAndShow();
+      const result = scoreAndShow();
       document.getElementById('playbackBox').style.display = 'block';
+      // ≥60 分：自動播回音 + 播完自動下一字；<60 分留在本字重錄
+      const cardActive = document.getElementById('card-page').classList.contains('active');
+      if (cardActive && result && result.score >= 60) scheduleAutoAdvance();
     };
     mediaRecorder.start();
 
@@ -761,6 +791,7 @@
     const alts = window._lastAlts && window._lastAlts.length ? window._lastAlts : [{ transcript: transcript, confidence: 0 }];
     const result = scorePronunciation(alts, target);
     showScore(result);
+    return result;
   }
 
   // ---------- 發音比對工具 ----------
@@ -1094,6 +1125,15 @@
   });
 
   window.addEventListener('beforeunload', saveProgress);
+
+  // 回音播完 → 提早自動下一字（不用等保底 7 秒）
+  document.getElementById('audioPreview').addEventListener('ended', () => {
+    if (autoAdvTimer) {
+      clearTimeout(autoAdvTimer);
+      autoAdvTimer = null;
+      if (document.getElementById('card-page').classList.contains('active')) changeCard(1);
+    }
+  });
 </script>
 </body>
 </html>
