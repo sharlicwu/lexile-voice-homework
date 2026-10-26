@@ -144,6 +144,16 @@
   .score-label { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
   .feedback-text { font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.4; }
   .score-red { color: var(--danger) !important; font-weight: 800; }
+  .weak-words { margin-top: 8px; display: none; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
+  .weak-words.show { display: flex; }
+  .weak-label { font-size: 13px; font-weight: 800; color: var(--pumpkin-dark); }
+  .weak-chip {
+    background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: #fff; border: none;
+    padding: 6px 14px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 3px 8px rgba(255,107,107,0.35); transition: 0.2s;
+  }
+  .weak-chip:hover { transform: translateY(-2px); filter: brightness(1.06); }
+  .heard-text { font-size: 13px; color: #636e72; margin-top: 6px; font-weight: 600; min-height: 0; }
   #retryHint { font-size: 13px; color: #636e72; margin-top: 6px; display: none; }
   /* Playback */
   .playback-box { margin-top: 10px; width: 100%; text-align: center; }
@@ -282,6 +292,8 @@
           <div class="score-label" id="scoreLabel">AI 評分</div>
           <div class="score-big" id="scoreBig">--</div>
           <div class="feedback-text" id="feedbackText">--</div>
+          <div class="weak-words" id="weakWords"></div>
+          <div class="heard-text" id="heardText"></div>
         </div>
         <div id="retryHint">💡 可以再按錄音鍵重錄喔！</div>
         <div class="playback-box" id="playbackBox" style="display:none;">
@@ -551,6 +563,9 @@
     document.getElementById('feedbackText').innerText = '--';
     document.getElementById('feedbackText').classList.remove('score-red');
     document.getElementById('retryHint').style.display = 'none';
+    document.getElementById('weakWords').innerHTML = '';
+    document.getElementById('weakWords').classList.remove('show');
+    document.getElementById('heardText').innerText = '';
     document.getElementById('playbackBox').style.display = 'none';
     currentAudioBlob = null;
     window._lastTranscript = '';
@@ -625,33 +640,48 @@
     const transcript = window._lastTranscript || '';
     const target = recMode === 'word' ? cardsData[currentIndex].word : cardsData[currentIndex].rawSent;
     const result = scorePronunciation(transcript, target);
-    showScore(result.score, result.feedback, result.isBad, result.retry);
+    showScore(result);
   }
+
+  function wordStem(w) { return w.length > 3 ? w.replace(/(es|ed|ing|s)$/, '') : w; }
 
   function scorePronunciation(transcript, target) {
     const clean = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
     const t = clean(transcript);
     const targetClean = clean(target);
     const isSentence = targetClean.split(' ').length > 2;
+    const targetWords = targetClean.split(' ');
+    const tWords = t ? t.split(' ') : [];
+    const stems = new Set();
+    tWords.forEach(w => { stems.add(w); stems.add(wordStem(w)); });
+    const missing = targetWords.filter(w => {
+      if (stems.has(w)) return false;
+      const st = wordStem(w);
+      if (st && stems.has(st)) return false;
+      for (const x of stems) {
+        if (x.length >= 5 && w.length >= 5 && (x.startsWith(w.slice(0, 5)) || w.startsWith(x.slice(0, 5)))) return false;
+      }
+      return true;
+    });
     if (!t) {
-      return { score: 30, feedback: '😴 沒偵測到聲音，請靠近麥克風大聲說一次', isBad: true, retry: true };
+      return { score: 30, feedback: '😴 沒偵測到聲音，請靠近麥克風大聲說一次', isBad: true, retry: true, missing: targetWords.slice(0, 8) };
     }
     if (t === targetClean) {
-      return { score: 100, feedback: '🎉 完美發音！太棒了！', isBad: false, retry: false };
+      return { score: 100, feedback: '🎉 完美發音！太棒了！', isBad: false, retry: false, missing: [] };
     }
     if (t.includes(targetClean) || targetClean.includes(t)) {
-      return { score: 90, feedback: '🌟 幾乎正確，再大聲一點就是滿分！', isBad: false, retry: false };
+      return { score: 90, feedback: '🌟 幾乎正確，再大聲一點就是滿分！', isBad: false, retry: false, missing: missing };
     }
-    const tWords = t.split(' ');
-    const targetWords = targetClean.split(' ');
     const matches = tWords.filter(w => targetWords.includes(w)).length;
     const ratio = matches / Math.max(tWords.length, targetWords.length);
-    if (ratio >= 0.7) return { score: 80, feedback: '👍 大部分正確，再微調一下就更棒！', isBad: false, retry: false };
-    if (ratio >= 0.4) return { score: 60, feedback: isSentence ? '✨ 有聽到一些內容，試著把整句慢慢念完！' : '💪 不錯喔，再多練習幾次會更好！', isBad: false, retry: false };
-    return { score: 40, feedback: isSentence ? '🎤 聽不太完整，看著句子再慢慢念一次' : '🎤 聽不太清楚，可能是麥克風距離或辨識問題，請再試一次', isBad: true, retry: true };
+    if (ratio >= 0.7) return { score: 80, feedback: '👍 大部分正確，把下面的紅色字再練幾次就完美！', isBad: false, retry: false, missing: missing };
+    if (ratio >= 0.4) return { score: 60, feedback: isSentence ? '✨ 有聽到一些內容，點下面的字聽發音再練！' : '💪 不錯喔，點下面的字聽發音多練幾次！', isBad: false, retry: false, missing: missing };
+    return { score: 40, feedback: isSentence ? '🎤 聽不太完整，點下面的字聽發音，看著句子慢慢念' : '🎤 聽不太清楚，點下面的字聽發音，大聲再試一次', isBad: true, retry: true, missing: missing.length ? missing : targetWords.slice(0, 8) };
   }
 
-  function showScore(score, feedback, isBad, retry) {
+  function showScore(result) {
+    const score = result.score, feedback = result.feedback, isBad = result.isBad, retry = result.retry;
+    const missing = result.missing || [];
     const scorePanel = document.getElementById('scorePanel');
     const scoreBig = document.getElementById('scoreBig');
     const scoreLabel = document.getElementById('scoreLabel');
@@ -668,8 +698,32 @@
     if (isBad) feedbackText.classList.add('score-red');
 
     const store = recMode === 'word' ? recordedScores : sentenceScores;
-    store[cardsData[currentIndex].word] = { score, feedback, mode: recMode };
+    const fbFull = feedback + (missing.length ? ` ｜加強:${missing.join(',')}` : '');
+    store[cardsData[currentIndex].word] = { score, feedback: fbFull, mode: recMode };
     pendingSend = true;
+
+    // 發音處方籤：點一下聽正確發音
+    const weakBox = document.getElementById('weakWords');
+    const heardText = document.getElementById('heardText');
+    weakBox.innerHTML = '';
+    if (missing.length) {
+      const label = document.createElement('span');
+      label.className = 'weak-label';
+      label.innerText = '🔍 需要加強的字：';
+      weakBox.appendChild(label);
+      missing.slice(0, 8).forEach(w => {
+        const chip = document.createElement('button');
+        chip.className = 'weak-chip';
+        chip.innerText = '🔊 ' + w;
+        chip.onclick = () => speak(w);
+        weakBox.appendChild(chip);
+      });
+      weakBox.classList.add('show');
+    } else {
+      weakBox.classList.remove('show');
+    }
+    const heard = (window._lastTranscript || '').trim();
+    heardText.innerText = (score < 90 && heard) ? `聽到你念了：「${heard}」` : '';
 
     document.getElementById('retryHint').style.display = retry ? 'block' : 'none';
     scorePanel.classList.add('show');
