@@ -461,6 +461,7 @@
     document.getElementById('keyboardHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     if (recognition && isRecognizing) recognition.stop();
+    if (audioStream) { try { audioStream.getTracks().forEach(t => t.stop()); } catch (e) {} audioStream = null; }
   }
 
   function openListeningMode() {
@@ -749,7 +750,10 @@
     const scorePanel = document.getElementById('scorePanel');
     resetRecordingUI();
     try {
-      if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // 每次錄音重新取用麥克風（上一輪錄完已放掉；已授權過不會再跳允許）
+      if (!audioStream || !audioStream.active) {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
     } catch (err) { alert('無法獲取麥克風權限！'); return; }
 
     mediaRecorder = new MediaRecorder(audioStream, REC_MIME ? { mimeType: REC_MIME } : undefined);
@@ -766,6 +770,10 @@
       recStatus.classList.remove('active');
       const result = scoreAndShow();
       document.getElementById('playbackBox').style.display = 'block';
+      // 关键：錄完立刻把麥克風完全放掉！
+      // 手機佔住麥克風時，TTS 會被降成又小又悶的通話音量，語音辨識也會搶不到裝置
+      try { if (audioStream) audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      audioStream = null;
       // ≥60 分：自動播回音 + 播完自動下一字；<60 分留在本字重錄
       const cardActive = document.getElementById('card-page').classList.contains('active');
       if (cardActive && result && result.score >= 60) scheduleAutoAdvance();
