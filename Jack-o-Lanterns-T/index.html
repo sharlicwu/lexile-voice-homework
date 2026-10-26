@@ -667,12 +667,9 @@
   function scheduleAutoAdvance() {
     cancelAutoAdvance();
     document.getElementById('autoAdvanceNote').classList.add('show');
-    // 盡量自動播回音（部分手機可能擋自動播放，此時學生自己按 ▶）
-    try {
-      const pr = document.getElementById('audioPreview').play();
-      if (pr && pr.catch) pr.catch(() => {});
-    } catch (e) {}
-    // 保底：7 秒後仍然自動前進
+    // 不自動播放回音（手機 Chrome 需使用者手勢才能播放，自動播放會導致下一輪錄音失敗）
+    // 改為讓學生自己點 ▶ 播放，播完後若要繼續請按下一個
+    // 保底：7 秒後仍然自動前進（可選，視測試結果而定）
     autoAdvTimer = setTimeout(() => {
       autoAdvTimer = null;
       if (!document.getElementById('card-page').classList.contains('active')) return;
@@ -702,6 +699,10 @@
     document.getElementById('weakWords').classList.remove('show');
     document.getElementById('heardText').innerText = '';
     document.getElementById('playbackBox').style.display = 'none';
+    const pv = document.getElementById('audioPreview');
+    pv.pause();
+    pv.src = '';
+    pv.load();
     currentAudioBlob = null;
     window._lastTranscript = '';
     window._lastAlts = [];
@@ -748,6 +749,13 @@
     const recordBtn = document.getElementById('recordBtn');
     const recStatus = document.getElementById('recStatus');
     const scorePanel = document.getElementById('scorePanel');
+    cancelAutoAdvance();
+    // 先清掉上一輪的音頻預覽，避免手機上殘留音頻通道導致下一輪錄音失敗
+    const preview = document.getElementById('audioPreview');
+    preview.pause();
+    preview.src = '';
+    preview.load();
+    document.getElementById('playbackBox').style.display = 'none';
     resetRecordingUI();
     try {
       // 每次錄音重新取用麥克風（上一輪錄完已放掉；已授權過不會再跳允許）
