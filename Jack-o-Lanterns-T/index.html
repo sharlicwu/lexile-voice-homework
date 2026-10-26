@@ -405,8 +405,6 @@
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbxmbXKYvXQaeakJGCz_AIrHvNmFje8GWCE_uVDcyy6zoi5zJHlJUKA9XsZ4lBFYAZfOKw/exec';
   const TOPIC = 'Jack-o-Lanterns-T';
-  const REC_SHEET = '藍思中級';
-  const QUIZ_SHEET = '藍思中級單字成績';
 
   let currentIndex = 0;
   let studentName = "";
@@ -961,29 +959,46 @@
   function autoSendScores() {
     const note = document.getElementById('autoSendNote');
     if (!pendingSend) { note.innerText = '✅ 成績已是最新紀錄'; return; }
-    const all = [];
-    Object.values(recordedScores).forEach(v => all.push(v));
-    Object.values(sentenceScores).forEach(v => all.push(v));
-    if (all.length === 0) { note.innerText = '💙 去錄音後，成績會自動送到雲端喔！'; return; }
-    const avg = Math.round(all.reduce((a, b) => a + b.score, 0) / all.length);
-    const lowWords = cardsData.filter(d => { const r = recordedScores[d.word]; return r && r.score < 60; }).map(d => d.word).join(', ');
+    const lowSet = new Set();
+    cardsData.forEach(d => {
+      const w = recordedScores[d.word], s = sentenceScores[d.word];
+      if (w && w.score < 60) lowSet.add(d.word);
+      if (s && s.score < 60) lowSet.add(d.word);
+    });
+    const allRecorded = [];
+    cardsData.forEach(d => {
+      if (recordedScores[d.word]) allRecorded.push(recordedScores[d.word].score);
+      if (sentenceScores[d.word]) allRecorded.push(sentenceScores[d.word].score);
+    });
+    if (!allRecorded.length) { note.innerText = '💙 去錄音後，成績會自動送到雲端喔！'; return; }
+    const avg = Math.round(allRecorded.reduce((a, b) => a + b, 0) / allRecorded.length);
+    const wordCount = doneCount('word');
+    const sentenceCount = doneCount('sentence');
     const payload = {
       topic: TOPIC,
-      type: 'quiz',
+      type: 'recording',
       studentName: studentName,
-      score: avg,
-      total: all.length,
-      feedback: `單字${Object.keys(recordedScores).length}句${Object.keys(sentenceScores).length}` + (lowWords ? `｜待加強:${lowWords}` : ''),
-      recordingSheet: REC_SHEET,
-      quizSheet: QUIZ_SHEET
+      wordCount: wordCount,
+      sentenceCount: sentenceCount,
+      avgScore: avg,
+      weakWords: [...lowSet].join(', ')
     };
     fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
       .then(res => res.json())
       .then(data => {
-        if (data.result === 'success') { pendingSend = false; note.innerText = '✅ 成績已自動送到老師的表格！'; }
-        else { note.innerText = ''; }
+        if (data.result === 'success') { pendingSend = false; note.innerText = '✅ 成績已自動送到老師的語音作業表！'; }
+        else sendLegacyQuizSummary(note, avg, wordCount, sentenceCount);
       })
-      .catch(() => { note.innerText = ''; });
+      .catch(() => { sendLegacyQuizSummary(note, avg, wordCount, sentenceCount); });
+  }
+
+  // 後端還沒更新成 v3 時的備援：先暫寫到單字成績表（更新後自動改走新路徑）
+  function sendLegacyQuizSummary(note, avg, wc, sc) {
+    const payload = { topic: TOPIC, type: 'quiz', studentName: studentName, score: avg, total: 18, feedback: `語音作業:${wc}字${sc}句` };
+    fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
+      .then(res => res.json())
+      .then(data => { if (data.result === 'success') { pendingSend = false; } })
+      .catch(() => {});
   }
 
   // ---------- Quiz ----------
@@ -1053,9 +1068,7 @@
       type: 'quiz',
       studentName: studentName,
       score: quizScore,
-      total: quizList.length,
-      recordingSheet: REC_SHEET,
-      quizSheet: QUIZ_SHEET
+      total: quizList.length
     };
     fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
       .then(res => res.json())
