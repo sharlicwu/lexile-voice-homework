@@ -423,6 +423,17 @@
   let isRecognizing = false;
   let currentAudioBlob = null;
   window._lastTranscript = '';
+  // 手機端：依裝置挑可用的錄音格式（iPhone 是 mp4，桌上型是 webm）
+  const REC_MIME = (function () {
+    try {
+      if (!window.MediaRecorder) return '';
+      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac', 'audio/ogg;codecs=opus'];
+      for (const t of candidates) {
+        if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+      }
+    } catch (e) {}
+    return '';
+  })();
 
   // ---------- Navigation ----------
   function checkNameAndRun(callback) {
@@ -697,10 +708,11 @@
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) { alert('無法獲取麥克風權限！'); return; }
 
-    mediaRecorder = new MediaRecorder(audioStream);
+    mediaRecorder = new MediaRecorder(audioStream, REC_MIME ? { mimeType: REC_MIME } : undefined);
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      const actualType = (mediaRecorder && mediaRecorder.mimeType) || REC_MIME || 'audio/webm';
+      const blob = new Blob(audioChunks, { type: actualType });
       currentAudioBlob = blob;
       const preview = document.getElementById('audioPreview');
       preview.src = URL.createObjectURL(blob);
@@ -717,7 +729,13 @@
     recStatus.classList.add('active');
     window._lastTranscript = '';
     window._lastAlts = [];
-    if (recognition) recognition.start();
+    if (recognition) {
+      recognition.start();
+    } else {
+      // 手機端沒有語音辨識功能：仍可錄音播放，但無法評分
+      recStatus.innerText = '⚠️ 此裝置不支援語音偵測（無法自動評分），錄完可直接播放';
+      recStatus.classList.add('active');
+    }
   }
 
   function stopRecording() {
@@ -727,8 +745,13 @@
 
   function scoreAndShow() {
     const transcript = window._lastTranscript || '';
-    const alts = window._lastAlts && window._lastAlts.length ? window._lastAlts : [{ transcript: transcript, confidence: 0 }];
     const target = recMode === 'word' ? cardsData[currentIndex].word : cardsData[currentIndex].rawSent;
+    // iPhone Safari 無語音辨識：明確提示改用 Chrome，不誤判成念錯
+    if (!recognition && !transcript.trim()) {
+      showScore({ score: 0, feedback: '⚠️ 這個裝置不支援語音偵測，無法評分！請改用 Chrome 開啟本網頁（或用老師的平板）', isBad: true, retry: true, missing: recMode === 'word' ? [cardsData[currentIndex].word] : target.split(' ').slice(0, 4), heard: '' });
+      return;
+    }
+    const alts = window._lastAlts && window._lastAlts.length ? window._lastAlts : [{ transcript: transcript, confidence: 0 }];
     const result = scorePronunciation(alts, target);
     showScore(result);
   }
