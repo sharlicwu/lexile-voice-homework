@@ -274,7 +274,6 @@
       </div>
       <div id="weakReviewBar" style="display:none; background:#fff3cd; border:3px dashed #fdcb6e; padding:10px 14px; border-radius:16px; font-weight:800; color:#b7950b; text-align:center; margin:0 0 10px 0; font-size:15px;">
         <div id="weakReviewText">💪 快過關了！以下單字再練習一次，到 60 分就可以過關喔！</div>
-        <button id="btnSkipWeak" style="margin-top:8px; background:linear-gradient(135deg,#a29bfe,#6c5ce7); color:#fff; border:none; padding:8px 18px; border-radius:18px; font-size:13px; font-weight:800; cursor:pointer;">📊 直接看總成績</button>
       </div>
       <!-- 補錄說明彈窗 -->
       <div id="weakModal" style="display:none; position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(45,52,54,0.5); z-index:10001; align-items:center; justify-content:center;">
@@ -283,8 +282,7 @@
           <div style="font-size:19px; font-weight:900; color:#e67e22; margin:6px 0 10px 0;">快過關了！再練一次會更棒～</div>
           <div id="weakModalList" style="display:flex; flex-direction:column; gap:6px; max-height:34vh; overflow-y:auto; margin-bottom:10px;"></div>
           <div style="font-size:14px; color:#636e72; font-weight:700; margin-bottom:14px;">這幾個單字到 <b>60 分</b>就過關囉！準備好了就按下面的按鈕 🎤</div>
-          <button id="btnWeakStart" style="width:100%; background:linear-gradient(135deg,#fab1a0,#ff7675); color:#fff; border:none; padding:12px 20px; border-radius:18px; font-size:16px; font-weight:800; cursor:pointer; margin-bottom:8px;">🎤 準備好了，開始補錄</button>
-          <button id="btnWeakSkip2" style="background:#fff; color:#636e72; border:2px solid #dfe6e9; padding:8px 16px; border-radius:16px; font-size:13px; font-weight:700; cursor:pointer;">先跳過，直接看總成績</button>
+          <button id="btnWeakStart" style="width:100%; background:linear-gradient(135deg,#fab1a0,#ff7675); color:#fff; border:none; padding:12px 20px; border-radius:18px; font-size:16px; font-weight:800; cursor:pointer;">🎤 準備好了，開始補錄</button>
         </div>
       </div>
       <div class="word-section" id="wordSection">
@@ -831,6 +829,8 @@
   }
 
   async function toggleAutoPractice() {
+    // 補錄模式只能用單一錄音鍵，避免自動練習跑回前面的字造成循環
+    if (weakReviewMode) { toast('💪 補錄模式中！請直接按上面的 🎤 單一錄音鍵'); return; }
     if (autoPractice) {
       stopAutoPractice('已停止自動練習');
       return;
@@ -1129,8 +1129,8 @@
           updateWeakReviewBarText();
         }
       } else {
-        // 還沒過關：留在這個字，直接再按錄音鍵重試即可；也可以按提示列的「直接看總成績」離開
-        toast('💪 這次還差一點到 60 分，再試一次就更棒了！也可以按「📊 直接看總成績」先跳過');
+        // 還沒過關：留在這個字，直接再按錄音鍵重試即可
+        toast('💪 這次還差一點到 60 分，再試一次就更棒了！');
       }
     }
     // 注意：不在此處送出（每字一送會洗板），成績統一在「看總成績」時送出一條
