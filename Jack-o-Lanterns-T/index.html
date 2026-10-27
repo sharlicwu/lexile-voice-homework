@@ -273,8 +273,19 @@
         <button class="mode-tab" id="tabSentence">📖 例句</button>
       </div>
       <div id="weakReviewBar" style="display:none; background:#fff3cd; border:3px dashed #fdcb6e; padding:10px 14px; border-radius:16px; font-weight:800; color:#b7950b; text-align:center; margin:0 0 10px 0; font-size:15px;">
-        <div id="weakReviewText">🚨 有低於 60 分的單字，請重新錄音！</div>
+        <div id="weakReviewText">💪 快過關了！以下單字再練習一次，到 60 分就可以過關喔！</div>
         <button id="btnSkipWeak" style="margin-top:8px; background:linear-gradient(135deg,#a29bfe,#6c5ce7); color:#fff; border:none; padding:8px 18px; border-radius:18px; font-size:13px; font-weight:800; cursor:pointer;">📊 直接看總成績</button>
+      </div>
+      <!-- 補錄說明彈窗 -->
+      <div id="weakModal" style="display:none; position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(45,52,54,0.5); z-index:10001; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:26px; padding:26px 22px; max-width:88vw; width:380px; text-align:center; box-shadow:0 15px 45px rgba(0,0,0,0.3);">
+          <div style="font-size:40px;">💪</div>
+          <div style="font-size:19px; font-weight:900; color:#e67e22; margin:6px 0 10px 0;">快過關了！再練一次會更棒～</div>
+          <div id="weakModalList" style="display:flex; flex-direction:column; gap:6px; max-height:34vh; overflow-y:auto; margin-bottom:10px;"></div>
+          <div style="font-size:14px; color:#636e72; font-weight:700; margin-bottom:14px;">這幾個單字到 <b>60 分</b>就過關囉！準備好了就按下面的按鈕 🎤</div>
+          <button id="btnWeakStart" style="width:100%; background:linear-gradient(135deg,#fab1a0,#ff7675); color:#fff; border:none; padding:12px 20px; border-radius:18px; font-size:16px; font-weight:800; cursor:pointer; margin-bottom:8px;">🎤 準備好了，開始補錄</button>
+          <button id="btnWeakSkip2" style="background:#fff; color:#636e72; border:2px solid #dfe6e9; padding:8px 16px; border-radius:16px; font-size:13px; font-weight:700; cursor:pointer;">先跳過，直接看總成績</button>
+        </div>
       </div>
       <div class="word-section" id="wordSection">
         <div class="icon-large" id="cardIcon">🎃</div>
@@ -288,6 +299,7 @@
       </div>
       <div class="record-box">
         <div class="rec-status" id="recStatus">🔴 正在錄音中...</div>
+        <div id="recDoneNote" style="display:none; background:#e9fcf0; border:3px solid #00b894; color:#1e7e56; padding:10px 14px; border-radius:16px; font-weight:800; font-size:15px; text-align:center; width:100%; max-width:420px;"></div>
         <button class="record-action-btn" id="autoPracticeBtn" style="background:#6c5ce7;">▶️ 開始自動練習（整組只按一次）</button>
         <div id="autoPracticeStatus" style="font-size:13px;color:#6c5ce7;font-weight:700;text-align:center;">開啟後會自動錄音、偵測停頓、評分並換下一題</div>
         <button class="record-action-btn" id="recordBtn">🎤 單一錄音（可播放自己的聲音）</button>
@@ -487,6 +499,10 @@
     saveProgress();
     // 保險：離開前把還沒送出的成績送出去（有防重複快照，不會洗板）
     try { sendToServer(); } catch (e) {}
+    // 收起補錄彈窗與提示列，還原自動練習鍵
+    const modal = document.getElementById('weakModal');
+    if (modal) modal.style.display = 'none';
+    hideWeakReviewBar();
     switchPage('welcome-page');
     document.getElementById('keyboardHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
@@ -509,6 +525,9 @@
   async function startPractice(mode, forceRestart) {
     if (mode) recMode = mode;
     setupRecognition();
+    // 進入練習時收起補錄彈窗（重錄流程會自行判斷何時再跳出）
+    const modal = document.getElementById('weakModal');
+    if (modal) modal.style.display = 'none';
     switchPage('card-page');
     document.getElementById('displayStudentName').innerText = `學生：${studentName}`;
     document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
@@ -600,19 +619,29 @@
   function hideWeakReviewBar() {
     const bar = document.getElementById('weakReviewBar');
     if (bar) bar.style.display = 'none';
+    // 離開補錄模式：把自動練習鍵還原回來
+    const autoBtn = document.getElementById('autoPracticeBtn');
+    if (autoBtn) autoBtn.style.display = '';
+    weakReviewMode = null;
   }
   function showWeakReviewBar() {
     const bar = document.getElementById('weakReviewBar');
     if (bar) bar.style.display = 'block';
+    // 補錄階段只留單一錄音鍵，隱藏自動練習鍵（避免整組自動練習又造成循環）
+    const autoBtn = document.getElementById('autoPracticeBtn');
+    if (autoBtn) autoBtn.style.display = 'none';
+    weakReviewMode = recMode;
   }
   function updateWeakReviewBarText() {
     const cnt = countWeak(recMode);
     if (cnt <= 0) { hideWeakReviewBar(); return; }
     const text = document.getElementById('weakReviewText');
-    if (text) text.innerText = `🚨 還有 ${cnt} 個低於 60 分的${recMode === 'word' ? '單字' : '句子'}，請重新錄音達 60 分以上！`;
+    if (text) text.innerText = `💪 快過關了！還有 ${cnt} 個單字到 60 分就完成囉！`;
   }
 
-  // 進總成績前檢查：若有低於 60 分的（先查當前模式、再查另一種模式），就跳去重錄而不是看總成績
+  // ---------- 低於 60 分重錄流程 ----------
+  let weakReviewMode = null; // 進入補錄時記錄要補錄的模式（'word'/'sentence'）
+
   function reviewWeakBeforeSummary() {
     let idx = firstWeakIndex(recMode);
     let mode = recMode;
@@ -621,18 +650,46 @@
       idx = firstWeakIndex(mode);
     }
     if (idx === -1) return false;
+    // 先跳說明彈窗，列出要補錄的單字（分數），學生準備好再按「開始補錄」
+    showWeakModal(mode);
+    return true;
+  }
 
+  // 補錄說明彈窗：文字柔和不傷人，並列出每個字目前的分數
+  function showWeakModal(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    const listEl = document.getElementById('weakModalList');
+    const items = cardsData.map((item, i) => ({ item, s: scores[item.word] }))
+      .filter(x => x.s && (Number(x.s.score) || 0) < 60);
+    listEl.innerHTML = items.map(x =>
+      `<div style="background:#fff8e7; border:2px solid #ffeaa7; border-radius:12px; padding:6px 12px; font-weight:800; font-size:15px; color:#2d3436;">${x.item.icon} ${x.item.word}　<span style="color:#e17055;">${Number(x.s.score) || 0}分</span></div>`
+    ).join('');
+    const modal = document.getElementById('weakModal');
+    modal.style.display = 'flex';
+    document.getElementById('btnWeakStart').onclick = () => {
+      modal.style.display = 'none';
+      startWeakReview(mode);
+    };
+    const skipBtn = document.getElementById('btnWeakSkip2');
+    if (skipBtn) skipBtn.onclick = () => {
+      modal.style.display = 'none';
+      showSummary(true);
+    };
+  }
+
+  // 進入補錄模式：切換模式、跳到第一個要補錄的字、隱藏自動練習鍵（只留單一錄音鍵）
+  function startWeakReview(mode) {
+    weakReviewMode = mode;
     if (mode !== recMode) {
       recMode = mode;
       updateModeTabs();
       document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
     }
-    loadCard(idx, true);
+    const idx = firstWeakIndex(mode);
+    loadCard(idx === -1 ? 0 : idx, true);
     showWeakReviewBar();
     updateWeakReviewBarText();
-    toast(`🚨 有低於 60 分的${mode === 'word' ? '單字' : '句子'}，請重新錄音！現在從「${cardsData[idx].word}」開始`);
-    // loadCard 最後會自動朗讀當前內容，這裡不要再 speak，以免同一字被連讀兩次
-    return true;
+    toast('💪 補錄模式：念到 60 分以上就過關，加油！');
   }
 
   // 浮動提示
@@ -679,6 +736,8 @@
     document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
     document.getElementById('playbackBox').style.display = 'none';
     document.getElementById('retryHint').style.display = 'none';
+    const doneNote = document.getElementById('recDoneNote');
+    if (doneNote) doneNote.style.display = 'none';
     
     speak(mainText(item));
   }
@@ -908,6 +967,8 @@
       window._finalAlts = [];
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(2500);
+      const doneNote = document.getElementById('recDoneNote');
+      if (doneNote) doneNote.style.display = 'none';
       try {
         if (!audioStream) {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -936,6 +997,12 @@
         isRecognizing = false;
         await new Promise(r => setTimeout(r, 700));
         evaluateSpeech(window._lastTranscript || window._interim || '');
+        // 明確告知錄音結束＋下一步要做什麼
+        const noteEl = document.getElementById('recDoneNote');
+        if (noteEl) {
+          noteEl.innerText = '✅ 錄音結束！可按 ▶ 聽自己的聲音；沒問題就按「下一個 →」或「看總成績 📊」繼續';
+          noteEl.style.display = 'block';
+        }
       };
 
       mediaRecorder.start();
@@ -1063,7 +1130,7 @@
         }
       } else {
         // 還沒過關：留在這個字，直接再按錄音鍵重試即可；也可以按提示列的「直接看總成績」離開
-        toast('音 這次還沒到 60 分，再按 🎤 試一次！或按提示列「📊 直接看總成績」離開');
+        toast('💪 這次還差一點到 60 分，再試一次就更棒了！也可以按「📊 直接看總成績」先跳過');
       }
     }
     // 注意：不在此處送出（每字一送會洗板），成績統一在「看總成績」時送出一條
