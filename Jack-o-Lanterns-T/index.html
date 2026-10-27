@@ -240,6 +240,7 @@
         <button class="clear-progress-btn" id="btnRestart">🔁 重頭全部練習</button>
         <button class="clear-progress-btn" id="btnClearProgress">🗑 清除這個姓名的上次進度</button>
       </div>
+      <div id="verTag" style="font-size:12px; color:#b2bec3; font-weight:700; margin-top:6px;">🧩 版本檢查中…</div>
     </div>
   </div>
 
@@ -399,6 +400,26 @@
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
   const TOPIC = 'Jack-o-Lanterns-T';
+
+  // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
+  const APP_VER = 'V1028C';
+  document.addEventListener('DOMContentLoaded', () => {
+    const tag = document.getElementById('verTag');
+    if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
+  });
+  // 載入後自查：線上檔案若不含本版本標記 → 提示並自動更新一次（每次開啟分頁最多一次，避免循環）
+  setTimeout(() => {
+    fetch(location.pathname + '?cb=' + Date.now(), { cache: 'no-store' })
+      .then(r => r.text())
+      .then(t => {
+        if (!t.includes('APP_VER = \'' + APP_VER + '\'') && !sessionStorage.getItem('verReloadedOnce')) {
+          sessionStorage.setItem('verReloadedOnce', '1');
+          alert('偵測到手機/瀏覽器快取了舊版頁面，按確定自動更新到最新版！');
+          location.reload();
+        }
+      })
+      .catch(() => {});
+  }, 2500);
 
   let currentIndex = 0;
   let studentName = "";
