@@ -391,7 +391,6 @@
   let recMode = 'word';
   let recordedScores = {};
   let sentenceScores = {};
-  let pendingSend = false;
   let quizIndex = 0, quizScore = 0, quizList = [], canAnswer = true;
 
   let audioStream = null;
@@ -593,6 +592,10 @@
     
     document.getElementById('pageCounter').innerText = `${currentIndex + 1} / ${cardsData.length}`;
     document.getElementById('doneTag').innerText = `已完成: ${doneCount(recMode)} / ${cardsData.length}`;
+    // 最後一張卡：右下按鈕改成「看總成績」，避免無限循環
+    const navNext = document.getElementById('nextBtn');
+    navNext.disabled = false;
+    navNext.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
     
     if (resetUI) {
       document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
@@ -614,12 +617,27 @@
     return (recMode === 'word') ? item.word : item.rawSent;
   }
 
+  let ttsQuietResolve = null;
   function speak(text) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
+    // 換新的發音時，先結束上一個「等發音結束」的承諾
+    if (ttsQuietResolve) { try { ttsQuietResolve(); } catch (e) {} }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
+    const p = new Promise(resolve => { ttsQuietResolve = resolve; });
+    utterance.onend = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
+    utterance.onerror = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
+    p._active = true;
+    window.ttsDonePromise = p;
     window.speechSynthesis.speak(utterance);
+  }
+  // 等發音播完（最多等 maxMs 毫秒），避免梵音被麥克風錄進去造成假高分
+  function waitTtsDone(maxMs) {
+    return Promise.race([
+      window.ttsDonePromise || Promise.resolve(),
+      new Promise(r => setTimeout(r, maxMs || 3500))
+    ]);
   }
 
   function speakMain() {
@@ -628,6 +646,10 @@
 
   function changeCard(dir) {
     if (autoPractice) return;
+    if (currentIndex === cardsData.length - 1 && dir === 1) {
+      showSummary(); // 最後一張卡再按「下一個/看總成績」→ 進總成績，不循環回第一張
+      return;
+    }
     let newIdx = currentIndex + dir;
     if (newIdx < 0) newIdx = 0;
     if (newIdx >= cardsData.length) newIdx = cardsData.length - 1;
@@ -644,13 +666,18 @@
     recognition.continuous = true;
     recognition.maxAlternatives = 3;
     recognition.onresult = (event) => {
-      // 只處理這次新產生的辨識結果，避免連續辨識時把前一題的文字帶進來
-      let newText = '';
+      // 只累加「最終確認」的辨識結果；中間的暫時結果只存最新一筆，
+      // 這樣評語不會把整句話重複出現十來次
+      let finalText = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        newText += event.results[i][0].transcript + ' ';
+        if (event.results[i].isFinal) {
+          finalText += event.results[i][0].transcript + ' ';
+        } else {
+          window._interim = event.results[i][0].transcript; // 覆蓋舊的暫時結果
+        }
       }
-      if (newText.trim()) {
-        window._lastTranscript = (window._lastTranscript + ' ' + newText).trim();
+      if (finalText.trim()) {
+        window._lastTranscript = (window._lastTranscript + ' ' + finalText).trim();
       }
     };
     recognition.onerror = (event) => console.log('Speech recognition:', event.error);
@@ -713,9 +740,13 @@
 
   async function startAutoRecording() {
     if (!autoPractice) return;
+    // 先等系統朗讀播完再開始錄音，避免麥克風把示範發音錄進去造成假高分
+    await waitTtsDone(4000);
+    if (!autoPractice) return;
     clearTimeout(silenceTimer);
     speechStarted = false;
     window._lastTranscript = '';
+    window._interim = '';
     audioChunks = [];
     try {
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -838,9 +869,22 @@
     }
   }
 
+  // 兩個字串的字面相似度（bigram Dice 係數，0~1）
+  function strSimilarity(a, b) {
+    if (a === b) return 1;
+    if (!a || !b) return 0;
+    if (a.length < 2 || b.length < 2) return a[0] === b[0] ? 0.5 : 0;
+    const bigrams = (s) => { const set = new Set(); for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2)); return set; };
+    const A = bigrams(a), B = bigrams(b);
+    let inter = 0;
+    A.forEach(x => { if (B.has(x)) inter++; });
+    return (2 * inter) / (A.size + B.size);
+  }
+
   function evaluateSpeech(transcript) {
-    const target = mainText(cardsData[currentIndex]).toLowerCase().replace(/[^a-z0-9 ]/g, '');
-    const spoken = transcript.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+    const target = mainText(cardsData[currentIndex]).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+    // 最終確認的文字；若來不及出現最終結果，用最後一筆暫時結果當答案
+    const spoken = ((transcript || window._interim || '') + '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
 
     let score = 0;
     let feedback = '';
@@ -848,32 +892,26 @@
     if (!spoken) {
       score = 40;
       feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！';
+    } else if (recMode === 'word') {
+      // 單字模式：相似度比對（完全相同才滿分；唸錯會真的扣分）
+      const sim = Math.max(strSimilarity(spoken, target), (spoken.includes(target) || target.includes(spoken)) ? 0.85 : 0);
+      if (sim === 1) { score = 100; feedback = '完美！發音標準又清楚，真的太棒了！🌟'; }
+      else if (sim >= 0.9) { score = 90; feedback = '很棒！就是它了，多唸幾次可以更流暢！'; }
+      else if (sim >= 0.6) { score = 80; feedback = '接近了！尾音再多聽 🔊 練準一點吧！'; }
+      else if (sim >= 0.4) { score = 65; feedback = '有一半像喔！先聽 🔊 發音，注意開頭的音再試一次！'; }
+      else { score = 45; feedback = '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！'; }
     } else {
+      // 句子模式：比對「你有唸到的字數佔多少比例」
       const targetWords = target.split(/\s+/).filter(Boolean);
       const spokenWords = spoken.split(/\s+/).filter(Boolean);
-      const exact = (spoken === target) ||
-        (targetWords.length === 1 && spokenWords.length === 1 && targetWords[0] === spokenWords[0]);
       const contained = spoken.includes(target) || target.includes(spoken);
-      if (exact) {
-        score = 100;
-        feedback = '完美！發音標準又清楚，真的太棒了！🌟';
-      } else if (contained) {
-        score = 90;
-        feedback = '很棒！就是它了！多練幾次可以更流暢！';
-      } else {
-        const hit = targetWords.filter(tw => spokenWords.includes(tw)).length;
-        const ratio = targetWords.length ? hit / targetWords.length : 0;
-        if (ratio >= 0.7) {
-          score = 85;
-          feedback = '很接近了！其中有幾個音要再加強，再聽一次 🔊 然後再試一次！';
-        } else if (ratio >= 0.4) {
-          score = 70;
-          feedback = `唸對了大約 ${Math.round(ratio * 100)}%，先聽發音再大聲模仿一次吧！`;
-        } else {
-          score = 50;
-          feedback = '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！';
-        }
-      }
+      const hit = targetWords.filter(tw => spokenWords.includes(tw)).length;
+      const ratio = Math.max(targetWords.length ? hit / targetWords.length : 0, contained ? 0.85 : 0);
+      if (ratio >= 0.99) { score = 100; feedback = '完美！整句都唸對了，太棒了！🌟'; }
+      else if (ratio >= 0.85) { score = 90; feedback = '很棒！就是它了，多練幾次可以更流暢！'; }
+      else if (ratio >= 0.6) { score = 80; feedback = `整句唸對了約 ${Math.round(ratio * 100)}%，有幾個字要再加強！`; }
+      else if (ratio >= 0.4) { score = 65; feedback = `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！`; }
+      else { score = 45; feedback = '這句差滿多的喔！先按 🔊 朗讀聽清楚，一句一句慢慢跟著念！'; }
     }
 
     const resultObj = { score: score, feedback: feedback, transcript: transcript };
@@ -886,15 +924,20 @@
     
     saveProgress();
     showScoreResult(resultObj);
-    pendingSend = true;
-    triggerAutoSend();
+    // 注意：不在此處送出（每字一送會洗板），成績統一在「看總成績」時送出一條
   }
 
   function showScoreResult(res) {
     const panel = document.getElementById('scorePanel');
     panel.className = 'score-panel show ' + (res.score >= 80 ? 'good' : res.score >= 60 ? 'warn' : 'bad');
     document.getElementById('scoreBig').innerText = res.score + '分';
-    document.getElementById('feedbackText').innerText = res.feedback + (res.transcript ? ` (聽到: ${res.transcript})` : '');
+    // 評語只要一句，聽到的內容最多顯示 60 字，避免整句重複塞滿畫面
+    let heard = '';
+    if (res.transcript) {
+      const t = res.transcript.trim();
+      heard = '（聽到: ' + (t.length > 60 ? t.slice(0, 60) + '…' : t) + '）';
+    }
+    document.getElementById('feedbackText').innerText = res.feedback + heard;
     document.getElementById('retryHint').style.display = 'block';
     if (res.score >= 80) celebrate();
   }
@@ -921,34 +964,43 @@
     setTimeout(() => { box.classList.remove('show'); box.innerHTML = ''; }, 3600);
   }
 
-  let sendTimeout = null;
-  function triggerAutoSend() {
-    if (sendTimeout) clearTimeout(sendTimeout);
-    sendTimeout = setTimeout(() => {
-      if (pendingSend) sendToServer();
-    }, 2000);
-  }
-
+  // 同一學生同樣進度只送一次（避免重複開「我的成績」就洗板）
+  let lastSentSnapshot = '';
   function sendToServer() {
     if (!scriptURL || scriptURL.includes('YOUR_GAS')) return;
+    if (!studentName) return;
     const wordEntries = Object.entries(recordedScores);
     const sentenceEntries = Object.entries(sentenceScores);
-    const allEntries = [...wordEntries.map(([word, result]) => ({ mode: 'word', word, score: Number(result.score) || 0, transcript: result.transcript || '' })),
-                        ...sentenceEntries.map(([word, result]) => ({ mode: 'sentence', word, score: Number(result.score) || 0, transcript: result.transcript || '' }))];
-    const wordCount = wordEntries.length;
-    const sentenceCount = sentenceEntries.length;
-    const avgScore = allEntries.length ? Math.round(allEntries.reduce((sum, item) => sum + item.score, 0) / allEntries.length) : 0;
-    const weakWords = allEntries.filter(item => item.score < 80).map(item => item.word).join(', ');
+    if (!wordEntries.length && !sentenceEntries.length) return;
+
+    const statOf = (entries) => {
+      const scores = entries.map(([, r]) => Number(r.score) || 0);
+      return {
+        count: entries.length,
+        avg: scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0,
+        weak: entries.filter(([, r]) => (Number(r.score) || 0) < 80).map(([w]) => w).join(', ')
+      };
+    };
+    const wordStats = statOf(wordEntries);
+    const sentenceStats = statOf(sentenceEntries);
+
+    // 防重複送出的快照（姓名 + 兩種模式各自的完成數與平均）
+    const snapshot = [studentName, wordStats.count, wordStats.avg, sentenceStats.count, sentenceStats.avg].join('|');
+    const isSame = snapshot === lastSentSnapshot;
+    lastSentSnapshot = snapshot;
+    if (isSame) return;
 
     const payload = {
       type: 'recording',
       topic: TOPIC,
       studentName: studentName,
-      wordCount: wordCount,
-      sentenceCount: sentenceCount,
-      avgScore: avgScore,
-      weakWords: weakWords,
-      scores: JSON.stringify(allEntries)
+      // 單字一條、句子一條，由 GAS 分兩行寫入
+      wordCount: wordStats.count,
+      wordAvg: wordStats.avg,
+      wordWeak: wordStats.weak,
+      sentenceCount: sentenceStats.count,
+      sentenceAvg: sentenceStats.avg,
+      sentenceWeak: sentenceStats.weak
     };
 
     // With mode:'no-cors', application/json is not a CORS-safelisted Content-Type.
@@ -958,13 +1010,7 @@
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
-    }).then(() => {
-      // no-cors responses are opaque; this means the browser sent the request, not that the Sheet confirmed a write.
-      pendingSend = false;
-    }).catch(err => {
-      console.error('上傳失敗', err);
-      pendingSend = true;
-    });
+    }).catch(err => console.error('上傳失敗', err));
   }
 
   function showSummary() {
@@ -1008,7 +1054,7 @@
       if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
       quizIndex = 0;
       quizScore = 0;
-      quizList = [...cardsData].sort(() => Math.random() - 0.5).slice(0, 10);
+      quizList = [...cardsData].sort(() => Math.random() - 0.5); // 全部 18 個單字都考，不截斷
       document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
       switchPage('quiz-page');
       loadQuizQuestion();
@@ -1023,6 +1069,9 @@
     const current = quizList[quizIndex];
     document.getElementById('quizProgress').innerText = `第 ${quizIndex + 1} / ${quizList.length} 題`;
     document.getElementById('quizWord').innerText = current.word;
+
+    // 進到題目就自動發音，學生不用自己按按鈕（按鈕仍保留可用於重聽）
+    speak(current.word);
     
     let options = [current.zh];
     while (options.length < 4) {
