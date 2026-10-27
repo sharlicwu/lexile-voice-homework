@@ -906,6 +906,8 @@
       window._lastTranscript = '';
       window._interim = '';
       window._finalAlts = [];
+      // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
+      await waitTtsDone(2500);
       try {
         if (!audioStream) {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -977,8 +979,19 @@
     candidates = [...new Set(candidates.map(clean).filter(Boolean))];
 
     const scoreWordMode = (s) => {
-      const sim = Math.max(strSimilarity(s, target), (s.includes(target) || target.includes(s)) ? 0.85 : 0);
-      if (sim === 1) return { score: 100, feedback: '完美！發音標準又清楚，真的太棒了！🌟' };
+      const sim = strSimilarity(s, target);
+      const contains = s.includes(target) || target.includes(s);
+      const targetTokens = target.split(/\s+/).filter(Boolean);
+      const spokenTokens = s.split(/\s+/).filter(Boolean);
+      // 嚴格滿分：連字數、內容都一模一樣（不能有旁邊多餘的雜音字）
+      const sameTokens = spokenTokens.length === targetTokens.length &&
+        targetTokens.every(t => spokenTokens.includes(t));
+      if (sameTokens) return { score: 100, feedback: '完美！發音標準又清楚，真的太棒了！🌟' };
+      if (contains) {
+        // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音，不能給高分
+        if (spokenTokens.length <= targetTokens.length + 1) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
+        return { score: 75, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
+      }
       if (sim >= 0.9) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
       if (sim >= 0.6) return { score: 80, feedback: '接近了！尾音再多聽 🔊 練準一點吧！' };
       if (sim >= 0.4) return { score: 65, feedback: '有一半像喔！先聽 🔊 發音，注意開頭的音再試一次！' };
@@ -1005,7 +1018,19 @@
       feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！';
     } else {
       const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
-      best = candidates.map(judge).sort((a, b) => b.score - a.score)[0];
+      const primaryClean = clean(transcript || window._interim);
+      const judged = candidates.map(c => Object.assign(judge(c), { cand: c }));
+      judged.sort((a, b) => b.score - a.score);
+      best = judged[0];
+      // 回音防呆：最高分的候選剛好「完全等於目標」，但學生自己嘴裡說的（主辨識）卻完全不像
+      // → 多半是示範朗讀被麥克風錄進去，不能給 90/100，降為 85 並提示重錄
+      if (best.cand !== primaryClean && primaryClean) {
+        const primaryJudge = judged.find(j => j.cand === primaryClean);
+        if (primaryJudge && primaryJudge.score <= 65 && best.score >= 90) {
+          best.score = 85;
+          best.feedback = '偵測到可能有示範朗讀的回音喔！等安靜的時候只唸這個字，再試一次！';
+        }
+      }
       score = best.score;
       feedback = best.feedback;
     }
