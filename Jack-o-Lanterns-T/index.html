@@ -759,12 +759,19 @@
     window.ttsDonePromise = p;
     window.speechSynthesis.speak(utterance);
   }
-  // 等發音播完（最多等 maxMs 毫秒），避免梵音被麥克風錄進去造成假高分
+  // 等發音播完（輪詢 speechSynthesis 實際狀態，最多等 maxMs 毫秒），
+  // 確保示範朗讀「真的播完了」，避免示範聲音被麥克風錄進去造成假高分
   function waitTtsDone(maxMs) {
-    return Promise.race([
-      window.ttsDonePromise || Promise.resolve(),
-      new Promise(r => setTimeout(r, maxMs || 3500))
-    ]);
+    const synth = window.speechSynthesis;
+    const deadline = Date.now() + (maxMs || 3500);
+    return new Promise(resolve => {
+      const tick = () => {
+        const busy = synth && (synth.speaking || synth.pending);
+        if (!busy || Date.now() >= deadline) resolve();
+        else setTimeout(tick, 120);
+      };
+      tick();
+    });
   }
 
   function speakMain() {
@@ -809,8 +816,15 @@
         }
       }
       if (finalText.trim()) {
-        window._lastTranscript = (window._lastTranscript + ' ' + finalText).trim();
-        window._finalAlts = (window._finalAlts || []).concat(finalAlts);
+        const ft = finalText.trim();
+        // 顯示用：只保留最後一個最終結果（避免同一句重複出現 5~6 次）
+        window._lastSingleFinal = ft;
+        // 累加前先去重：同一結果不重複累加
+        if (ft !== window._lastAppendedFinal && !(window._lastTranscript || '').includes(ft)) {
+          window._lastTranscript = (window._lastTranscript + ' ' + ft).trim();
+          window._finalAlts = (window._finalAlts || []).concat(finalAlts);
+        }
+        window._lastAppendedFinal = ft;
         window._interim = ''; // 最終結果已到，暫時結果就用不著了
       }
     };
@@ -884,6 +898,8 @@
     window._lastTranscript = '';
     window._interim = '';
     window._finalAlts = [];
+    window._lastSingleFinal = '';
+    window._lastAppendedFinal = '';
     audioChunks = [];
     try {
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -965,6 +981,8 @@
       window._lastTranscript = '';
       window._interim = '';
       window._finalAlts = [];
+      window._lastSingleFinal = '';
+      window._lastAppendedFinal = '';
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(2500);
       const doneNote = document.getElementById('recDoneNote');
@@ -1055,9 +1073,9 @@
         targetTokens.every(t => spokenTokens.includes(t));
       if (sameTokens) return { score: 100, feedback: '完美！發音標準又清楚，真的太棒了！🌟' };
       if (contains) {
-        // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音，不能給高分
-        if (spokenTokens.length <= targetTokens.length + 1) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
-        return { score: 75, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
+        // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音混進來，不能給高分
+        if (spokenTokens.length <= targetTokens.length + 1) return { score: 80, feedback: '聽到的內容不太對喔！等安靜時只唸這一個字，再試一次！' };
+        return { score: 65, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
       }
       if (sim >= 0.9) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
       if (sim >= 0.6) return { score: 80, feedback: '接近了！尾音再多聽 🔊 練準一點吧！' };
@@ -1090,19 +1108,20 @@
       judged.sort((a, b) => b.score - a.score);
       best = judged[0];
       // 回音防呆：最高分的候選剛好「完全等於目標」，但學生自己嘴裡說的（主辨識）卻完全不像
-      // → 多半是示範朗讀被麥克風錄進去，不能給 90/100，降為 85 並提示重錄
+      // → 多半是示範朗讀被麥克風錄進去，不能給高分，降為 80 並請學生重錄
       if (best.cand !== primaryClean && primaryClean) {
         const primaryJudge = judged.find(j => j.cand === primaryClean);
         if (primaryJudge && primaryJudge.score <= 65 && best.score >= 90) {
-          best.score = 85;
-          best.feedback = '偵測到可能有示範朗讀的回音喔！等安靜的時候只唸這個字，再試一次！';
+          best.score = 80;
+          best.feedback = '聽到的內容不太對喔！等安靜時只唸這個字，再試一次！';
         }
       }
       score = best.score;
       feedback = best.feedback;
     }
 
-    const resultObj = { score: score, feedback: feedback, transcript: transcript || (best ? best.transcript : '') };
+    // 評語顯示：「真正聽到的內容」優先用最後一筆最終結果，避免同一字重複洗版
+    const resultObj = { score: score, feedback: feedback, transcript: window._lastSingleFinal || transcript || (best ? best.transcript : '') };
     
     if (recMode === 'word') {
       recordedScores[cardsData[currentIndex].word] = resultObj;
