@@ -272,6 +272,10 @@
         <button class="mode-tab" id="tabWord">🔤 單字</button>
         <button class="mode-tab" id="tabSentence">📖 例句</button>
       </div>
+      <div id="weakReviewBar" style="display:none; background:#fff3cd; border:3px dashed #fdcb6e; padding:10px 14px; border-radius:16px; font-weight:800; color:#b7950b; text-align:center; margin:0 0 10px 0; font-size:15px;">
+        <div id="weakReviewText">🚨 有低於 60 分的單字，請重新錄音！</div>
+        <button id="btnSkipWeak" style="margin-top:8px; background:linear-gradient(135deg,#a29bfe,#6c5ce7); color:#fff; border:none; padding:8px 18px; border-radius:18px; font-size:13px; font-weight:800; cursor:pointer;">📊 直接看總成績</button>
+      </div>
       <div class="word-section" id="wordSection">
         <div class="icon-large" id="cardIcon">🎃</div>
         <div class="word-title" id="cardWord">Word</div>
@@ -442,7 +446,7 @@
     document.getElementById('btnHomeListen').addEventListener('click', goHome);
     document.getElementById('btnStartFromListen').addEventListener('click', () => startPractice(recMode));
 
-    document.getElementById('btnShowSummary').addEventListener('click', showSummary);
+    document.getElementById('btnShowSummary').addEventListener('click', () => showSummary());
     document.getElementById('btnHomeCard').addEventListener('click', goHome);
     document.getElementById('tabWord').addEventListener('click', () => switchRecMode('word'));
     document.getElementById('tabSentence').addEventListener('click', () => switchRecMode('sentence'));
@@ -460,6 +464,9 @@
     document.getElementById('speakQuizBtn').addEventListener('click', speakQuizWord);
     document.getElementById('btnRestartQuiz').addEventListener('click', startQuiz);
     document.getElementById('btnHomeQuizResult').addEventListener('click', goHome);
+
+    const skipWeakBtn = document.getElementById('btnSkipWeak');
+    if (skipWeakBtn) skipWeakBtn.addEventListener('click', () => showSummary(true));
   });
 
   function checkNameAndRun(callback) {
@@ -569,8 +576,71 @@
     recMode = mode;
     updateModeTabs();
     document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
+    // 一般切換模式時收起重錄提示列（由重錄流程自行決定何時顯示）
+    hideWeakReviewBar();
     const idx = firstIncomplete(recMode);
     loadCard(idx === -1 ? 0 : idx, true);
+  }
+
+  // ---------- 低於 60 分重錄流程 ----------
+  function firstWeakIndex(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    for (let i = 0; i < cardsData.length; i++) {
+      const s = scores[cardsData[i].word];
+      if (s && (Number(s.score) || 0) < 60) return i;
+    }
+    return -1;
+  }
+  function countWeak(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    return cardsData.filter(item => { const s = scores[item.word]; return s && (Number(s.score) || 0) < 60; }).length;
+  }
+  function hideWeakReviewBar() {
+    const bar = document.getElementById('weakReviewBar');
+    if (bar) bar.style.display = 'none';
+  }
+  function showWeakReviewBar() {
+    const bar = document.getElementById('weakReviewBar');
+    if (bar) bar.style.display = 'block';
+  }
+  function updateWeakReviewBarText() {
+    const cnt = countWeak(recMode);
+    if (cnt <= 0) { hideWeakReviewBar(); return; }
+    const text = document.getElementById('weakReviewText');
+    if (text) text.innerText = `🚨 還有 ${cnt} 個低於 60 分的${recMode === 'word' ? '單字' : '句子'}，請重新錄音達 60 分以上！`;
+  }
+
+  // 進總成績前檢查：若有低於 60 分的（先查當前模式、再查另一種模式），就跳去重錄而不是看總成績
+  function reviewWeakBeforeSummary() {
+    let idx = firstWeakIndex(recMode);
+    let mode = recMode;
+    if (idx === -1) {
+      mode = (recMode === 'word') ? 'sentence' : 'word';
+      idx = firstWeakIndex(mode);
+    }
+    if (idx === -1) return false;
+
+    if (mode !== recMode) {
+      recMode = mode;
+      updateModeTabs();
+      document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
+    }
+    loadCard(idx, true);
+    showWeakReviewBar();
+    updateWeakReviewBarText();
+    toast(`🚨 有低於 60 分的${mode === 'word' ? '單字' : '句子'}，請重新錄音！現在從「${cardsData[idx].word}」開始`);
+    speak(mainText(cardsData[idx]));
+    return true;
+  }
+
+  // 浮動提示
+  function toast(msg) {
+    const el = document.createElement('div');
+    el.innerText = msg;
+    el.style.cssText = 'position:fixed; top:18px; left:50%; transform:translateX(-50%); z-index:10000; background:#2d3436; color:#fff; padding:12px 22px; border-radius:20px; font-size:15px; font-weight:800; box-shadow:0 8px 20px rgba(0,0,0,0.3); max-width:92vw; text-align:center;';
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; }, 3200);
+    setTimeout(() => { el.remove(); }, 3800);
   }
 
   function loadCard(idx, resetUI) {
@@ -928,6 +998,22 @@
     
     saveProgress();
     showScoreResult(resultObj);
+    // 重錄流程：過關（≥60）就更新提示、並自動跳到下一個低分字繼續重錄
+    const bar = document.getElementById('weakReviewBar');
+    const wasWeakReviewing = bar && bar.style.display === 'block';
+    if (wasWeakReviewing && score >= 60) {
+      const nextIdx = firstWeakIndex(recMode);
+      if (nextIdx === -1) {
+        hideWeakReviewBar();
+        toast('🎊 低於 60 分的都過關了！按「看總成績 📊」查看總成績');
+      } else {
+        toast(`👍 這個過關了！下一個要重錄：「${cardsData[nextIdx].word}」`);
+        loadCard(nextIdx, true);
+        showWeakReviewBar();
+        updateWeakReviewBarText();
+        speak(mainText(cardsData[nextIdx]));
+      }
+    }
     // 注意：不在此處送出（每字一送會洗板），成績統一在「看總成績」時送出一條
   }
 
@@ -1017,8 +1103,11 @@
     }).catch(err => console.error('上傳失敗', err));
   }
 
-  function showSummary() {
+  function showSummary(force) {
     saveProgress();
+    // 進總成績前，先檢查是否有低於 60 分的單字/句子要重錄（除非按了「直接看總成績」）
+    if (!force && reviewWeakBeforeSummary()) return;
+    hideWeakReviewBar();
     document.getElementById('summaryStudentName').innerText = `學生：${studentName}`;
     
     const wordTable = document.getElementById('wordSummaryTable');
