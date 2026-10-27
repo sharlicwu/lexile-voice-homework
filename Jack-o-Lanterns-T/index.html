@@ -485,6 +485,8 @@
   function goHome() {
     if (autoPractice) stopAutoPractice('已返回首頁');
     saveProgress();
+    // 保險：離開前把還沒送出的成績送出去（有防重複快照，不會洗板）
+    try { sendToServer(); } catch (e) {}
     switchPage('welcome-page');
     document.getElementById('keyboardHint').style.display = 'none';
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
@@ -629,7 +631,7 @@
     showWeakReviewBar();
     updateWeakReviewBarText();
     toast(`🚨 有低於 60 分的${mode === 'word' ? '單字' : '句子'}，請重新錄音！現在從「${cardsData[idx].word}」開始`);
-    speak(mainText(cardsData[idx]));
+    // loadCard 最後會自動朗讀當前內容，這裡不要再 speak，以免同一字被連讀兩次
     return true;
   }
 
@@ -737,15 +739,21 @@
       // 只累加「最終確認」的辨識結果；中間的暫時結果只存最新一筆，
       // 這樣評語不會把整句話重複出現十來次
       let finalText = '';
+      const finalAlts = [];
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           finalText += event.results[i][0].transcript + ' ';
+          // 同時收下所有備選結果（Google 常把字聽對但在第2、3個備選裡）
+          for (let j = 0; j < event.results[i].length; j++) {
+            finalAlts.push(event.results[i][j].transcript);
+          }
         } else {
           window._interim = event.results[i][0].transcript; // 覆蓋舊的暫時結果
         }
       }
       if (finalText.trim()) {
         window._lastTranscript = (window._lastTranscript + ' ' + finalText).trim();
+        window._finalAlts = (window._finalAlts || []).concat(finalAlts);
         window._interim = ''; // 最終結果已到，暫時結果就用不著了
       }
     };
@@ -816,6 +824,7 @@
     speechStarted = false;
     window._lastTranscript = '';
     window._interim = '';
+    window._finalAlts = [];
     audioChunks = [];
     try {
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -893,9 +902,10 @@
     const btn = document.getElementById('recordBtn');
     if (!mediaRecorder || mediaRecorder.state === 'inactive') {
       audioChunks = [];
-      // 每次開始錄音先清空辨識文字（最終版＋暫時版都清），避免上一題/上一次的內容被帶進評分
+      // 每次開始錄音先清空辨識文字（最終版＋暫時版＋備選版都清），避免上一題/上一次的內容被帶進評分
       window._lastTranscript = '';
       window._interim = '';
+      window._finalAlts = [];
       try {
         if (!audioStream) {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -957,38 +967,50 @@
 
   function evaluateSpeech(transcript) {
     const target = mainText(cardsData[currentIndex]).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
-    // 最終確認的文字；若來不及出現最終結果，用最後一筆暫時結果當答案
-    const spoken = ((transcript || window._interim || '') + '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+    const clean = (s) => ((s || '') + '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+
+    // 候選答案：主辨識文字＋暫時結果＋所有備選結果，取「得分最高」的那個來評
+    let candidates = [];
+    if (transcript) candidates.push(transcript);
+    if (window._interim) candidates.push(window._interim);
+    if (window._finalAlts) candidates = candidates.concat(window._finalAlts);
+    candidates = [...new Set(candidates.map(clean).filter(Boolean))];
+
+    const scoreWordMode = (s) => {
+      const sim = Math.max(strSimilarity(s, target), (s.includes(target) || target.includes(s)) ? 0.85 : 0);
+      if (sim === 1) return { score: 100, feedback: '完美！發音標準又清楚，真的太棒了！🌟' };
+      if (sim >= 0.9) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
+      if (sim >= 0.6) return { score: 80, feedback: '接近了！尾音再多聽 🔊 練準一點吧！' };
+      if (sim >= 0.4) return { score: 65, feedback: '有一半像喔！先聽 🔊 發音，注意開頭的音再試一次！' };
+      return { score: 45, feedback: '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！' };
+    };
+    const scoreSentenceMode = (s) => {
+      const targetWords = target.split(/\s+/).filter(Boolean);
+      const spokenWords = s.split(/\s+/).filter(Boolean);
+      const contained = s.includes(target) || target.includes(s);
+      const hit = targetWords.filter(tw => spokenWords.includes(tw)).length;
+      const ratio = Math.max(targetWords.length ? hit / targetWords.length : 0, contained ? 0.85 : 0);
+      if (ratio >= 0.99) return { score: 100, feedback: '完美！整句都唸對了，太棒了！🌟' };
+      if (ratio >= 0.85) return { score: 90, feedback: '很棒！就是它了，多練幾次可以更流暢！' };
+      if (ratio >= 0.6) return { score: 80, feedback: `整句唸對了約 ${Math.round(ratio * 100)}%，有幾個字要再加強！` };
+      if (ratio >= 0.4) return { score: 65, feedback: `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！` };
+      return { score: 45, feedback: '這句差滿多的喔！先按 🔊 朗讀聽清楚，一句一句慢慢跟著念！' };
+    };
 
     let score = 0;
     let feedback = '';
-
-    if (!spoken) {
+    let best = null;
+    if (!candidates.length) {
       score = 40;
       feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！';
-    } else if (recMode === 'word') {
-      // 單字模式：相似度比對（完全相同才滿分；唸錯會真的扣分）
-      const sim = Math.max(strSimilarity(spoken, target), (spoken.includes(target) || target.includes(spoken)) ? 0.85 : 0);
-      if (sim === 1) { score = 100; feedback = '完美！發音標準又清楚，真的太棒了！🌟'; }
-      else if (sim >= 0.9) { score = 90; feedback = '很棒！就是它了，多唸幾次可以更流暢！'; }
-      else if (sim >= 0.6) { score = 80; feedback = '接近了！尾音再多聽 🔊 練準一點吧！'; }
-      else if (sim >= 0.4) { score = 65; feedback = '有一半像喔！先聽 🔊 發音，注意開頭的音再試一次！'; }
-      else { score = 45; feedback = '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！'; }
     } else {
-      // 句子模式：比對「你有唸到的字數佔多少比例」
-      const targetWords = target.split(/\s+/).filter(Boolean);
-      const spokenWords = spoken.split(/\s+/).filter(Boolean);
-      const contained = spoken.includes(target) || target.includes(spoken);
-      const hit = targetWords.filter(tw => spokenWords.includes(tw)).length;
-      const ratio = Math.max(targetWords.length ? hit / targetWords.length : 0, contained ? 0.85 : 0);
-      if (ratio >= 0.99) { score = 100; feedback = '完美！整句都唸對了，太棒了！🌟'; }
-      else if (ratio >= 0.85) { score = 90; feedback = '很棒！就是它了，多練幾次可以更流暢！'; }
-      else if (ratio >= 0.6) { score = 80; feedback = `整句唸對了約 ${Math.round(ratio * 100)}%，有幾個字要再加強！`; }
-      else if (ratio >= 0.4) { score = 65; feedback = `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！`; }
-      else { score = 45; feedback = '這句差滿多的喔！先按 🔊 朗讀聽清楚，一句一句慢慢跟著念！'; }
+      const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
+      best = candidates.map(judge).sort((a, b) => b.score - a.score)[0];
+      score = best.score;
+      feedback = best.feedback;
     }
 
-    const resultObj = { score: score, feedback: feedback, transcript: transcript };
+    const resultObj = { score: score, feedback: feedback, transcript: transcript || (best ? best.transcript : '') };
     
     if (recMode === 'word') {
       recordedScores[cardsData[currentIndex].word] = resultObj;
@@ -999,19 +1021,24 @@
     saveProgress();
     showScoreResult(resultObj);
     // 重錄流程：過關（≥60）就更新提示、並自動跳到下一個低分字繼續重錄
+    // 注意：loadCard 最後會自動朗讀當前內容，這裡呼叫過 loadCard 就不要再 speak，以免讀兩次
     const bar = document.getElementById('weakReviewBar');
     const wasWeakReviewing = bar && bar.style.display === 'block';
-    if (wasWeakReviewing && score >= 60) {
-      const nextIdx = firstWeakIndex(recMode);
-      if (nextIdx === -1) {
-        hideWeakReviewBar();
-        toast('🎊 低於 60 分的都過關了！按「看總成績 📊」查看總成績');
+    if (wasWeakReviewing) {
+      if (score >= 60) {
+        const nextIdx = firstWeakIndex(recMode);
+        if (nextIdx === -1) {
+          hideWeakReviewBar();
+          toast('🎊 低於 60 分的都過關了！按「看總成績 📊」查看總成績');
+        } else {
+          toast(`👍 這個過關了！下一個要重錄：「${cardsData[nextIdx].word}」`);
+          loadCard(nextIdx, true);
+          showWeakReviewBar();
+          updateWeakReviewBarText();
+        }
       } else {
-        toast(`👍 這個過關了！下一個要重錄：「${cardsData[nextIdx].word}」`);
-        loadCard(nextIdx, true);
-        showWeakReviewBar();
-        updateWeakReviewBarText();
-        speak(mainText(cardsData[nextIdx]));
+        // 還沒過關：留在這個字，直接再按錄音鍵重試即可；也可以按提示列的「直接看總成績」離開
+        toast('音 這次還沒到 60 分，再按 🎤 試一次！或按提示列「📊 直接看總成績」離開');
       }
     }
     // 注意：不在此處送出（每字一送會洗板），成績統一在「看總成績」時送出一條
