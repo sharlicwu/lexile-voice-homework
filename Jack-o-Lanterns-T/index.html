@@ -522,7 +522,7 @@
     }
   }
 
-  function progressKey() { return 'jolT_progress_' + encodeURIComponent(studentName); }
+  function progressKey() { return 'jolT2_progress_' + encodeURIComponent(studentName); }
   function saveProgress() {
     if (!studentName) return;
     try {
@@ -603,12 +603,10 @@
       document.getElementById('retryHint').style.display = 'none';
     }
     
-    const scores = wordMode ? recordedScores : sentenceScores;
-    if (scores[item.word]) {
-      showScoreResult(scores[item.word]);
-    } else {
-      document.getElementById('scorePanel').classList.remove('show');
-    }
+    // 換卡時先收起舊的分數面板：分數只在「這一次錄完」才顯示，不會殘留舊資料
+    document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
+    document.getElementById('playbackBox').style.display = 'none';
+    document.getElementById('retryHint').style.display = 'none';
     
     speak(mainText(item));
   }
@@ -678,6 +676,7 @@
       }
       if (finalText.trim()) {
         window._lastTranscript = (window._lastTranscript + ' ' + finalText).trim();
+        window._interim = ''; // 最終結果已到，暫時結果就用不著了
       }
     };
     recognition.onerror = (event) => console.log('Speech recognition:', event.error);
@@ -824,8 +823,9 @@
     const btn = document.getElementById('recordBtn');
     if (!mediaRecorder || mediaRecorder.state === 'inactive') {
       audioChunks = [];
-      // 每次開始錄音先清空辨識文字，避免上一題/上一次的內容被帶進評分
+      // 每次開始錄音先清空辨識文字（最終版＋暫時版都清），避免上一題/上一次的內容被帶進評分
       window._lastTranscript = '';
+      window._interim = '';
       try {
         if (!audioStream) {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -841,7 +841,6 @@
         document.getElementById('recStatus').classList.remove('active');
         btn.classList.remove('recording');
         btn.innerText = '🎤 單一錄音（可播放自己的聲音）';
-        isRecognizing = false;
 
         currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp3' });
         const audioUrl = URL.createObjectURL(currentAudioBlob);
@@ -849,7 +848,12 @@
         audioPreview.src = audioUrl;
         document.getElementById('playbackBox').style.display = 'block';
 
-        evaluateSpeech(window._lastTranscript || '');
+        // 停止辨識後、先等最終確認結果送達（最多 700ms）再評分，
+        // 避免搶跑還沒錄就出分數、也避免評到上一題的舊單字
+        if (recognition && isRecognizing) { try { recognition.stop(); } catch (e) {} }
+        isRecognizing = false;
+        await new Promise(r => setTimeout(r, 700));
+        evaluateSpeech(window._lastTranscript || window._interim || '');
       };
 
       mediaRecorder.start();
