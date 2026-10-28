@@ -1119,12 +1119,11 @@
         if (spokenTokens.length <= targetTokens.length + 1) return { score: 80, feedback: '聽到的內容不太對喔！等安靜時只唸這一個字，再試一次！' };
         return { score: 65, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
       }
-      if (sim >= 0.9) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
-      if (sim >= 0.8) return { score: 85, feedback: '接近了！再注意開頭的音就更完美！' };
-      if (sim >= 0.65) return { score: 80, feedback: '已經很像了！再聽 🔊 練一次！' };
-      if (sim >= 0.55) return { score: 75, feedback: '有大部分像喔！再跟著念一次！' };
+      if (sim >= 0.88) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
+      if (sim >= 0.75) return { score: 85, feedback: '接近了！再注意開頭的音就更完美！' };
+      if (sim >= 0.6) return { score: 75, feedback: '有大部分像喔！再跟著念一次！' };
       if (sim >= 0.45) return { score: 70, feedback: '已經有一半像了！先聽 🔊 發音，再跟著念！' };
-      if (sim >= 0.3) return { score: 65, feedback: '有一點像喔！再試一次一定更好！' };
+      if (sim >= 0.25) return { score: 65, feedback: '有一點像喔！再試一次一定更好！' };
       return { score: 45, feedback: '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！' };
     };
     const scoreSentenceMode = (s) => {
