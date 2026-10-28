@@ -227,8 +227,8 @@
   <!-- Welcome -->
   <div class="page active" id="welcome-page">
     <div class="welcome-screen">
-      <div class="cute-title">🎃 Jack-o'-Lanterns</div>
-      <div class="subtitle">藍思中級語音作業 · 單字卡朗讀與 AI 評分系統</div>
+      <div class="cute-title">🍽️ The food we eat</div>
+      <div class="subtitle">藍思基礎班語音作業 · 單字卡朗讀與 AI 評分</div>
       <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
       <div class="btn-group">
         <button class="cute-btn btn-listen" id="btnListen">🎧 聽力練習</button>
@@ -391,7 +391,7 @@
     { word: "french fries", zh: "薯條", icon: "🍟", enSent: "<span class='highlight-blue'>French fries</span> come from potatoes.", zhSent: "薯條來自馬鈴薯。", rawSent: "French fries come from potatoes." },
     { word: "made from", zh: "用…製成", icon: "🛠️", enSent: "Bagels are <span class='highlight-blue'>made from</span> wheat.", zhSent: "貝果是用小麥製成的。", rawSent: "Bagels are made from wheat." },
     { word: "root", zh: "根", icon: "🥕", enSent: "A <span class='highlight-blue'>root</span> is under the ground.", zhSent: "根在地底下。", rawSent: "A root is under the ground." },
-    { word: "stem", zh: "莹", icon: "🍃", enSent: "A <span class='highlight-blue'>stem</span> grows above the <span class='highlight-blue'>ground</span>.", zhSent: "莹在地面上長出來。", rawSent: "A stem grows above the ground." }
+    { word: "stem", zh: "根莹", icon: "🍃", enSent: "A <span class='highlight-blue'>stem</span> grows above the <span class='highlight-blue'>ground</span>.", zhSent: "莹在地面上長出來。", rawSent: "A stem grows above the ground." }
   ];;
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
@@ -1018,6 +1018,7 @@
       window._finalAlts = [];
       window._lastSingleFinal = '';
       window._lastAppendedFinal = '';
+      window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(2500);
       const doneNote = document.getElementById('recDoneNote');
@@ -1159,6 +1160,17 @@
       }
       score = best.score;
       feedback = best.feedback;
+    }
+
+    // 容錯：同一字重錄多次仍低分（常見如 root / stem 辨音不靈），第 3 次自動給 65 分讓學生能過關
+    if (score < 60) {
+      window._retryCount = (window._retryCount || 0) + 1;
+      if (window._retryCount >= 2) {
+        score = 65;
+        feedback = '這次給你鼓勵分數！再試一次一定能更好！💪';
+      }
+    } else {
+      window._retryCount = 0;
     }
 
     // 評語顯示：「真正聽到的內容」優先用最後一筆最終結果，避免同一字重複洗版
