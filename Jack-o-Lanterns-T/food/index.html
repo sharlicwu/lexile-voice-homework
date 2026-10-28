@@ -1166,8 +1166,8 @@
     if (score < 60) {
       window._retryCount = (window._retryCount || 0) + 1;
       if (window._retryCount >= 2) {
-        score = 65;
-        feedback = '這次給你鼓勵分數！再試一次一定能更好！💪';
+        score = Math.max(65, score); // 第 3 次重錄：最低 65，若辨音較好則給更高
+        feedback = score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪';
       }
     } else {
       window._retryCount = 0;
