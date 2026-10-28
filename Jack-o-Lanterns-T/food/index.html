@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food 語音作業 (基礎班)</title>
+<title>Jack-o'-Lanterns 語音作業 (中級)</title>
 <style>
   :root {
     --pumpkin: #ff9f43;
@@ -378,31 +378,27 @@
 
 <script>
   const cardsData = [
-    { word: "plants", zh: "門廊；走廊", icon: "🏠", enSent: "They are a festive sight in windows and on doorsteps and <span class='highlight-blue'>porches</span>.", zhSent: "它們是窗戶、門口和門廊上喜慶的景象。", rawSent: "They are a festive sight in windows and on doorsteps and porches." },
-    { word: "stingy", zh: "吝嗇的", icon: "💰", enSent: "A common one from the nineteenth century tells of a man named <span class='highlight-blue'>Stingy</span> Jack.", zhSent: "十九世紀的一個常見故事講的是「吝嗇傑克」這個男人。", rawSent: "A common one from the nineteenth century tells of a man named Stingy Jack." },
-    { word: "mischievous", zh: "愛惡作劇的", icon: "😈", enSent: "Stingy Jack was so <span class='highlight-blue'>mischievous</span> that when he died, he was cursed to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，他死後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
-    { word: "cursed", zh: "被詛咒的", icon: "👻", enSent: "Stingy Jack was so mischievous that when he died, he was <span class='highlight-blue'>cursed</span> to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，他死後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
-    { word: "throughout", zh: "遍及；在…期間", icon: "🌍", enSent: "People <span class='highlight-blue'>throughout</span> Europe lit bonfires.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
-    { word: "bonfires", zh: "篝火", icon: "🔥", enSent: "People throughout Europe lit <span class='highlight-blue'>bonfires</span>.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
-    { word: "immigrated", zh: "移民；遷居", icon: "✈️", enSent: "When Irish, English, and Scottish people <span class='highlight-blue'>immigrated</span> to the United States, they brought the jack-o'-lantern tradition with them.", zhSent: "愛爾蘭、英格蘭和蘇格蘭人移民到美國時，把燈籠南瓜的傳統帶了過去。", rawSent: "When Irish, English, and Scottish people immigrated to the United States, they brought the jack-o'-lantern tradition with them." },
-    { word: "pumpkin patches", zh: "南瓜田", icon: "🎃", enSent: "Every autumn, people visit <span class='highlight-blue'>pumpkin patches</span>, farms, and vegetable stands to pick just the right pumpkin.", zhSent: "每年秋天，人們去南瓜田、農場和蔬菜攤挑選剛好的南瓜。", rawSent: "Every autumn, people visit pumpkin patches, farms, and vegetable stands to pick just the right pumpkin." },
-    { word: "firm", zh: "堅實的；結實的", icon: "💪", enSent: "Pumpkins that are <span class='highlight-blue'>firm</span>, smooth, and free of marks work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
-    { word: "free of marks", zh: "沒有瑕疵的", icon: "✨", enSent: "Pumpkins that are firm, smooth, and <span class='highlight-blue'>free of marks</span> work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
-    { word: "tilts", zh: "傾斜；斜著", icon: "➡️", enSent: "If it <span class='highlight-blue'>tilts</span> to one side, the light inside may not stay in place.", zhSent: "如果它斜向一側，裡面的燈光可能就不會固定。", rawSent: "If it tilts to one side, the light inside may not stay in place." },
-    { word: "art patterns", zh: "藝術圖樣", icon: "🎨", enSent: "Some people buy carving kits with tools and <span class='highlight-blue'>art patterns</span> to make a great jack-o'-lantern.", zhSent: "有些人買附有工具和藝術圖樣的雕刻組，做出精美的燈籠南瓜。", rawSent: "Some people buy carving kits with tools and art patterns to make a great jack-o'-lantern." },
-    { word: "feature", zh: "具有；特色", icon: "⭐", enSent: "Some of the pumpkins <span class='highlight-blue'>feature</span> traditional scary faces.", zhSent: "有些南瓜上有傳統的恐怖面孔。", rawSent: "Some of the pumpkins feature traditional scary faces." },
-    { word: "characters", zh: "角色；人物", icon: "👥", enSent: "Creative carvers have also fashioned cartoon <span class='highlight-blue'>characters</span>, animals, and other detailed designs.", zhSent: "有創意的雕刻者也雕出卡通角色、動物和其他細緻的設計。", rawSent: "Creative carvers have also fashioned cartoon characters, animals, and other detailed designs." },
-    { word: "planetarium", zh: "天象館", icon: "🪐", enSent: "The event even has a pumpkin <span class='highlight-blue'>planetarium</span>!", zhSent: "這個活動甚至還有南瓜天象館呢！", rawSent: "The event even has a pumpkin planetarium!" },
-    { word: "boasted", zh: "誇耀；吹噓", icon: "🗣️", enSent: "The town <span class='highlight-blue'>boasted</span> a whopping thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
-    { word: "whopping", zh: "驚人的；巨大的", icon: "📈", enSent: "The town boasted a <span class='highlight-blue'>whopping</span> thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
-    { word: "stencils", zh: "模板；刻字板", icon: "🧩", enSent: "They can also use <span class='highlight-blue'>stencils</span> or even paint.", zhSent: "他們也可以使用模板，甚至直接塗色。", rawSent: "They can also use stencils or even paint." }
-  ];
+    { word: "plants", zh: "植物", icon: "🌱", enSent: "Many kinds of <span class='highlight-blue'>food</span> grow from <span class='highlight-blue'>plants</span>.", zhSent: "很多種食物從植物長出來。", rawSent: "Many kinds of food grow from plants." },
+    { word: "many kinds of food", zh: "很多種食物", icon: "🍽️", enSent: "There are <span class='highlight-blue'>many kinds of food</span> in the world.", zhSent: "世界上有很多種食物。", rawSent: "There are many kinds of food in the world." },
+    { word: "grow", zh: "生長", icon: "🌿", enSent: "Wheat can <span class='highlight-blue'>grow</span> from <span class='highlight-blue'>seeds</span>.", zhSent: "小麥可以從種子長出來。", rawSent: "Wheat can grow from seeds." },
+    { word: "meat", zh: "肉", icon: "🍖", enSent: "<span class='highlight-blue'>Meat</span> comes from animals, not <span class='highlight-blue'>plants</span>.", zhSent: "肉來自動物，不是植物。", rawSent: "Meat comes from animals, not plants." },
+    { word: "bagels", zh: "貝果", icon: "🥯", enSent: "<span class='highlight-blue'>Bagels</span> are <span class='highlight-blue'>made from</span> wheat.", zhSent: "貝果是用小麥做的。", rawSent: "Bagels are made from wheat." },
+    { word: "come from", zh: "來自", icon: "📦", enSent: "Wheat <span class='highlight-blue'>comes from</span> the <span class='highlight-blue'>ground</span>.", zhSent: "小麥來自土地。", rawSent: "Wheat comes from the ground." },
+    { word: "ground", zh: "地面／土壤", icon: "⛰️", enSent: "A <span class='highlight-blue'>root</span> is under the <span class='highlight-blue'>ground</span>.", zhSent: "根在地面下。", rawSent: "A root is under the ground." },
+    { word: "wheat", zh: "小麥", icon: "🌾", enSent: "<span class='highlight-blue'>Wheat</span> <span class='highlight-blue'>seeds</span> grow into plants.", zhSent: "小麥種子長成植物。", rawSent: "Wheat seeds grow into plants." },
+    { word: "seeds", zh: "種子", icon: "🌱", enSent: "<span class='highlight-blue'>Seeds</span> can grow into <span class='highlight-blue'>plants</span>.", zhSent: "種子可以長成植物。", rawSent: "Seeds can grow into plants." },
+    { word: "omelets", zh: "蛋捲", icon: "🍳", enSent: "<span class='highlight-blue'>Omelets</span> are <span class='highlight-blue'>made from</span> eggs.", zhSent: "蛋捲是用蛋做的。", rawSent: "Omelets are made from eggs." },
+    { word: "french fries", zh: "薯條", icon: "🍟", enSent: "<span class='highlight-blue'>French fries</span> come from potatoes.", zhSent: "薯條來自馬鈴薯。", rawSent: "French fries come from potatoes." },
+    { word: "made from", zh: "用…製成", icon: "🛠️", enSent: "Bagels are <span class='highlight-blue'>made from</span> wheat.", zhSent: "貝果是用小麥製成的。", rawSent: "Bagels are made from wheat." },
+    { word: "root", zh: "根", icon: "🥕", enSent: "A <span class='highlight-blue'>root</span> is under the ground.", zhSent: "根在地底下。", rawSent: "A root is under the ground." },
+    { word: "stem", zh: "莹", icon: "🍃", enSent: "A <span class='highlight-blue'>stem</span> grows above the <span class='highlight-blue'>ground</span>.", zhSent: "莹在地面上長出來。", rawSent: "A stem grows above the ground." }
+  ];;
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
-  const TOPIC = 'jack-o-lanterns-food';
+  const TOPIC = 'Jack-o-Lanterns-T';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'VFOOD1';
+  const APP_VER = 'V1028D';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
