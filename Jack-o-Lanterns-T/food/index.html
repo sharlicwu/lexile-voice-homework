@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food 語音作業 (基礎班)</title>
+<style>
+  :root {
+    --pumpkin: #ff9f43;
+    --pumpkin-dark: #e67e22;
+    --mint: #a8e6cf;
+    --pink: #ffd3b6;
+    --cream: #fdfffc;
+    --text-dark: #2d3436;
+    --success: #00b894;
+    --warning: #fdcb6e;
+    --danger: #e17055;
+    --bg-gradient: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #a8e6cf 100%);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Microsoft JhengHei", Arial, sans-serif;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 20px 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .presentation-container {
+    width: 94%;
+    max-width: 820px;
+    background: var(--cream);
+    border-radius: 30px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    padding: 30px 24px;
+    position: relative;
+    min-height: 640px;
+    overflow: hidden;
+  }
+  .page { display: none; flex-direction: column; justify-content: space-between; flex-grow: 1; animation: cutePop 0.4s ease; }
+  .page.active { display: flex; }
+  @keyframes cutePop {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px dashed #fdcb6e; padding-bottom: 12px; margin-bottom: 18px; gap: 8px; flex-wrap: wrap; }
+  .student-tag {
+    font-size: 15px; font-weight: 800; color: var(--pumpkin-dark);
+    background: #fff3cd; padding: 6px 14px; border-radius: 20px; border: 2px solid var(--pumpkin);
+  }
+  .page-indicator { font-size: 14px; font-weight: 600; color: #636e72; }
+  .nav-btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .home-btn {
+    background-color: #fff; color: var(--pumpkin-dark); border: 2px solid var(--pumpkin);
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
+  }
+  .home-btn:hover { background: var(--pumpkin); color: #fff; }
+  .summary-link-btn {
+    background: linear-gradient(135deg, #a29bfe, #6c5ce7); color: #fff; border: none;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
+  }
+  .summary-link-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(108,92,231,0.35); }
+  /* Welcome */
+  .welcome-screen { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 520px; gap: 16px; }
+  .cute-title { font-size: 40px; font-weight: 900; color: var(--pumpkin-dark); line-height: 1.1; text-shadow: 3px 3px 0 #fab1a0; margin: 0; }
+  .subtitle { font-size: 17px; color: #636e72; font-weight: 600; }
+  .welcome-input { padding: 14px 22px; font-size: 19px; border: 3px dashed #fab1a0; border-radius: 16px; outline: none; text-align: center; width: 280px; transition: 0.2s; background: #fff; }
+  .welcome-input:focus { border-color: var(--pumpkin-dark); box-shadow: 0 0 0 4px rgba(255,159,67,0.2); }
+  .btn-group { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+  .cute-btn {
+    padding: 14px 26px; font-size: 16px; font-weight: 800; border-radius: 16px; cursor: pointer;
+    border: none; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .cute-btn:active { transform: scale(0.95); }
+  .btn-listen { background: linear-gradient(135deg, #81ecec, #55efc4); }
+  .btn-record { background: linear-gradient(135deg, #fab1a0, #ff7675); }
+  .btn-sentence { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+  .btn-quiz { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+  .cute-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+  /* Listen grid */
+  .listen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 10px; margin-top: 10px; }
+  .listen-card {
+    background: #fff; border: 3px solid #ffeaa7; border-radius: 18px; padding: 14px; text-align: center; cursor: pointer;
+    transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .listen-card:hover { border-color: var(--pumpkin); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .listen-icon { font-size: 30px; margin-bottom: 6px; display: block; }
+  .listen-word { font-size: 15px; font-weight: 800; color: var(--pumpkin-dark); margin-bottom: 3px; }
+  .listen-zh { font-size: 12px; color: #636e72; }
+  /* Mode tabs */
+  .mode-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
+  .mode-tab {
+    padding: 10px 26px; border-radius: 22px; border: 2px solid #fab1a0; background: #fff;
+    color: var(--pumpkin-dark); font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;
+  }
+  .mode-tab.active-word { background: linear-gradient(135deg, #fab1a0, #ff7675); color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(255,118,117,0.35); }
+  .mode-tab.active-sentence { background: linear-gradient(135deg, #74b9ff, #0984e3); color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(9,132,227,0.35); }
+  /* Card page */
+  .word-section { text-align: center; margin: 4px 0 12px 0; }
+  .icon-large { font-size: 56px; margin-bottom: 6px; display: inline-block; filter: drop-shadow(3px 3px 2px rgba(0,0,0,0.15)); }
+  .word-title { font-size: 34px; font-weight: 900; color: var(--pumpkin-dark); margin: 4px 0; }
+  .word-translation { font-size: 20px; color: #636e72; font-weight: 600; margin-bottom: 12px; }
+  .word-audio-btn { background: var(--pumpkin); color: #fff; border: none; padding: 10px 24px; border-radius: 22px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.3); }
+  .word-audio-btn.blue { background: #0984e3; box-shadow: 0 4px 10px rgba(9,132,227,0.3); }
+  .word-audio-btn:hover { filter: brightness(0.92); }
+  .sentence-container {
+    background: linear-gradient(135deg, #fff5ba, #ffeaa7); border-left: 8px solid var(--pumpkin);
+    border-radius: 16px; padding: 14px 20px; margin-top: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  }
+  .sentence-container.blue { background: linear-gradient(135deg, #dff9fb, #cdeeff); border-left-color: #0984e3; }
+  .sentence-en { font-size: 16px; line-height: 1.5; color: #2d3436; font-weight: 600; margin-bottom: 6px; }
+  .sentence-zh { font-size: 14px; color: #636e72; line-height: 1.4; }
+  .highlight-blue { color: #0984e3; font-weight: 800; text-decoration: underline; }
+  /* Record box */
+  .record-box {
+    margin-top: 14px; background: #fff; border: 3px solid #81ecec; border-radius: 22px; padding: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  }
+  .rec-status { font-size: 14px; font-weight: 800; color: var(--danger); display: none; animation: pulse 1s infinite; }
+  .rec-status.active { display: inline-block; }
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  .record-action-btn {
+    background: var(--success); color: #fff; border: none; padding: 12px 30px; border-radius: 22px;
+    font-size: 16px; font-weight: 800; cursor: pointer; width: 100%; max-width: 320px; box-shadow: 0 4px 12px rgba(0,184,148,0.3);
+  }
+  .record-action-btn.blue { background: #0984e3; box-shadow: 0 4px 12px rgba(9,132,227,0.3); }
+  .record-action-btn.recording { background: var(--danger); animation: recordPulse 1.5s infinite; }
+  @keyframes recordPulse { 0% { box-shadow: 0 0 0 0 rgba(225,112,85,0.7); } 70% { box-shadow: 0 0 0 12px rgba(225,112,85,0); } 100% { box-shadow: 0 0 0 0 rgba(225,112,85,0); } }
+  /* Score */
+  .score-panel { margin-top: 12px; width: 100%; border-radius: 18px; padding: 16px; text-align: center; display: none; }
+  .score-panel.show { display: block; animation: scorePop 0.5s ease; }
+  @keyframes scorePop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .score-panel.good { background: #e9fcf0; border: 3px solid var(--success); color: #1e7e56; }
+  .score-panel.warn { background: #fdf6e3; border: 3px solid var(--warning); color: #b7950b; }
+  .score-panel.bad { background: #fdecea; border: 3px solid var(--danger); color: #c23616; }
+  .score-big { font-size: 44px; font-weight: 900; margin: 4px 0; }
+  .score-label { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .feedback-text { font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.4; }
+  #retryHint { font-size: 13px; color: #636e72; margin-top: 6px; display: none; }
+  /* Playback */
+  .playback-box { margin-top: 10px; width: 100%; text-align: center; }
+  .playback-label { font-size: 13px; color: #636e72; font-weight: 700; margin-bottom: 2px; }
+  audio { width: 100%; max-width: 320px; margin-top: 4px; }
+  /* Celebration >=80: flowers & stars */
+  .celebration { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 9999; overflow: hidden; }
+  .celebration.show { display: block; }
+  .celebration span {
+    position: absolute; font-size: 32px; opacity: 0;
+    animation: celebFloat 2.4s ease-out forwards;
+  }
+  @keyframes celebFloat {
+    0% { opacity: 0; transform: translateY(55vh) scale(0.5) rotate(0deg); }
+    15% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-50vh) scale(1.5) rotate(340deg); }
+  }
+  .celebration-banner {
+    position: absolute; top: 24%; left: 50%; transform: translateX(-50%) scale(0.6);
+    font-size: 22px; font-weight: 900; color: var(--success);
+    background: rgba(255,255,255,0.95); border: 4px solid var(--success);
+    padding: 12px 28px; border-radius: 26px; white-space: nowrap;
+    box-shadow: 0 8px 25px rgba(0,184,148,0.35);
+    animation: bannerPop 2.2s ease-out forwards;
+  }
+  @keyframes bannerPop {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+    20% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+    35% { transform: translateX(-50%) scale(1); }
+    85% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) scale(0.9); }
+  }
+  .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 3px dashed #fdcb6e; }
+  .nav-btn {
+    background: var(--pumpkin); color: #fff; border: none; padding: 10px 20px; border-radius: 14px;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .nav-btn.prev { background: #74b9ff; }
+  .nav-btn:disabled { background: #dfe6e9; color: #b2bec3; cursor: not-allowed; }
+  .nav-btn:hover:not(:disabled) { filter: brightness(0.92); }
+  /* Summary */
+  .summary-wrap { display: flex; flex-direction: column; gap: 14px; }
+  .summary-sec-title { font-size: 18px; font-weight: 900; color: var(--pumpkin-dark); margin-bottom: 6px; }
+  .summary-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+  .summary-table td { background: #f7fbff; padding: 8px 12px; font-size: 14px; }
+  .summary-table tr td:first-child { border-radius: 14px 0 0 14px; font-weight: 800; color: #2d3436; width: 34%; }
+  .summary-table tr td:last-child { border-radius: 0 14px 14px 0; text-align: right; font-weight: 900; }
+  .chip { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 14px; font-weight: 900; }
+  .chip.good { background: #e9fcf0; color: #1e7e56; }
+  .chip.none { background: #f1f2f6; color: #b2bec3; }
+  .done-tag { font-size: 13px; font-weight: 800; color: var(--success); background: #e9fcf0; padding: 5px 12px; border-radius: 16px; }
+  .clear-progress-btn {
+    margin-top: 4px; background: #fff; color: #636e72; border: 2px solid #dfe6e9;
+    padding: 6px 16px; border-radius: 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .clear-progress-btn:hover { border-color: var(--danger); color: var(--danger); }
+  /* Quiz */
+  .quiz-container { display: flex; flex-direction: column; gap: 18px; align-items: center; margin-top: 18px; }
+  .quiz-word { font-size: 38px; font-weight: 900; color: var(--pumpkin-dark); }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 520px; }
+  .option-btn {
+    background: #fff; border: 3px solid #ffeaa7; padding: 18px; border-radius: 16px; font-size: 17px; font-weight: 700;
+    cursor: pointer; transition: 0.2s; color: var(--text-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .option-btn:hover { border-color: var(--pumpkin); background: #ffeaa7; transform: translateY(-2px); }
+  .option-btn.wrong { border-color: var(--danger) !important; background: #fdecea !important; color: var(--danger) !important; font-weight: 800; }
+  .option-btn.correct { border-color: var(--success) !important; background: #e9fcf0 !important; color: #1e7e56 !important; font-weight: 800; }
+  .quiz-result { text-align: center; display: none; flex-direction: column; gap: 16px; align-items: center; }
+  .result-emoji { font-size: 64px; }
+  .score-display { font-size: 44px; font-weight: 900; color: var(--pumpkin-dark); }
+  .keyboard-hint { font-size: 13px; color: #636e72; text-align: center; margin-top: 10px; font-weight: 600; }
+  @media (max-width: 480px) {
+    .presentation-container { width: 98%; padding: 20px 14px; min-height: auto; }
+    .cute-title { font-size: 30px; }
+    .word-title { font-size: 26px; }
+    .options-grid { grid-template-columns: 1fr; }
+    .listen-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .mode-tab { padding: 8px 18px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="presentation-container">
+  <!-- Welcome -->
+  <div class="page active" id="welcome-page">
+    <div class="welcome-screen">
+      <div class="cute-title">🎃 Jack-o'-Lanterns</div>
+      <div class="subtitle">藍思中級語音作業 · 單字卡朗讀與 AI 評分系統</div>
+      <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
+      <div class="btn-group">
+        <button class="cute-btn btn-listen" id="btnListen">🎧 聽力練習</button>
+        <button class="cute-btn btn-record" id="btnRecordWord">🔤 單字錄音</button>
+        <button class="cute-btn btn-sentence" id="btnRecordSentence">📖 句子錄音</button>
+        <button class="cute-btn btn-quiz" id="btnQuiz">📝 單字測驗</button>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:4px;">
+        <button class="clear-progress-btn" id="btnRestart">🔁 重頭全部練習</button>
+        <button class="clear-progress-btn" id="btnClearProgress">🗑 清除這個姓名的上次進度</button>
+      </div>
+      <div id="verTag" style="font-size:12px; color:#b2bec3; font-weight:700; margin-top:6px;">🧩 版本檢查中…</div>
+    </div>
+  </div>
+
+  <!-- Listening -->
+  <div class="page" id="listening-page">
+    <div>
+      <div class="top-bar">
+        <span class="student-tag">🎧 藍思中級 - 聽力自主練習區</span>
+        <div class="nav-btn-group"><button class="home-btn" id="btnHomeListen">🏠 首頁</button></div>
+      </div>
+      <div class="listen-grid" id="listenGrid"></div>
+    </div>
+    <div class="welcome-screen" style="min-height:auto;">
+      <button class="cute-btn btn-record" id="btnStartFromListen">準備好了，開始錄音 🎤</button>
+    </div>
+  </div>
+
+  <!-- Recording Card -->
+  <div class="page" id="card-page">
+    <div>
+      <div class="top-bar">
+        <span class="student-tag" id="displayStudentName">學生：--</span>
+        <span class="done-tag" id="doneTag"></span>
+        <div class="nav-btn-group">
+          <button class="summary-link-btn" id="btnShowSummary">📊 我的成績</button>
+          <button class="home-btn" id="btnHomeCard">🏠 首頁</button>
+        </div>
+      </div>
+      <div class="mode-tabs">
+        <button class="mode-tab" id="tabWord">🔤 單字</button>
+        <button class="mode-tab" id="tabSentence">📖 例句</button>
+      </div>
+      <div id="weakReviewBar" style="display:none; background:#fff3cd; border:3px dashed #fdcb6e; padding:10px 14px; border-radius:16px; font-weight:800; color:#b7950b; text-align:center; margin:0 0 10px 0; font-size:15px;">
+        <div id="weakReviewText">💪 快過關了！以下單字再練習一次，到 60 分就可以過關喔！</div>
+      </div>
+      <!-- 補錄說明彈窗 -->
+      <div id="weakModal" style="display:none; position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(45,52,54,0.5); z-index:10001; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:26px; padding:26px 22px; max-width:88vw; width:380px; text-align:center; box-shadow:0 15px 45px rgba(0,0,0,0.3);">
+          <div style="font-size:40px;">💪</div>
+          <div style="font-size:19px; font-weight:900; color:#e67e22; margin:6px 0 10px 0;">快過關了！再練一次會更棒～</div>
+          <div id="weakModalList" style="display:flex; flex-direction:column; gap:6px; max-height:34vh; overflow-y:auto; margin-bottom:10px;"></div>
+          <div style="font-size:14px; color:#636e72; font-weight:700; margin-bottom:14px;">這幾個單字到 <b>60 分</b>就過關囉！準備好了就按下面的按鈕 🎤</div>
+          <button id="btnWeakStart" style="width:100%; background:linear-gradient(135deg,#fab1a0,#ff7675); color:#fff; border:none; padding:12px 20px; border-radius:18px; font-size:16px; font-weight:800; cursor:pointer;">🎤 準備好了，開始補錄</button>
+        </div>
+      </div>
+      <div class="word-section" id="wordSection">
+        <div class="icon-large" id="cardIcon">🎃</div>
+        <div class="word-title" id="cardWord">Word</div>
+        <div class="word-translation" id="cardTranslation">中文</div>
+        <button class="word-audio-btn" id="speakMainBtn">🔊 朗讀</button>
+      </div>
+      <div class="sentence-container" id="refSentenceBox">
+        <div class="sentence-en" id="refSentenceEn">...</div>
+        <div class="sentence-zh" id="refSentenceZh">...</div>
+      </div>
+      <div class="record-box">
+        <div class="rec-status" id="recStatus">🔴 正在錄音中...</div>
+        <div id="recDoneNote" style="display:none; background:#e9fcf0; border:3px solid #00b894; color:#1e7e56; padding:10px 14px; border-radius:16px; font-weight:800; font-size:15px; text-align:center; width:100%; max-width:420px;"></div>
+        <button class="record-action-btn" id="autoPracticeBtn" style="background:#6c5ce7;">▶️ 開始自動練習（整組只按一次）</button>
+        <div id="autoPracticeStatus" style="font-size:13px;color:#6c5ce7;font-weight:700;text-align:center;">開啟後會自動錄音、偵測停頓、評分並換下一題</div>
+        <button class="record-action-btn" id="recordBtn">🎤 單一錄音（可播放自己的聲音）</button>
+        <div class="score-panel" id="scorePanel">
+          <div class="score-label" id="scoreLabel">AI 評分</div>
+          <div class="score-big" id="scoreBig">--</div>
+          <div class="feedback-text" id="feedbackText">--</div>
+        </div>
+        <div id="retryHint">💡 可以再按錄音鍵重錄喔！</div>
+        <div class="playback-box" id="playbackBox" style="display:none;">
+          <div class="playback-label">🎧 聽聽看自己的錄音</div>
+          <audio id="audioPreview" controls></audio>
+        </div>
+        <div class="celebration" id="celebration"></div>
+      </div>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn prev" id="prevBtn">← 上一個</button>
+      <span style="font-weight: 800; color: #636e72;" id="pageCounter">1 / 18</span>
+      <button class="nav-btn" id="nextBtn">下一個 →</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="page" id="summary-page">
+    <div class="summary-wrap">
+      <div class="top-bar">
+        <span class="student-tag" id="summaryStudentName">學生：--</span>
+        <div class="nav-btn-group">
+          <button class="home-btn" id="btnHomeSummary">🏠 首頁</button>
+        </div>
+      </div>
+      <div>
+        <div class="summary-sec-title">🔤 單字錄音成績</div>
+        <table class="summary-table" id="wordSummaryTable"></table>
+      </div>
+      <div>
+        <div class="summary-sec-title">📖 句子錄音成績</div>
+        <table class="summary-table" id="sentenceSummaryTable"></table>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button class="cute-btn btn-record" id="btnRestartSummary">🔄 回去重頭再錄</button>
+        <button class="cute-btn btn-quiz" id="btnQuizSummary">📝 去做單字測驗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div class="page" id="quiz-page">
+    <div>
+      <div class="top-bar">
+        <span class="student-tag" id="quizStudentName">學生：--</span>
+        <div class="nav-btn-group">
+          <span class="page-indicator" id="quizProgress">第 1 / 18 題</span>
+          <button class="home-btn" id="btnHomeQuiz">🏠 首頁</button>
+        </div>
+      </div>
+      <div class="quiz-container" id="quizBox">
+        <div class="quiz-word" id="quizWord">Word</div>
+        <button class="btn-subtle" id="speakQuizBtn" style="background:#fff;color:var(--pumpkin-dark);border:2px solid var(--pumpkin);padding:9px 22px;border-radius:22px;font-size:14px;font-weight:700;cursor:pointer;">🔊 發音</button>
+        <div class="options-grid" id="optionsGrid"></div>
+      </div>
+      <div class="quiz-result" id="quizResultBox">
+        <div class="result-emoji">🏆</div>
+        <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">測驗完成！</h2>
+        <div class="score-display" id="finalScore">答對 0 / 18 題</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top: 10px;">
+          <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再測驗一次</button>
+          <button class="cute-btn btn-listen" id="btnHomeQuizResult">🏠 回首頁</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="keyboard-hint" id="keyboardHint">💡 自動練習：按一次「開始自動練習」，系統會偵測停頓、自動停止、評分並換下一題</div>
+
+<script>
+  const cardsData = [
+    { word: "plants", zh: "門廊；走廊", icon: "🏠", enSent: "They are a festive sight in windows and on doorsteps and <span class='highlight-blue'>porches</span>.", zhSent: "它們是窗戶、門口和門廊上喜慶的景象。", rawSent: "They are a festive sight in windows and on doorsteps and porches." },
+    { word: "stingy", zh: "吝嗇的", icon: "💰", enSent: "A common one from the nineteenth century tells of a man named <span class='highlight-blue'>Stingy</span> Jack.", zhSent: "十九世紀的一個常見故事講的是「吝嗇傑克」這個男人。", rawSent: "A common one from the nineteenth century tells of a man named Stingy Jack." },
+    { word: "mischievous", zh: "愛惡作劇的", icon: "😈", enSent: "Stingy Jack was so <span class='highlight-blue'>mischievous</span> that when he died, he was cursed to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，他死後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
+    { word: "cursed", zh: "被詛咒的", icon: "👻", enSent: "Stingy Jack was so mischievous that when he died, he was <span class='highlight-blue'>cursed</span> to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，他死後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
+    { word: "throughout", zh: "遍及；在…期間", icon: "🌍", enSent: "People <span class='highlight-blue'>throughout</span> Europe lit bonfires.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
+    { word: "bonfires", zh: "篝火", icon: "🔥", enSent: "People throughout Europe lit <span class='highlight-blue'>bonfires</span>.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
+    { word: "immigrated", zh: "移民；遷居", icon: "✈️", enSent: "When Irish, English, and Scottish people <span class='highlight-blue'>immigrated</span> to the United States, they brought the jack-o'-lantern tradition with them.", zhSent: "愛爾蘭、英格蘭和蘇格蘭人移民到美國時，把燈籠南瓜的傳統帶了過去。", rawSent: "When Irish, English, and Scottish people immigrated to the United States, they brought the jack-o'-lantern tradition with them." },
+    { word: "pumpkin patches", zh: "南瓜田", icon: "🎃", enSent: "Every autumn, people visit <span class='highlight-blue'>pumpkin patches</span>, farms, and vegetable stands to pick just the right pumpkin.", zhSent: "每年秋天，人們去南瓜田、農場和蔬菜攤挑選剛好的南瓜。", rawSent: "Every autumn, people visit pumpkin patches, farms, and vegetable stands to pick just the right pumpkin." },
+    { word: "firm", zh: "堅實的；結實的", icon: "💪", enSent: "Pumpkins that are <span class='highlight-blue'>firm</span>, smooth, and free of marks work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
+    { word: "free of marks", zh: "沒有瑕疵的", icon: "✨", enSent: "Pumpkins that are firm, smooth, and <span class='highlight-blue'>free of marks</span> work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
+    { word: "tilts", zh: "傾斜；斜著", icon: "➡️", enSent: "If it <span class='highlight-blue'>tilts</span> to one side, the light inside may not stay in place.", zhSent: "如果它斜向一側，裡面的燈光可能就不會固定。", rawSent: "If it tilts to one side, the light inside may not stay in place." },
+    { word: "art patterns", zh: "藝術圖樣", icon: "🎨", enSent: "Some people buy carving kits with tools and <span class='highlight-blue'>art patterns</span> to make a great jack-o'-lantern.", zhSent: "有些人買附有工具和藝術圖樣的雕刻組，做出精美的燈籠南瓜。", rawSent: "Some people buy carving kits with tools and art patterns to make a great jack-o'-lantern." },
+    { word: "feature", zh: "具有；特色", icon: "⭐", enSent: "Some of the pumpkins <span class='highlight-blue'>feature</span> traditional scary faces.", zhSent: "有些南瓜上有傳統的恐怖面孔。", rawSent: "Some of the pumpkins feature traditional scary faces." },
+    { word: "characters", zh: "角色；人物", icon: "👥", enSent: "Creative carvers have also fashioned cartoon <span class='highlight-blue'>characters</span>, animals, and other detailed designs.", zhSent: "有創意的雕刻者也雕出卡通角色、動物和其他細緻的設計。", rawSent: "Creative carvers have also fashioned cartoon characters, animals, and other detailed designs." },
+    { word: "planetarium", zh: "天象館", icon: "🪐", enSent: "The event even has a pumpkin <span class='highlight-blue'>planetarium</span>!", zhSent: "這個活動甚至還有南瓜天象館呢！", rawSent: "The event even has a pumpkin planetarium!" },
+    { word: "boasted", zh: "誇耀；吹噓", icon: "🗣️", enSent: "The town <span class='highlight-blue'>boasted</span> a whopping thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
+    { word: "whopping", zh: "驚人的；巨大的", icon: "📈", enSent: "The town boasted a <span class='highlight-blue'>whopping</span> thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
+    { word: "stencils", zh: "模板；刻字板", icon: "🧩", enSent: "They can also use <span class='highlight-blue'>stencils</span> or even paint.", zhSent: "他們也可以使用模板，甚至直接塗色。", rawSent: "They can also use stencils or even paint." }
+  ];
+
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
+  const TOPIC = 'jack-o-lanterns-food';
+
+  // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
+  const APP_VER = 'VFOOD1';
+  document.addEventListener('DOMContentLoaded', () => {
+    const tag = document.getElementById('verTag');
+    if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
+  });
+  // 載入後自查：線上檔案若不含本版本標記 → 提示並自動更新一次（每次開啟分頁最多一次，避免循環）
+  setTimeout(() => {
+    fetch(location.pathname + '?cb=' + Date.now(), { cache: 'no-store' })
+      .then(r => r.text())
+      .then(t => {
+        if (!t.includes('APP_VER = \'' + APP_VER + '\'') && !sessionStorage.getItem('verReloadedOnce')) {
+          sessionStorage.setItem('verReloadedOnce', '1');
+          alert('偵測到手機/瀏覽器快取了舊版頁面，按確定自動更新到最新版！');
+          location.reload();
+        }
+      })
+      .catch(() => {});
+  }, 2500);
+
+  let currentIndex = 0;
+  let studentName = "";
+  let recMode = 'word';
+  let recordedScores = {};
+  let sentenceScores = {};
+  let quizIndex = 0, quizScore = 0, quizList = [], canAnswer = true;
+
+  let audioStream = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recognition = null;
+  let isRecognizing = false;
+  let currentAudioBlob = null;
+  let autoPractice = false;
+  let silenceTimer = null;
+  let speechStarted = false;
+  let autoAdvanceTimer = null;
+  let audioContext = null;
+  let analyserFrame = null;
+  window._lastTranscript = '';
+
+  const REC_MIME = (function () {
+    try {
+      if (!window.MediaRecorder) return '';
+      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac', 'audio/ogg;codecs=opus'];
+      for (const t of candidates) {
+        if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+      }
+    } catch (e) {}
+    return '';
+  })();
+
+  // ---------- 初始化：直接在進站時預先請求一次麥克風權限 ----------
+  async function initMicrophone() {
+    if (!audioStream) {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        console.log('尚未取得麥克風授權或裝置不支援');
+      }
+    }
+  }
+
+  // ---------- Navigation & Event Binding ----------
+  document.addEventListener('DOMContentLoaded', () => {
+
+    document.getElementById('btnListen').addEventListener('click', () => checkNameAndRun(openListeningMode));
+    document.getElementById('btnRecordWord').addEventListener('click', () => checkNameAndRun(() => startPractice('word')));
+    document.getElementById('btnRecordSentence').addEventListener('click', () => checkNameAndRun(() => startPractice('sentence')));
+    document.getElementById('btnQuiz').addEventListener('click', () => checkNameAndRun(startQuiz));
+    document.getElementById('btnRestart').addEventListener('click', () => checkNameAndRun(() => startPractice('word', true)));
+    document.getElementById('btnClearProgress').addEventListener('click', clearProgress);
+
+    document.getElementById('btnHomeListen').addEventListener('click', goHome);
+    document.getElementById('btnStartFromListen').addEventListener('click', () => startPractice(recMode));
+
+    document.getElementById('btnShowSummary').addEventListener('click', () => showSummary());
+    document.getElementById('btnHomeCard').addEventListener('click', goHome);
+    document.getElementById('tabWord').addEventListener('click', () => switchRecMode('word'));
+    document.getElementById('tabSentence').addEventListener('click', () => switchRecMode('sentence'));
+    document.getElementById('speakMainBtn').addEventListener('click', speakMain);
+    document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+    document.getElementById('autoPracticeBtn').addEventListener('click', toggleAutoPractice);
+    document.getElementById('prevBtn').addEventListener('click', () => changeCard(-1));
+    document.getElementById('nextBtn').addEventListener('click', () => changeCard(1));
+
+    document.getElementById('btnHomeSummary').addEventListener('click', goHome);
+    document.getElementById('btnRestartSummary').addEventListener('click', () => startPractice(recMode, true));
+    document.getElementById('btnQuizSummary').addEventListener('click', startQuiz);
+
+    document.getElementById('btnHomeQuiz').addEventListener('click', goHome);
+    document.getElementById('speakQuizBtn').addEventListener('click', speakQuizWord);
+    document.getElementById('btnRestartQuiz').addEventListener('click', startQuiz);
+    document.getElementById('btnHomeQuizResult').addEventListener('click', goHome);
+
+    const skipWeakBtn = document.getElementById('btnSkipWeak');
+    if (skipWeakBtn) skipWeakBtn.addEventListener('click', () => showSummary(true));
+  });
+
+  function checkNameAndRun(callback) {
+    const nameInput = document.getElementById('studentNameInput').value.trim();
+    if (!nameInput && !studentName) { alert('請先輸入學生姓名喔！'); return; }
+    if (nameInput) studentName = nameInput;
+    callback();
+  }
+
+  function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.getElementById('keyboardHint').style.display = (pageId === 'card-page') ? 'block' : 'none';
+  }
+
+  function goHome() {
+    if (autoPractice) stopAutoPractice('已返回首頁');
+    saveProgress();
+    // 保險：離開前把還沒送出的成績送出去（有防重複快照，不會洗板）
+    try { sendToServer(); } catch (e) {}
+    // 收起補錄彈窗與提示列，還原自動練習鍵
+    const modal = document.getElementById('weakModal');
+    if (modal) modal.style.display = 'none';
+    hideWeakReviewBar();
+    switchPage('welcome-page');
+    document.getElementById('keyboardHint').style.display = 'none';
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    if (recognition && isRecognizing) recognition.stop();
+  }
+
+  function openListeningMode() {
+    const grid = document.getElementById('listenGrid');
+    grid.innerHTML = '';
+    cardsData.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'listen-card';
+      card.innerHTML = `<div class="listen-icon">${item.icon}</div><div class="listen-word">${item.word}</div><div class="listen-zh">${item.zh}</div>`;
+      card.addEventListener('click', () => speak(item.word));
+      grid.appendChild(card);
+    });
+    switchPage('listening-page');
+  }
+
+  async function startPractice(mode, forceRestart) {
+    if (mode) recMode = mode;
+    setupRecognition();
+    // 進入練習時收起補錄彈窗（重錄流程會自行判斷何時再跳出）
+    const modal = document.getElementById('weakModal');
+    if (modal) modal.style.display = 'none';
+    switchPage('card-page');
+    document.getElementById('displayStudentName').innerText = `學生：${studentName}`;
+    document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
+    updateModeTabs();
+    if (forceRestart) {
+      loadCard(0, true);
+      return;
+    }
+    const restored = loadProgress();
+    if (restored) {
+      const idx = firstIncomplete(recMode);
+      if (idx === -1) {
+        showSummary();
+      } else {
+        loadCard(idx, false);
+        speak(mainText(cardsData[currentIndex]));
+      }
+    } else {
+      loadCard(0, true);
+    }
+  }
+
+  function progressKey() { return 'jolT2_progress_' + encodeURIComponent(studentName); }
+  function saveProgress() {
+    if (!studentName) return;
+    try {
+      localStorage.setItem(progressKey(), JSON.stringify({
+        recorded: recordedScores, sentence: sentenceScores, ts: Date.now()
+      }));
+    } catch (e) {}
+  }
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(progressKey());
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      const hasR = p && p.recorded && Object.keys(p.recorded).length;
+      const hasS = p && p.sentence && Object.keys(p.sentence).length;
+      if (!hasR && !hasS) return null;
+      recordedScores = Object.assign({}, p.recorded || {});
+      sentenceScores = Object.assign({}, p.sentence || {});
+      return true;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function firstIncomplete(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    for (let i = 0; i < cardsData.length; i++) {
+      if (!scores[cardsData[i].word]) return i;
+    }
+    return -1;
+  }
+
+  function doneCount(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    return Object.keys(scores).length;
+  }
+
+  function updateModeTabs() {
+    document.getElementById('tabWord').className = 'mode-tab ' + (recMode === 'word' ? 'active-word' : '');
+    document.getElementById('tabSentence').className = 'mode-tab ' + (recMode === 'sentence' ? 'active-sentence' : '');
+  }
+
+  function switchRecMode(mode) {
+    recMode = mode;
+    updateModeTabs();
+    document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
+    // 一般切換模式時收起重錄提示列（由重錄流程自行決定何時顯示）
+    hideWeakReviewBar();
+    const idx = firstIncomplete(recMode);
+    loadCard(idx === -1 ? 0 : idx, true);
+  }
+
+  // ---------- 低於 60 分重錄流程 ----------
+  function firstWeakIndex(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    for (let i = 0; i < cardsData.length; i++) {
+      const s = scores[cardsData[i].word];
+      if (s && (Number(s.score) || 0) < 60) return i;
+    }
+    return -1;
+  }
+  function countWeak(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    return cardsData.filter(item => { const s = scores[item.word]; return s && (Number(s.score) || 0) < 60; }).length;
+  }
+  function hideWeakReviewBar() {
+    const bar = document.getElementById('weakReviewBar');
+    if (bar) bar.style.display = 'none';
+    // 離開補錄模式：把自動練習鍵還原回來
+    const autoBtn = document.getElementById('autoPracticeBtn');
+    if (autoBtn) autoBtn.style.display = '';
+    weakReviewMode = null;
+  }
+  function showWeakReviewBar() {
+    const bar = document.getElementById('weakReviewBar');
+    if (bar) bar.style.display = 'block';
+    // 補錄階段只留單一錄音鍵，隱藏自動練習鍵（避免整組自動練習又造成循環）
+    const autoBtn = document.getElementById('autoPracticeBtn');
+    if (autoBtn) autoBtn.style.display = 'none';
+    weakReviewMode = recMode;
+  }
+  function updateWeakReviewBarText() {
+    const cnt = countWeak(recMode);
+    if (cnt <= 0) { hideWeakReviewBar(); return; }
+    const text = document.getElementById('weakReviewText');
+    if (text) text.innerText = `💪 快過關了！還有 ${cnt} 個單字到 60 分就完成囉！`;
+  }
+
+  // ---------- 低於 60 分重錄流程 ----------
+  let weakReviewMode = null; // 進入補錄時記錄要補錄的模式（'word'/'sentence'）
+
+  function reviewWeakBeforeSummary() {
+    let idx = firstWeakIndex(recMode);
+    let mode = recMode;
+    if (idx === -1) {
+      mode = (recMode === 'word') ? 'sentence' : 'word';
+      idx = firstWeakIndex(mode);
+    }
+    if (idx === -1) return false;
+    // 先跳說明彈窗，列出要補錄的單字（分數），學生準備好再按「開始補錄」
+    showWeakModal(mode);
+    return true;
+  }
+
+  // 補錄說明彈窗：文字柔和不傷人，並列出每個字目前的分數
+  function showWeakModal(mode) {
+    const scores = (mode === 'word') ? recordedScores : sentenceScores;
+    const listEl = document.getElementById('weakModalList');
+    const items = cardsData.map((item, i) => ({ item, s: scores[item.word] }))
+      .filter(x => x.s && (Number(x.s.score) || 0) < 60);
+    listEl.innerHTML = items.map(x =>
+      `<div style="background:#fff8e7; border:2px solid #ffeaa7; border-radius:12px; padding:6px 12px; font-weight:800; font-size:15px; color:#2d3436;">${x.item.icon} ${x.item.word}　<span style="color:#e17055;">${Number(x.s.score) || 0}分</span></div>`
+    ).join('');
+    const modal = document.getElementById('weakModal');
+    modal.style.display = 'flex';
+    document.getElementById('btnWeakStart').onclick = () => {
+      modal.style.display = 'none';
+      startWeakReview(mode);
+    };
+    const skipBtn = document.getElementById('btnWeakSkip2');
+    if (skipBtn) skipBtn.onclick = () => {
+      modal.style.display = 'none';
+      showSummary(true);
+    };
+  }
+
+  // 進入補錄模式：切換模式、跳到第一個要補錄的字、隱藏自動練習鍵（只留單一錄音鍵）
+  function startWeakReview(mode) {
+    weakReviewMode = mode;
+    if (mode !== recMode) {
+      recMode = mode;
+      updateModeTabs();
+      document.getElementById('prevBtn').classList.toggle('prev', recMode === 'sentence');
+    }
+    const idx = firstWeakIndex(mode);
+    loadCard(idx === -1 ? 0 : idx, true);
+    showWeakReviewBar();
+    updateWeakReviewBarText();
+    toast('💪 補錄模式：念到 60 分以上就過關，加油！');
+  }
+
+  // 浮動提示
+  function toast(msg) {
+    const el = document.createElement('div');
+    el.innerText = msg;
+    el.style.cssText = 'position:fixed; top:18px; left:50%; transform:translateX(-50%); z-index:10000; background:#2d3436; color:#fff; padding:12px 22px; border-radius:20px; font-size:15px; font-weight:800; box-shadow:0 8px 20px rgba(0,0,0,0.3); max-width:92vw; text-align:center;';
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; }, 3200);
+    setTimeout(() => { el.remove(); }, 3800);
+  }
+
+  function loadCard(idx, resetUI) {
+    currentIndex = idx;
+    const item = cardsData[currentIndex];
+    document.getElementById('cardIcon').innerText = item.icon;
+    document.getElementById('cardWord').innerText = item.word;
+    document.getElementById('cardTranslation').innerText = item.zh;
+    
+    const isSentence = (recMode === 'sentence');
+    document.getElementById('refSentenceBox').className = 'sentence-container ' + (isSentence ? 'blue' : '');
+    document.getElementById('refSentenceEn').innerHTML = item.enSent;
+    document.getElementById('refSentenceZh').innerText = item.zhSent;
+    
+    const recordBtn = document.getElementById('recordBtn');
+    const wordMode = (recMode === 'word');
+    recordBtn.className = 'record-action-btn ' + (wordMode ? '' : 'blue');
+    recordBtn.innerText = '🎤 單一錄音（可播放自己的聲音）';
+    
+    document.getElementById('pageCounter').innerText = `${currentIndex + 1} / ${cardsData.length}`;
+    document.getElementById('doneTag').innerText = `已完成: ${doneCount(recMode)} / ${cardsData.length}`;
+    // 最後一張卡：右下按鈕改成「看總成績」，避免無限循環
+    // 補錄模式：還有沒過關的字 → 「下一個 →」；全部過關 → 「查看成績 📊」
+    const navNext = document.getElementById('nextBtn');
+    navNext.disabled = false;
+    if (weakReviewMode) {
+      navNext.innerText = (firstWeakIndex(weakReviewMode) === -1) ? '查看成績 📊' : '下一個 →';
+    } else {
+      navNext.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
+    }
+    
+    if (resetUI) {
+      document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
+      document.getElementById('playbackBox').style.display = 'none';
+      document.getElementById('retryHint').style.display = 'none';
+    }
+    
+    // 換卡時先收起舊的分數面板：分數只在「這一次錄完」才顯示，不會殘留舊資料
+    document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
+    document.getElementById('playbackBox').style.display = 'none';
+    document.getElementById('retryHint').style.display = 'none';
+    const doneNote = document.getElementById('recDoneNote');
+    if (doneNote) doneNote.style.display = 'none';
+    
+    speak(mainText(item));
+  }
+
+  function mainText(item) {
+    return (recMode === 'word') ? item.word : item.rawSent;
+  }
+
+  let ttsQuietResolve = null;
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    // 換新的發音時，先結束上一個「等發音結束」的承諾
+    if (ttsQuietResolve) { try { ttsQuietResolve(); } catch (e) {} }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    const p = new Promise(resolve => { ttsQuietResolve = resolve; });
+    utterance.onend = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
+    utterance.onerror = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
+    p._active = true;
+    window.ttsDonePromise = p;
+    window.speechSynthesis.speak(utterance);
+  }
+  // 等發音播完（輪詢 speechSynthesis 實際狀態，最多等 maxMs 毫秒），
+  // 確保示範朗讀「真的播完了」，避免示範聲音被麥克風錄進去造成假高分
+  function waitTtsDone(maxMs) {
+    const synth = window.speechSynthesis;
+    const deadline = Date.now() + (maxMs || 3500);
+    return new Promise(resolve => {
+      const tick = () => {
+        const busy = synth && (synth.speaking || synth.pending);
+        if (!busy || Date.now() >= deadline) resolve();
+        else setTimeout(tick, 120);
+      };
+      tick();
+    });
+  }
+
+  function speakMain() {
+    speak(mainText(cardsData[currentIndex]));
+  }
+
+  function changeCard(dir) {
+    if (autoPractice) return;
+    // 補錄模式：右下按鈕 = 前往下一個要補錄的字（錄過關才算）；全部過關 → 看總成績
+    if (dir === 1 && weakReviewMode) {
+      const wIdx = firstWeakIndex(weakReviewMode);
+      if (wIdx === -1) { showSummary(); return; }
+      if (wIdx !== currentIndex) {
+        loadCard(wIdx, true);
+        showWeakReviewBar();
+        updateWeakReviewBarText();
+      } else {
+        toast('💪 這個字還沒過關（要到 60 分），再按 🎤 試一次！');
+      }
+      return;
+    }
+    if (currentIndex === cardsData.length - 1 && dir === 1) {
+      showSummary(); // 最後一張卡再按「下一個/看總成績」→ 進總成績，不循環回第一張
+      return;
+    }
+    let newIdx = currentIndex + dir;
+    if (newIdx < 0) newIdx = 0;
+    if (newIdx >= cardsData.length) newIdx = cardsData.length - 1;
+    loadCard(newIdx, true);
+  }
+
+  function setupRecognition() {
+    if (recognition) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.maxAlternatives = 3;
+    recognition.onresult = (event) => {
+      // 只累加「最終確認」的辨識結果；中間的暫時結果只存最新一筆，
+      // 這樣評語不會把整句話重複出現十來次
+      let finalText = '';
+      const finalAlts = [];
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalText += event.results[i][0].transcript + ' ';
+          // 同時收下所有備選結果（Google 常把字聽對但在第2、3個備選裡）
+          for (let j = 0; j < event.results[i].length; j++) {
+            finalAlts.push(event.results[i][j].transcript);
+          }
+        } else {
+          window._interim = event.results[i][0].transcript; // 覆蓋舊的暫時結果
+        }
+      }
+      if (finalText.trim()) {
+        const ft = finalText.trim();
+        // 顯示用：只保留最後一個最終結果（避免同一句重複出現 5~6 次）
+        window._lastSingleFinal = ft;
+        // 累加前先去重：同一結果不重複累加
+        if (ft !== window._lastAppendedFinal && !(window._lastTranscript || '').includes(ft)) {
+          window._lastTranscript = (window._lastTranscript + ' ' + ft).trim();
+          window._finalAlts = (window._finalAlts || []).concat(finalAlts);
+        }
+        window._lastAppendedFinal = ft;
+        window._interim = ''; // 最終結果已到，暫時結果就用不著了
+      }
+    };
+    recognition.onerror = (event) => console.log('Speech recognition:', event.error);
+    recognition.onend = () => {
+      isRecognizing = false;
+      // Keep one recognition session running across cards; restarting per card can re-trigger permission prompts.
+      if (autoPractice) {
+        setTimeout(() => {
+          if (autoPractice && !isRecognizing) {
+            try { recognition.start(); isRecognizing = true; } catch (e) {}
+          }
+        }, 250);
+      }
+    };
+  }
+
+  async function toggleAutoPractice() {
+    // 補錄模式只能用單一錄音鍵，避免自動練習跑回前面的字造成循環
+    if (weakReviewMode) { toast('💪 補錄模式中！請直接按上面的 🎤 單一錄音鍵'); return; }
+    if (autoPractice) {
+      stopAutoPractice('已停止自動練習');
+      return;
+    }
+    try {
+      if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      alert('無法使用麥克風，請確認瀏覽器權限，並使用 Chrome 或 Edge。');
+      return;
+    }
+    setupRecognition();
+    autoPractice = true;
+    if (recognition && !isRecognizing) {
+      try { recognition.start(); isRecognizing = true; } catch (e) {}
+    }
+    document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
+    document.getElementById('autoPracticeStatus').innerText = '自動練習中：請唸出畫面上的內容，停頓後會自動換題';
+    document.getElementById('recordBtn').disabled = true;
+    document.getElementById('prevBtn').disabled = true;
+    document.getElementById('nextBtn').disabled = true;
+    startAutoRecording();
+  }
+
+  function stopAutoPractice(message) {
+    autoPractice = false;
+    clearTimeout(silenceTimer);
+    clearTimeout(autoAdvanceTimer);
+    if (analyserFrame) cancelAnimationFrame(analyserFrame);
+    analyserFrame = null;
+    document.getElementById('autoPracticeBtn').innerText = '▶️ 開始自動練習（整組只按一次）';
+    document.getElementById('autoPracticeStatus').innerText = message || '自動練習已停止';
+    document.getElementById('recordBtn').disabled = false;
+    document.getElementById('prevBtn').disabled = false;
+    document.getElementById('nextBtn').disabled = false;
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      try { mediaRecorder.stop(); } catch (e) {}
+    }
+    if (recognition && isRecognizing) {
+      try { recognition.stop(); } catch (e) {}
+      isRecognizing = false;
+    }
+  }
+
+  async function startAutoRecording() {
+    if (!autoPractice) return;
+    // 先等系統朗讀播完再開始錄音，避免麥克風把示範發音錄進去造成假高分
+    await waitTtsDone(4000);
+    if (!autoPractice) return;
+    clearTimeout(silenceTimer);
+    speechStarted = false;
+    window._lastTranscript = '';
+    window._interim = '';
+    window._finalAlts = [];
+    window._lastSingleFinal = '';
+    window._lastAppendedFinal = '';
+    audioChunks = [];
+    try {
+      if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(audioStream, REC_MIME ? { mimeType: REC_MIME } : {});
+    } catch (err) {
+      stopAutoPractice('錄音啟動失敗，請檢查麥克風權限');
+      return;
+    }
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      clearTimeout(silenceTimer);
+      // Speech recognition stays on during the whole set, so permission is not requested for every card.
+      await new Promise(resolve => setTimeout(resolve, 250));
+      document.getElementById('recStatus').classList.remove('active');
+      document.getElementById('recordBtn').classList.remove('recording');
+      currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      document.getElementById('audioPreview').src = URL.createObjectURL(currentAudioBlob);
+      document.getElementById('playbackBox').style.display = 'block';
+      evaluateSpeech(window._lastTranscript || '');
+      if (!autoPractice) return;
+      if (currentIndex >= cardsData.length - 1) {
+        stopAutoPractice('🎉 全部單字完成！可查看「我的成績」');
+        return;
+      }
+      autoAdvanceTimer = setTimeout(() => {
+        if (!autoPractice) return;
+        loadCard(currentIndex + 1, true);
+        startAutoRecording();
+      }, 1800);
+    };
+    mediaRecorder.start();
+    document.getElementById('recStatus').classList.add('active');
+    document.getElementById('recordBtn').classList.add('recording');
+    document.getElementById('autoPracticeStatus').innerText = '🎙️ 正在聽你朗讀；唸完後停頓約 1.6 秒會自動停止';
+    startSilenceDetection();
+    // Safety cap in case the browser never detects silence.
+    silenceTimer = setTimeout(() => { if (autoPractice && mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 20000);
+  }
+
+  function startSilenceDetection() {
+    if (!audioStream || !window.AudioContext) return;
+    try {
+      if (audioContext) audioContext.close().catch(() => {});
+      audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(audioStream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 1024;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.fftSize);
+      let quietSince = null;
+      const checkLevel = () => {
+        if (!autoPractice || !mediaRecorder || mediaRecorder.state !== 'recording') return;
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / data.length);
+        if (rms > 0.025) {
+          speechStarted = true;
+          quietSince = null;
+        } else if (speechStarted) {
+          if (quietSince === null) quietSince = Date.now();
+          if (Date.now() - quietSince >= 1600) {
+            try { mediaRecorder.stop(); } catch (e) {}
+            return;
+          }
+        }
+        analyserFrame = requestAnimationFrame(checkLevel);
+      };
+      checkLevel();
+    } catch (e) { console.log('Silence detection unavailable:', e); }
+  }
+
+  async function toggleRecording() {
+    if (autoPractice) return;
+    const btn = document.getElementById('recordBtn');
+    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+      audioChunks = [];
+      // 每次開始錄音先清空辨識文字（最終版＋暫時版＋備選版都清），避免上一題/上一次的內容被帶進評分
+      window._lastTranscript = '';
+      window._interim = '';
+      window._finalAlts = [];
+      window._lastSingleFinal = '';
+      window._lastAppendedFinal = '';
+      // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
+      await waitTtsDone(2500);
+      const doneNote = document.getElementById('recDoneNote');
+      if (doneNote) doneNote.style.display = 'none';
+      try {
+        if (!audioStream) {
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+        mediaRecorder = new MediaRecorder(audioStream, REC_MIME ? { mimeType: REC_MIME } : {});
+      } catch (err) {
+        alert('無法啟動錄音，請檢查麥克風權限是否遭封鎖！');
+        return;
+      }
+
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = async () => {
+        document.getElementById('recStatus').classList.remove('active');
+        btn.classList.remove('recording');
+        btn.innerText = '🎤 單一錄音（可播放自己的聲音）';
+
+        currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(currentAudioBlob);
+        const audioPreview = document.getElementById('audioPreview');
+        audioPreview.src = audioUrl;
+        document.getElementById('playbackBox').style.display = 'block';
+
+        // 停止辨識後、先等最終確認結果送達（最多 700ms）再評分，
+        // 避免搶跑還沒錄就出分數、也避免評到上一題的舊單字
+        if (recognition && isRecognizing) { try { recognition.stop(); } catch (e) {} }
+        isRecognizing = false;
+        await new Promise(r => setTimeout(r, 700));
+        evaluateSpeech(window._lastTranscript || window._interim || '');
+        // 明確告知錄音結束＋下一步要做什麼（依補錄進度給正確的按鈕名稱）
+        const noteEl = document.getElementById('recDoneNote');
+        if (noteEl) {
+          let nextHint = '沒問題就按「下一個 →」或「看總成績 📊」繼續';
+          if (weakReviewMode) {
+            nextHint = (firstWeakIndex(weakReviewMode) === -1)
+              ? '聽聽自己的聲音，好了就按右下角「查看成績 📊」'
+              : '聽聽自己的聲音，好了就按「下一個 →」繼續補錄';
+          }
+          noteEl.innerText = '✅ 錄音結束！可按 ▶ 聽自己的聲音；' + nextHint;
+          noteEl.style.display = 'block';
+        }
+      };
+
+      mediaRecorder.start();
+      if (recognition && !isRecognizing) {
+        try { recognition.start(); isRecognizing = true; } catch (e) {}
+      }
+
+      document.getElementById('recStatus').classList.add('active');
+      btn.classList.add('recording');
+      btn.innerText = '⏹️ 停止錄音';
+    } else {
+      mediaRecorder.stop();
+      if (recognition && isRecognizing) {
+        try { recognition.stop(); } catch (e) {}
+        isRecognizing = false;
+      }
+    }
+  }
+
+  // 兩個字串的字面相似度（bigram Dice 係數，0~1）
+  function strSimilarity(a, b) {
+    if (a === b) return 1;
+    if (!a || !b) return 0;
+    if (a.length < 2 || b.length < 2) return a[0] === b[0] ? 0.5 : 0;
+    const bigrams = (s) => { const set = new Set(); for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2)); return set; };
+    const A = bigrams(a), B = bigrams(b);
+    let inter = 0;
+    A.forEach(x => { if (B.has(x)) inter++; });
+    return (2 * inter) / (A.size + B.size);
+  }
+
+  function evaluateSpeech(transcript) {
+    const target = mainText(cardsData[currentIndex]).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+    const clean = (s) => ((s || '') + '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+
+    // 候選答案：主辨識文字＋暫時結果＋所有備選結果，取「得分最高」的那個來評
+    let candidates = [];
+    if (transcript) candidates.push(transcript);
+    if (window._interim) candidates.push(window._interim);
+    if (window._finalAlts) candidates = candidates.concat(window._finalAlts);
+    candidates = [...new Set(candidates.map(clean).filter(Boolean))];
+
+    const scoreWordMode = (s) => {
+      const sim = strSimilarity(s, target);
+      const contains = s.includes(target) || target.includes(s);
+      const targetTokens = target.split(/\s+/).filter(Boolean);
+      const spokenTokens = s.split(/\s+/).filter(Boolean);
+      // 嚴格滿分：連字數、內容都一模一樣（不能有旁邊多餘的雜音字）
+      const sameTokens = spokenTokens.length === targetTokens.length &&
+        targetTokens.every(t => spokenTokens.includes(t));
+      if (sameTokens) return { score: 100, feedback: '完美！發音標準又清楚，真的太棒了！🌟' };
+      if (contains) {
+        // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音混進來，不能給高分
+        if (spokenTokens.length <= targetTokens.length + 1) return { score: 80, feedback: '聽到的內容不太對喔！等安靜時只唸這一個字，再試一次！' };
+        return { score: 65, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
+      }
+      if (sim >= 0.9) return { score: 90, feedback: '很棒！就是它了，多唸幾次可以更流暢！' };
+      if (sim >= 0.6) return { score: 80, feedback: '接近了！尾音再多聽 🔊 練準一點吧！' };
+      if (sim >= 0.4) return { score: 65, feedback: '有一半像喔！先聽 🔊 發音，注意開頭的音再試一次！' };
+      return { score: 45, feedback: '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！' };
+    };
+    const scoreSentenceMode = (s) => {
+      const targetWords = target.split(/\s+/).filter(Boolean);
+      const spokenWords = s.split(/\s+/).filter(Boolean);
+      const contained = s.includes(target) || target.includes(s);
+      const hit = targetWords.filter(tw => spokenWords.includes(tw)).length;
+      const ratio = Math.max(targetWords.length ? hit / targetWords.length : 0, contained ? 0.85 : 0);
+      if (ratio >= 0.99) return { score: 100, feedback: '完美！整句都唸對了，太棒了！🌟' };
+      if (ratio >= 0.85) return { score: 90, feedback: '很棒！就是它了，多練幾次可以更流暢！' };
+      if (ratio >= 0.6) return { score: 80, feedback: `整句唸對了約 ${Math.round(ratio * 100)}%，有幾個字要再加強！` };
+      if (ratio >= 0.4) return { score: 65, feedback: `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！` };
+      return { score: 45, feedback: '這句差滿多的喔！先按 🔊 朗讀聽清楚，一句一句慢慢跟著念！' };
+    };
+
+    let score = 0;
+    let feedback = '';
+    let best = null;
+    if (!candidates.length) {
+      score = 40;
+      feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！';
+    } else {
+      const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
+      const primaryClean = clean(transcript || window._interim);
+      const judged = candidates.map(c => Object.assign(judge(c), { cand: c }));
+      judged.sort((a, b) => b.score - a.score);
+      best = judged[0];
+      // 回音防呆：最高分的候選剛好「完全等於目標」，但學生自己嘴裡說的（主辨識）卻完全不像
+      // → 多半是示範朗讀被麥克風錄進去，不能給高分，降為 80 並請學生重錄
+      if (best.cand !== primaryClean && primaryClean) {
+        const primaryJudge = judged.find(j => j.cand === primaryClean);
+        if (primaryJudge && primaryJudge.score <= 65 && best.score >= 90) {
+          best.score = 80;
+          best.feedback = '聽到的內容不太對喔！等安靜時只唸這個字，再試一次！';
+        }
+      }
+      score = best.score;
+      feedback = best.feedback;
+    }
+
+    // 評語顯示：「真正聽到的內容」優先用最後一筆最終結果，避免同一字重複洗版
+    const resultObj = { score: score, feedback: feedback, transcript: window._lastSingleFinal || transcript || (best ? best.transcript : '') };
+    
+    if (recMode === 'word') {
+      recordedScores[cardsData[currentIndex].word] = resultObj;
+    } else {
+      sentenceScores[cardsData[currentIndex].word] = resultObj;
+    }
+    
+    saveProgress();
+    showScoreResult(resultObj);
+    // 重錄流程：過關（≥60）不自動跳走，讓學生先按 ▶ 聽自己的聲音；
+    // 準備好了再按右下角「下一個 →」前往下一個要補錄的字（全部過關則變「查看成績 📊」）
+    const bar = document.getElementById('weakReviewBar');
+    const wasWeakReviewing = bar && bar.style.display === 'block';
+    if (wasWeakReviewing) {
+      const nextBtn = document.getElementById('nextBtn');
+      if (score >= 60) {
+        const nextIdx = firstWeakIndex(recMode);
+        if (nextIdx === -1) {
+          // 全部過關：留在這張卡（可聽自己的錄音），右下角變「查看成績 📊」
+          if (nextBtn) nextBtn.innerText = '查看成績 📊';
+          const text = document.getElementById('weakReviewText');
+          if (text) text.innerText = '🎊 全部過關了！太厲害了！聽聽自己的發音，按右下角「查看成績 📊」看總成績';
+          toast('🎊 全部過關了！聽聽自己的錄音，好了就按右下角「查看成績 📊」');
+        } else {
+          // 還有別的字要補錄：停在這張卡讓學生聽自己的聲音，按「下一個」才過去
+          if (nextBtn) nextBtn.innerText = '下一個 →';
+          updateWeakReviewBarText();
+          toast(`👍 這個過關了！聽聽自己的發音，好了就按「下一個 →」補錄「${cardsData[nextIdx].word}」`);
+        }
+      } else {
+        // 還沒過關：留在這個字，直接再按錄音鍵重試即可
+        toast('💪 這次還差一點到 60 分，再試一次就更棒了！');
+      }
+    }
+    // 注意：不在此處送出（每字一送會洗板），成績統一在「看總成績」時送出一條
+  }
+
+  function showScoreResult(res) {
+    const panel = document.getElementById('scorePanel');
+    panel.className = 'score-panel show ' + (res.score >= 80 ? 'good' : res.score >= 60 ? 'warn' : 'bad');
+    document.getElementById('scoreBig').innerText = res.score + '分';
+    // 評語只要一句，聽到的內容最多顯示 60 字，避免整句重複塞滿畫面
+    let heard = '';
+    if (res.transcript) {
+      const t = res.transcript.trim();
+      heard = '（聽到: ' + (t.length > 60 ? t.slice(0, 60) + '…' : t) + '）';
+    }
+    document.getElementById('feedbackText').innerText = res.feedback + heard;
+    document.getElementById('retryHint').style.display = 'block';
+    if (res.score >= 80) celebrate();
+  }
+
+  // ≥80 分：曬花 + 曬星星（花朵與星星從畫面往上飄，並顯示稱讚橫幅）
+  function celebrate() {
+    const box = document.getElementById('celebration');
+    if (!box) return;
+    box.innerHTML = '';
+    box.classList.add('show');
+    const emojis = ['🌸', '🌼', '🌷', '🌺', '⭐', '🌟', '✨', '🌻'];
+    for (let i = 0; i < 16; i++) {
+      const sp = document.createElement('span');
+      sp.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+      sp.style.left = (Math.random() * 92 + 4) + '%';
+      sp.style.animationDelay = (Math.random() * 1.2) + 's';
+      sp.style.fontSize = (24 + Math.random() * 20) + 'px';
+      box.appendChild(sp);
+    }
+    const banner = document.createElement('div');
+    banner.className = 'celebration-banner';
+    banner.innerText = '🎉 太厲害了！發音好棒！';
+    box.appendChild(banner);
+    setTimeout(() => { box.classList.remove('show'); box.innerHTML = ''; }, 3600);
+  }
+
+  // 同一學生同樣進度只送一次（避免重複開「我的成績」就洗板）
+  let lastSentSnapshot = '';
+  function sendToServer() {
+    if (!scriptURL || scriptURL.includes('YOUR_GAS')) return;
+    if (!studentName) return;
+    const wordEntries = Object.entries(recordedScores);
+    const sentenceEntries = Object.entries(sentenceScores);
+    if (!wordEntries.length && !sentenceEntries.length) return;
+
+    const statOf = (entries) => {
+      const scores = entries.map(([, r]) => Number(r.score) || 0);
+      return {
+        count: entries.length,
+        avg: scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0,
+        weak: entries.filter(([, r]) => (Number(r.score) || 0) < 80).map(([w]) => w).join(', ')
+      };
+    };
+    const wordStats = statOf(wordEntries);
+    const sentenceStats = statOf(sentenceEntries);
+
+    // 防重複送出的快照（姓名 + 兩種模式各自的完成數與平均）
+    const snapshot = [studentName, wordStats.count, wordStats.avg, sentenceStats.count, sentenceStats.avg].join('|');
+    const isSame = snapshot === lastSentSnapshot;
+    lastSentSnapshot = snapshot;
+    if (isSame) return;
+
+    const payload = {
+      type: 'recording',
+      topic: TOPIC,
+      studentName: studentName,
+      // 單字一條、句子一條，由 GAS 分兩行寫入
+      wordCount: wordStats.count,
+      wordAvg: wordStats.avg,
+      wordWeak: wordStats.weak,
+      sentenceCount: sentenceStats.count,
+      sentenceAvg: sentenceStats.avg,
+      sentenceWeak: sentenceStats.weak
+    };
+
+    // With mode:'no-cors', application/json is not a CORS-safelisted Content-Type.
+    // text/plain avoids a preflight and still lets Apps Script parse e.postData.contents as JSON.
+    fetch(scriptURL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(err => console.error('上傳失敗', err));
+  }
+
+  function showSummary(force) {
+    saveProgress();
+    // 進總成績前，先檢查是否有低於 60 分的單字/句子要重錄（除非按了「直接看總成績」）
+    if (!force && reviewWeakBeforeSummary()) return;
+    hideWeakReviewBar();
+    document.getElementById('summaryStudentName').innerText = `學生：${studentName}`;
+    
+    const wordTable = document.getElementById('wordSummaryTable');
+    wordTable.innerHTML = '';
+    cardsData.forEach(item => {
+      const s = recordedScores[item.word];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${item.icon} ${item.word}</td><td>${s ? `<span class="chip good">${s.score}分</span>` : '<span class="chip none">未練習</span>'}</td>`;
+      wordTable.appendChild(tr);
+    });
+
+    const sentTable = document.getElementById('sentenceSummaryTable');
+    sentTable.innerHTML = '';
+    cardsData.forEach(item => {
+      const s = sentenceScores[item.word];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${item.icon} ${item.word}</td><td>${s ? `<span class="chip good">${s.score}分</span>` : '<span class="chip none">未練習</span>'}</td>`;
+      sentTable.appendChild(tr);
+    });
+
+    sendToServer();
+    switchPage('summary-page');
+  }
+
+  function clearProgress() {
+    if (!studentName) { alert('請先輸入姓名！'); return; }
+    if (confirm(`確定要清除 ${studentName} 的所有練習進度嗎？`)) {
+      localStorage.removeItem(progressKey());
+      recordedScores = {};
+      sentenceScores = {};
+      alert('已清除完成！');
+      goHome();
+    }
+  }
+
+  function startQuiz() {
+      if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
+      quizIndex = 0;
+      quizScore = 0;
+      quizList = [...cardsData].sort(() => Math.random() - 0.5); // 全部 18 個單字都考，不截斷
+      document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
+      switchPage('quiz-page');
+      loadQuizQuestion();
+  }
+
+  function loadQuizQuestion() {
+    if (quizIndex >= quizList.length) {
+      showQuizResult();
+      return;
+    }
+    canAnswer = true;
+    const current = quizList[quizIndex];
+    document.getElementById('quizProgress').innerText = `第 ${quizIndex + 1} / ${quizList.length} 題`;
+    document.getElementById('quizWord').innerText = current.word;
+
+    // 進到題目就自動發音，學生不用自己按按鈕（按鈕仍保留可用於重聽）
+    speak(current.word);
+    
+    let options = [current.zh];
+    while (options.length < 4) {
+      const randomItem = cardsData[Math.floor(Math.random() * cardsData.length)];
+      if (!options.includes(randomItem.zh)) {
+        options.push(randomItem.zh);
+      }
+    }
+    options.sort(() => Math.random() - 0.5);
+    
+    const grid = document.getElementById('optionsGrid');
+    grid.innerHTML = '';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerText = opt;
+      btn.addEventListener('click', () => selectQuizOption(btn, opt, current.zh));
+      grid.appendChild(btn);
+    });
+    
+    document.getElementById('quizBox').style.display = 'flex';
+    document.getElementById('quizResultBox').style.display = 'none';
+  }
+
+  function selectQuizOption(btn, selected, correct) {
+    if (!canAnswer) return;
+    canAnswer = false;
+    
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(b => {
+      if (b.innerText === correct) b.classList.add('correct');
+      if (b === btn && selected !== correct) b.classList.add('wrong');
+    });
+    
+    if (selected === correct) {
+      quizScore++;
+    }
+    
+    setTimeout(() => {
+      quizIndex++;
+      loadQuizQuestion();
+    }, 1200);
+  }
+
+  function speakQuizWord() {
+    const current = quizList[quizIndex];
+    if (current) speak(current.word);
+  }
+
+  function showQuizResult() {
+    document.getElementById('quizBox').style.display = 'none';
+    const resBox = document.getElementById('quizResultBox');
+    resBox.style.display = 'flex';
+    document.getElementById('finalScore').innerText = `答對 ${quizScore} / ${quizList.length} 題`;
+    
+    if (!scriptURL.includes('YOUR_GAS')) {
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          type: 'quiz',
+          topic: TOPIC,
+          studentName: studentName,
+          score: quizScore,
+          total: quizList.length
+        })
+      }).catch(e => console.log(e));
+    }
+  }
+</script>
+</body>
+</html>
