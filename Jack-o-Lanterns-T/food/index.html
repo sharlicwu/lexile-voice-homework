@@ -1106,6 +1106,11 @@
     candidates = [...new Set(candidates.map(clean).filter(Boolean))];
 
     const scoreWordMode = (s) => {
+      // 完全錯字硬鎖：若說的字與目標完全無共用字母且長度差大 → 直接 50，不看相似度
+      const sClean = s.toLowerCase().replace(/[^a-z]/g, '');
+      const tClean = target.toLowerCase().replace(/[^a-z]/g, '');
+      const sharedChars = new Set(sClean).size > 0 ? [...new Set(sClean)].filter(c => tClean.includes(c)).length : 0;
+      if (sharedChars === 0 && Math.abs(sClean.length - tClean.length) > 2) return { score: 50, feedback: '聽到的內容完全不一樣！你唸的是「' + s.trim() + '」，再試一次！' };
       const sim = strSimilarity(s, target);
       const contains = s.includes(target) || target.includes(s);
       const sharedTokens = targetTokens.filter(t => spokenTokens.includes(t)).length;
