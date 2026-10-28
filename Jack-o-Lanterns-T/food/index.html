@@ -391,7 +391,7 @@
     { word: "french fries", zh: "薯條", icon: "🍟", enSent: "<span class='highlight-blue'>French fries</span> come from potatoes.", zhSent: "薯條來自馬鈴薯。", rawSent: "French fries come from potatoes." },
     { word: "made from", zh: "用…製成", icon: "🛠️", enSent: "Bagels are <span class='highlight-blue'>made from</span> wheat.", zhSent: "貝果是用小麥製成的。", rawSent: "Bagels are made from wheat." },
     { word: "root", zh: "根", icon: "🥕", enSent: "A <span class='highlight-blue'>root</span> is under the ground.", zhSent: "根在地底下。", rawSent: "A root is under the ground." },
-    { word: "stem", zh: "根莹", icon: "🍃", enSent: "A <span class='highlight-blue'>stem</span> grows above the <span class='highlight-blue'>ground</span>.", zhSent: "莹在地面上長出來。", rawSent: "A stem grows above the ground." }
+    { word: "stem", zh: "根莖", icon: "🍃", enSent: "A <span class='highlight-blue'>stem</span> grows above the <span class='highlight-blue'>ground</span>.", zhSent: "根莖在地面上長出來。", rawSent: "A stem grows above the ground." }
   ];;
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
@@ -1162,11 +1162,11 @@
       feedback = best.feedback;
     }
 
-    // 容錯：同一字重錄多次仍低分（常見如 root / stem 辨音不靈），第 3 次自動給 65 分讓學生能過關
+    // 容錯：同一字重錄多次仍低分（常見如 root / stem 辨音不靈），第 2 次重錄：最低 65，若辨音較好給更高分
     if (score < 60) {
       window._retryCount = (window._retryCount || 0) + 1;
-      if (window._retryCount >= 2) {
-        score = Math.max(65, score); // 第 3 次重錄：最低 65，若辨音較好則給更高
+      if (window._retryCount >= 1) {
+        score = Math.max(65, score); // 第 2 次重錄：最低 65，若辨音較好則給更高
         feedback = score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪';
       }
     } else {
