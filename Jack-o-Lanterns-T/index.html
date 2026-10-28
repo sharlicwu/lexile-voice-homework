@@ -402,7 +402,7 @@
   const TOPIC = 'Jack-o-Lanterns-T';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1028C';
+  const APP_VER = 'V1028D';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
@@ -741,9 +741,14 @@
     document.getElementById('pageCounter').innerText = `${currentIndex + 1} / ${cardsData.length}`;
     document.getElementById('doneTag').innerText = `已完成: ${doneCount(recMode)} / ${cardsData.length}`;
     // 最後一張卡：右下按鈕改成「看總成績」，避免無限循環
+    // 補錄模式：還有沒過關的字 → 「下一個 →」；全部過關 → 「查看成績 📊」
     const navNext = document.getElementById('nextBtn');
     navNext.disabled = false;
-    navNext.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
+    if (weakReviewMode) {
+      navNext.innerText = (firstWeakIndex(weakReviewMode) === -1) ? '查看成績 📊' : '下一個 →';
+    } else {
+      navNext.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
+    }
     
     if (resetUI) {
       document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
@@ -801,6 +806,19 @@
 
   function changeCard(dir) {
     if (autoPractice) return;
+    // 補錄模式：右下按鈕 = 前往下一個要補錄的字（錄過關才算）；全部過關 → 看總成績
+    if (dir === 1 && weakReviewMode) {
+      const wIdx = firstWeakIndex(weakReviewMode);
+      if (wIdx === -1) { showSummary(); return; }
+      if (wIdx !== currentIndex) {
+        loadCard(wIdx, true);
+        showWeakReviewBar();
+        updateWeakReviewBarText();
+      } else {
+        toast('💪 這個字還沒過關（要到 60 分），再按 🎤 試一次！');
+      }
+      return;
+    }
     if (currentIndex === cardsData.length - 1 && dir === 1) {
       showSummary(); // 最後一張卡再按「下一個/看總成績」→ 進總成績，不循環回第一張
       return;
@@ -1036,10 +1054,16 @@
         isRecognizing = false;
         await new Promise(r => setTimeout(r, 700));
         evaluateSpeech(window._lastTranscript || window._interim || '');
-        // 明確告知錄音結束＋下一步要做什麼
+        // 明確告知錄音結束＋下一步要做什麼（依補錄進度給正確的按鈕名稱）
         const noteEl = document.getElementById('recDoneNote');
         if (noteEl) {
-          noteEl.innerText = '✅ 錄音結束！可按 ▶ 聽自己的聲音；沒問題就按「下一個 →」或「看總成績 📊」繼續';
+          let nextHint = '沒問題就按「下一個 →」或「看總成績 📊」繼續';
+          if (weakReviewMode) {
+            nextHint = (firstWeakIndex(weakReviewMode) === -1)
+              ? '聽聽自己的聲音，好了就按右下角「查看成績 📊」'
+              : '聽聽自己的聲音，好了就按「下一個 →」繼續補錄';
+          }
+          noteEl.innerText = '✅ 錄音結束！可按 ▶ 聽自己的聲音；' + nextHint;
           noteEl.style.display = 'block';
         }
       };
@@ -1152,21 +1176,25 @@
     
     saveProgress();
     showScoreResult(resultObj);
-    // 重錄流程：過關（≥60）就更新提示、並自動跳到下一個低分字繼續重錄
-    // 注意：loadCard 最後會自動朗讀當前內容，這裡呼叫過 loadCard 就不要再 speak，以免讀兩次
+    // 重錄流程：過關（≥60）不自動跳走，讓學生先按 ▶ 聽自己的聲音；
+    // 準備好了再按右下角「下一個 →」前往下一個要補錄的字（全部過關則變「查看成績 📊」）
     const bar = document.getElementById('weakReviewBar');
     const wasWeakReviewing = bar && bar.style.display === 'block';
     if (wasWeakReviewing) {
+      const nextBtn = document.getElementById('nextBtn');
       if (score >= 60) {
         const nextIdx = firstWeakIndex(recMode);
         if (nextIdx === -1) {
-          hideWeakReviewBar();
-          toast('🎊 低於 60 分的都過關了！按「看總成績 📊」查看總成績');
+          // 全部過關：留在這張卡（可聽自己的錄音），右下角變「查看成績 📊」
+          if (nextBtn) nextBtn.innerText = '查看成績 📊';
+          const text = document.getElementById('weakReviewText');
+          if (text) text.innerText = '🎊 全部過關了！太厲害了！聽聽自己的發音，按右下角「查看成績 📊」看總成績';
+          toast('🎊 全部過關了！聽聽自己的錄音，好了就按右下角「查看成績 📊」');
         } else {
-          toast(`👍 這個過關了！下一個要重錄：「${cardsData[nextIdx].word}」`);
-          loadCard(nextIdx, true);
-          showWeakReviewBar();
+          // 還有別的字要補錄：停在這張卡讓學生聽自己的聲音，按「下一個」才過去
+          if (nextBtn) nextBtn.innerText = '下一個 →';
           updateWeakReviewBarText();
+          toast(`👍 這個過關了！聽聽自己的發音，好了就按「下一個 →」補錄「${cardsData[nextIdx].word}」`);
         }
       } else {
         // 還沒過關：留在這個字，直接再按錄音鍵重試即可
