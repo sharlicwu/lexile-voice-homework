@@ -1108,11 +1108,14 @@
     const scoreWordMode = (s) => {
       const sim = strSimilarity(s, target);
       const contains = s.includes(target) || target.includes(s);
+      const sharedTokens = targetTokens.filter(t => spokenTokens.includes(t)).length;
+      const totallyWrong = sharedTokens === 0 && sim < 0.35;
       const targetTokens = target.split(/\s+/).filter(Boolean);
       const spokenTokens = s.split(/\s+/).filter(Boolean);
       // 嚴格滿分：連字數、內容都一模一樣（不能有旁邊多餘的雜音字）
       const sameTokens = spokenTokens.length === targetTokens.length &&
         targetTokens.every(t => spokenTokens.includes(t));
+      if (totallyWrong) return { score: 45, feedback: '聽到的內容不太對喔！你唸的是『' + (s.trim()||'這個字') + '』，再試一次！' };
       if (sameTokens) return { score: 100, feedback: '完美！發音標準又清楚，真的太棒了！🌟' };
       if (contains) {
         // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音混進來，不能給高分
