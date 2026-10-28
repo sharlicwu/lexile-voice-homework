@@ -1022,6 +1022,7 @@
       window._finalAlts = [];
       window._lastSingleFinal = '';
       window._lastAppendedFinal = '';
+      window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(2500);
       const doneNote = document.getElementById('recDoneNote');
@@ -1163,6 +1164,17 @@
       }
       score = best.score;
       feedback = best.feedback;
+    }
+
+    // 容錯：重錄第 2 次（共錄 2 次）若仍低分 → 最低 65，若辨音較好則給更高
+    if (score < 60) {
+      window._retryCount = (window._retryCount || 0) + 1;
+      if (window._retryCount >= 1) {
+        score = Math.max(65, score);
+        feedback = score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪';
+      }
+    } else {
+      window._retryCount = 0;
     }
 
     // 評語顯示：「真正聽到的內容」優先用最後一筆最終結果，避免同一字重複洗版
