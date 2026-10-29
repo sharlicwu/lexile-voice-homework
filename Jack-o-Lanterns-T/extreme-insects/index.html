@@ -1107,6 +1107,10 @@
     candidates = [...new Set(candidates.map(clean).filter(Boolean))];
 
     const scoreWordMode = (s) => {
+      const sClean = s.toLowerCase().replace(/[^a-z]/g, '').trim();
+      const tClean = target.toLowerCase().replace(/[^a-z]/g, '').trim();
+      const sharedChars = new Set(sClean).size > 0 ? [...new Set(sClean)].filter(c => tClean.includes(c)).length : 0;
+      if (sharedChars === 0 && Math.abs(sClean.length - tClean.length) > 2) return { score: 55, feedback: '聽到很不一樣的字，試一次！' };
       const sim = strSimilarity(s, target);
       const contains = s.includes(target) || target.includes(s);
       const targetTokens = target.split(/\s+/).filter(Boolean);
@@ -1118,7 +1122,7 @@
       if (contains) {
         // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音混進來，不能給高分
         if (spokenTokens.length <= targetTokens.length + 1) return { score: 80, feedback: '聽到的內容不太對喔！等安靜時只唸這一個字，再試一次！' };
-        return { score: 65, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
+        return { score: 55, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
       }
       if (sim >= 0.88) return { score: 95, feedback: '非常接近！再多練幾次會更流暢！' };
       if (sim >= 0.75) return { score: 85, feedback: '接近了！再注意開頭的音就更完美！' };
@@ -1136,7 +1140,7 @@
       if (ratio >= 0.99) return { score: 100, feedback: '完美！整句都唸對了，太棒了！🌟' };
       if (ratio >= 0.85) return { score: 90, feedback: '很棒！就是它了，多練幾次可以更流暢！' };
       if (ratio >= 0.6) return { score: 80, feedback: `整句唸對了約 ${Math.round(ratio * 100)}%，有幾個字要再加強！` };
-      if (ratio >= 0.4) return { score: 65, feedback: `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！` };
+      if (ratio >= 0.4) return { score: 55, feedback: `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！` };
       return { score: 45, feedback: '這句差滿多的喔！先按 🔊 朗讀聽清楚，一句一句慢慢跟著念！' };
     };
 
