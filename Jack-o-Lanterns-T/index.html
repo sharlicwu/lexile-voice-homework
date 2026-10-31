@@ -43,15 +43,19 @@ body{font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;background:var
 .score-big{font-size:44px;font-weight:900;margin:4px 0;}
 .playback-box{margin-top:10px;width:100%;text-align:center;}
 audio{width:100%;max-width:320px;}
+.nav-btn{background:linear-gradient(135deg,#fab1a0,#ff7675);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
+.btn-auto{background:linear-gradient(135deg,#a29bfe,#6c5ce7);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
+.btn-auto.active{background:#e74c3c;}
+.celebration{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999;display:none;}
+.celebrate-emoji{position:absolute;font-size:32px;pointer-events:none;animation:floatUp 2s ease-out forwards;}
+@keyframes floatUp{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120vh) scale(0);opacity:0}}
 .summary-page{text-align:center;}
 .summary-title{font-size:28px;font-weight:800;color:var(--pumpkin-dark);}
 .summary-table{width:100%;border-collapse:collapse;margin-top:20px;}
 .summary-table th{background:#fdecea;color:#c23616;padding:10px;text-align:left;}
 .summary-table td{padding:8px;border-bottom:1px dashed #fab1a0;}
 .btn-home{background:#fff;color:#636e72;border:2px solid #dfe6e9;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;}
-.nav-btn{background:linear-gradient(135deg,#fab1a0,#ff7675);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
-.btn-auto{background:linear-gradient(135deg,#a29bfe,#6c5ce7);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
-.btn-auto.active{background:#e74c3c;}
+.clear-progress-btn{background:#fff;color:#636e72;border:2px solid #dfe6e9;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -134,9 +138,11 @@ audio{width:100%;max-width:320px;}
   </div>
 </div>
 
+<div class="celebration" id="celebration"></div>
+
 <script>
 const TOPIC = 'Jack-o-Lanterns-T';
-const APP_VER = 'VFINAL04';
+const APP_VER = 'VFINAL05';
 const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
 
 const cardsData = [
@@ -167,17 +173,13 @@ let weakReviewMode = null;
 let autoPractice = false;
 let recognition = null;
 let isRecognizing = false;
-let audioChunks = [];
-let mediaRecorder = null;
-let autoPracticeIndex = 0;
-let autoPracticeTimer = null;
 
 function speak(text) {
   if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';
   u.rate = 0.9;
-  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
 }
 
@@ -215,7 +217,6 @@ function scoreWordMode(s) {
   const spokenTokens = s.split(/\s+/).filter(Boolean);
   const sharedTokens = targetTokens.filter(t => spokenTokens.includes(t)).length;
   const totallyWrong = sharedTokens === 0 && sim < 0.35;
-
   if (totallyWrong) return { score: 55, feedback: '聽到的內容完全不一樣！你唸的是「' + s.trim() + '」，再試一次！' };
   if (contains) {
     if (spokenTokens.length <= targetTokens.length + 1 && sim >= 0.85) return { score: 95, feedback: '非常接近！再多練幾次會更流暢！' };
@@ -268,9 +269,26 @@ function evaluateSpeech(transcript) {
   document.getElementById('scoreBig').innerText = res.score + '分';
   document.getElementById('scoreBigText').innerText = res.feedback;
   panel.style.display = 'block';
-  if (weakReviewMode && res.score >= 60) {
-    document.getElementById('nextBtn').innerText = '查看成績 📊';
+  if (res.score >= 80) celebrate();
+}
+
+function celebrate() {
+  const emojis = ['🌸','⭐','🎉','🎊','🌟','✨','💐','🥳'];
+  const container = document.getElementById('celebration');
+  container.style.display = 'block';
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('div');
+    el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    el.className = 'celebrate-emoji';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = Math.random() * 60 + 'vh';
+    el.style.fontSize = Math.random() * 24 + 24 + 'px';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = Math.random() * 40 + 40 + 'vh';
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
   }
+  setTimeout(() => { container.style.display = 'none'; }, 2300);
 }
 
 function startPractice(mode) {
@@ -306,12 +324,12 @@ async function runAutoPractice() {
     document.getElementById('recDoneNote').style.display = 'none';
     document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
     document.getElementById('playbackBox').style.display = 'none';
+    document.getElementById('retryHint').style.display = 'none';
 
     speak(item.word);
     await waitTtsDone(3000);
     if (!autoPractice) break;
 
-    // start recognition
     if (!recognition) setupRecognition();
     recognition.start();
     isRecognizing = true;
@@ -351,10 +369,55 @@ function setupRecognition() {
       const result = event.results[i];
       if (result.isFinal) finalText = result[0].transcript;
     }
+    isRecognizing = false;
+    document.getElementById('recStatus').style.display = 'none';
+    document.getElementById('recordBtn').innerText = '🎤 開始錄音';
     await evaluateSpeech(finalText);
+    // 自動錄音完後自動下一題
+    if (autoPractice) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (!autoPractice) return;
+      changeCard(1);
+      if (currentIndex === cardsData.length - 1) {
+        // 最後一題，顯示總結
+        showSummary();
+      } else {
+        // 自動開始下一輪
+        setTimeout(() => {
+          if (!autoPractice) return;
+          const item = cardsData[currentIndex];
+          document.getElementById('cardWord').innerText = item.word;
+          document.getElementById('cardZh').innerText = item.zh;
+          document.getElementById('cardIcon').innerText = item.icon;
+          document.getElementById('cardSentence').innerHTML = item.enSent;
+          document.getElementById('recStatus').style.display = 'none';
+          document.getElementById('recDoneNote').style.display = 'none';
+          document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
+          document.getElementById('playbackBox').style.display = 'none';
+          document.getElementById('retryHint').style.display = 'none';
+          speak(item.word);
+          await waitTtsDone(3000);
+          if (!autoPractice) return;
+          recognition.start();
+          isRecognizing = true;
+          document.getElementById('recStatus').style.display = 'block';
+          document.getElementById('recordBtn').innerText = '⏹️ 停止錄音';
+          await new Promise(resolve => {
+            const check = () => {
+              if (!isRecognizing) resolve();
+              else setTimeout(check, 200);
+            };
+            check();
+          });
+          if (!autoPractice) return;
+          changeCard(1);
+          if (currentIndex === cardsData.length - 1) showSummary();
+        }, 500);
+      }
+    }
   };
   recognition.onerror = (e) => { isRecognizing = false; console.error(e); };
-  recognition.onend = () => { isRecognizing = false; document.getElementById('recStatus').style.display = 'none'; document.getElementById('recordBtn').innerText = '🎤 開始錄音'; };
+  recognition.onend = () => { isRecognizing = false; };
 }
 
 document.getElementById('btnSpeak').addEventListener('click', () => {
