@@ -50,6 +50,8 @@ audio{width:100%;max-width:320px;}
 .summary-table td{padding:8px;border-bottom:1px dashed #fab1a0;}
 .btn-home{background:#fff;color:#636e72;border:2px solid #dfe6e9;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;}
 .nav-btn{background:linear-gradient(135deg,#fab1a0,#ff7675);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
+.btn-auto{background:linear-gradient(135deg,#a29bfe,#6c5ce7);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
+.btn-auto.active{background:#e74c3c;}
 </style>
 </head>
 <body>
@@ -97,6 +99,7 @@ audio{width:100%;max-width:320px;}
     </div>
     <div class="btn-group" style="margin-top:14px;">
       <button class="cute-btn nav-btn" id="prevBtn">⟵ 上一個</button>
+      <button class="cute-btn btn-auto" id="autoPracticeBtn">▶️ 開始自動練習（整組只按一次）</button>
       <button class="cute-btn nav-btn" id="nextBtn">下一個 ⟶</button>
     </div>
   </div>
@@ -133,7 +136,7 @@ audio{width:100%;max-width:320px;}
 
 <script>
 const TOPIC = 'Jack-o-Lanterns-T';
-const APP_VER = 'VFINAL03';
+const APP_VER = 'VFINAL04';
 const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
 
 const cardsData = [
@@ -161,10 +164,13 @@ let recordedScores = {};
 let recMode = 'word';
 let currentIndex = 0;
 let weakReviewMode = null;
+let autoPractice = false;
 let recognition = null;
 let isRecognizing = false;
 let audioChunks = [];
 let mediaRecorder = null;
+let autoPracticeIndex = 0;
+let autoPracticeTimer = null;
 
 function speak(text) {
   if (!window.speechSynthesis) return;
@@ -239,7 +245,6 @@ function loadCard(idx) {
   document.getElementById('retryHint').style.display = 'none';
   document.getElementById('btnSpeak').disabled = false;
   document.getElementById('recordBtn').disabled = false;
-  document.getElementById('nextBtn').disabled = false;
 }
 
 function changeCard(dir) {
@@ -263,7 +268,6 @@ function evaluateSpeech(transcript) {
   document.getElementById('scoreBig').innerText = res.score + '分';
   document.getElementById('scoreBigText').innerText = res.feedback;
   panel.style.display = 'block';
-  // auto advance if weak mode
   if (weakReviewMode && res.score >= 60) {
     document.getElementById('nextBtn').innerText = '查看成績 📊';
   }
@@ -276,19 +280,59 @@ function startPractice(mode) {
   loadCard(0);
 }
 
-function stopAutoPractice(reason) { autoPractice = false; console.log(reason || '停止'); }
+function stopAutoPractice(reason) {
+  autoPractice = false;
+  const btn = document.getElementById('autoPracticeBtn');
+  if (btn) { btn.innerText = '▶️ 開始自動練習（整組只按一次）'; btn.classList.remove('active'); }
+  clearTimeout(autoPracticeTimer);
+  console.log(reason || '自動練習停止');
+}
 
-function showSummary() {
-  document.getElementById('card-page').classList.remove('active');
-  document.getElementById('summary-page').classList.add('active');
-  const tbody = document.querySelector('#summary-page table tbody');
-  tbody.innerHTML = '';
-  cardsData.forEach((item) => {
-    const res = recordedScores[item.word] || { score: 0, feedback: '', transcript: '' };
-    const row = document.createElement('tr');
-    row.innerHTML = `<td><strong>${item.word}</strong></td><td>${item.zh}</td><td>${res.score}分</td><td>${res.feedback || '未錄音'}</td>`;
-    tbody.appendChild(row);
-  });
+async function runAutoPractice() {
+  autoPractice = true;
+  const btn = document.getElementById('autoPracticeBtn');
+  btn.innerText = '⏹️ 停止自動練習';
+  btn.classList.add('active');
+
+  for (let i = 0; i < cardsData.length; i++) {
+    if (!autoPractice) break;
+    currentIndex = i;
+    const item = cardsData[currentIndex];
+    document.getElementById('cardWord').innerText = item.word;
+    document.getElementById('cardZh').innerText = item.zh;
+    document.getElementById('cardIcon').innerText = item.icon;
+    document.getElementById('cardSentence').innerHTML = item.enSent;
+    document.getElementById('recStatus').style.display = 'none';
+    document.getElementById('recDoneNote').style.display = 'none';
+    document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
+    document.getElementById('playbackBox').style.display = 'none';
+
+    speak(item.word);
+    await waitTtsDone(3000);
+    if (!autoPractice) break;
+
+    // start recognition
+    if (!recognition) setupRecognition();
+    recognition.start();
+    isRecognizing = true;
+    document.getElementById('recStatus').style.display = 'block';
+    document.getElementById('recordBtn').innerText = '⏹️ 停止錄音';
+
+    await new Promise(resolve => {
+      const check = () => {
+        if (!isRecognizing) resolve();
+        else setTimeout(check, 200);
+      };
+      check();
+    });
+
+    if (!autoPractice) break;
+  }
+
+  autoPractice = false;
+  btn.innerText = '▶️ 開始自動練習（整組只按一次）';
+  btn.classList.remove('active');
+  showSummary();
 }
 
 function setupRecognition() {
@@ -335,6 +379,14 @@ document.getElementById('recordBtn').addEventListener('click', () => {
 
 document.getElementById('nextBtn').addEventListener('click', () => changeCard(1));
 document.getElementById('prevBtn').addEventListener('click', () => changeCard(-1));
+
+document.getElementById('autoPracticeBtn').addEventListener('click', () => {
+  if (autoPractice) {
+    stopAutoPractice('手動停止');
+    return;
+  }
+  runAutoPractice();
+});
 
 document.getElementById('btnRecordWord').addEventListener('click', () => startPractice('word'));
 document.getElementById('btnQuiz').addEventListener('click', () => showSummary());
