@@ -6,7 +6,7 @@
 <title>Jack-o'-Lanterns 語音作業 (中級)</title>
 <style>
 :root{--pumpkin:#ff9f43;--pumpkin-dark:#e67e22;--text-dark:#2d3436;--bg-gradient:linear-gradient(135deg,#ffeaa7,#fab1a0);}
-* {box-sizing:border-box;}
+*{box-sizing:border-box;}
 body{font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;background:var(--bg-gradient);color:var(--text-dark);margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
 .card{width:94%;max-width:820px;background:#fff;border-radius:30px;padding:30px 24px;box-shadow:0 15px 40px rgba(0,0,0,0.12);}
 .welcome-screen{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:520px;gap:16px;}
@@ -19,9 +19,9 @@ body{font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;background:var
 .btn-record{background:linear-gradient(135deg,#fab1a0,#ff7675);}
 .btn-sentence{background:linear-gradient(135deg,#74b9ff,#0984e3);}
 .btn-quiz{background:linear-gradient(135deg,#a29bfe,#6c5ce7);}
-.page{display:none;flex-direction:column;align-items:center;min-height:100vh;}
+.page{display:none;flex-direction:column;min-height:100vh;}
 .page.active{display:flex;}
-.top-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;box-sizing:border-box;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;}
 .student-tag{font-size:15px;font-weight:800;color:var(--pumpkin-dark);background:#fff3cd;padding:6px 14px;border-radius:20px;border:2px solid var(--pumpkin);}
 .doneTag{font-size:14px;font-weight:600;color:#636e72;}
 .word-page{display:flex;flex-direction:column;align-items:center;gap:10px;}
@@ -49,6 +49,7 @@ audio{width:100%;max-width:320px;}
 .summary-table th{background:#fdecea;color:#c23616;padding:10px;text-align:left;}
 .summary-table td{padding:8px;border-bottom:1px dashed #fab1a0;}
 .btn-home{background:#fff;color:#636e72;border:2px solid #dfe6e9;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;}
+.nav-btn{background:linear-gradient(135deg,#fab1a0,#ff7675);color:#fff;border:none;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -59,7 +60,6 @@ audio{width:100%;max-width:320px;}
     <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
     <div class="btn-group">
       <button class="cute-btn btn-record" id="btnRecordWord">🔤 單字錄音</button>
-      <button class="cute-btn btn-sentence" id="btnRecordSentence">📖 句子錄音</button>
       <button class="cute-btn btn-quiz" id="btnQuiz">📝 單字測驗</button>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px;">
@@ -81,6 +81,7 @@ audio{width:100%;max-width:320px;}
     <div class="word-zh" id="cardZh">門廊 / 走廊</div>
     <div class="word-sentence" id="cardSentence"></div>
     <div class="record-box">
+      <button class="btn-listen" id="btnSpeak">🔊 朗讀示範</button>
       <div class="rec-status" id="recStatus">🔴 正在錄音中...</div>
       <div id="recDoneNote" style="display:none;background:#e9fcf0;border:3px solid #00b894;color:#1e7e56;padding:10px 14px;border-radius:16px;font-weight:800;font-size:15px;text-align:center;width:100%;max-width:420px;"></div>
       <div class="score-panel" id="scorePanel">
@@ -95,8 +96,8 @@ audio{width:100%;max-width:320px;}
       <div id="retryHint" style="font-size:13px;color:#636e72;margin-top:6px;display:none;"></div>
     </div>
     <div class="btn-group" style="margin-top:14px;">
-      <button class="cute-btn" id="prevBtn" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7);">⟵ 上一個</button>
-      <button class="cute-btn" id="nextBtn" style="background:linear-gradient(135deg,#fab1a0,#ff7675);">下一個 ⟶</button>
+      <button class="cute-btn nav-btn" id="prevBtn">⟵ 上一個</button>
+      <button class="cute-btn nav-btn" id="nextBtn">下一個 ⟶</button>
     </div>
   </div>
 </div>
@@ -132,7 +133,7 @@ audio{width:100%;max-width:320px;}
 
 <script>
 const TOPIC = 'Jack-o-Lanterns-T';
-const APP_VER = 'VFINAL02';
+const APP_VER = 'VFINAL03';
 const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
 
 const cardsData = [
@@ -157,36 +158,34 @@ const cardsData = [
 ];
 
 let recordedScores = {};
-let sentenceScores = {};
 let recMode = 'word';
 let currentIndex = 0;
 let weakReviewMode = null;
-let autoPractice = false;
 let recognition = null;
 let isRecognizing = false;
 let audioChunks = [];
+let mediaRecorder = null;
 
-function setupRecognition() {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    alert('此瀏覽器不支援語音辨識，請使用 Chrome 或 Edge');
-    return;
-  }
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.lang = 'en-US';
-  recognition.continuous = false;
-  recognition.interimResults = false;
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.9;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
 
-  recognition.onresult = async (event) => {
-    let finalText = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const result = event.results[i];
-      if (result.isFinal) finalText = result[0].transcript;
-    }
-    await evaluateSpeech(finalText);
-  };
-  recognition.onerror = (e) => { isRecognizing = false; console.error(e); };
-  recognition.onend = () => { isRecognizing = false; };
+function waitTtsDone(maxMs) {
+  return new Promise(resolve => {
+    const synth = window.speechSynthesis;
+    const deadline = Date.now() + (maxMs || 3500);
+    const tick = () => {
+      const busy = synth && (synth.speaking || synth.pending);
+      if (!busy || Date.now() >= deadline) resolve();
+      else setTimeout(tick, 120);
+    };
+    tick();
+  });
 }
 
 function clean(s) { return (s || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim(); }
@@ -203,9 +202,10 @@ function strSimilarity(a, b) {
 }
 
 function scoreWordMode(s) {
-  const sim = strSimilarity(s, currentWord().toLowerCase());
-  const contains = s.includes(currentWord().toLowerCase()) || currentWord().toLowerCase().includes(s);
-  const targetTokens = currentWord().toLowerCase().split(/\s+/).filter(Boolean);
+  const target = currentWord().toLowerCase();
+  const sim = strSimilarity(s, target);
+  const contains = s.includes(target) || target.includes(s);
+  const targetTokens = target.split(/\s+/).filter(Boolean);
   const spokenTokens = s.split(/\s+/).filter(Boolean);
   const sharedTokens = targetTokens.filter(t => spokenTokens.includes(t)).length;
   const totallyWrong = sharedTokens === 0 && sim < 0.35;
@@ -236,7 +236,10 @@ function loadCard(idx) {
   document.getElementById('recDoneNote').style.display = 'none';
   document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
   document.getElementById('playbackBox').style.display = 'none';
-  document.getElementById('recordingPanel').innerHTML = '';
+  document.getElementById('retryHint').style.display = 'none';
+  document.getElementById('btnSpeak').disabled = false;
+  document.getElementById('recordBtn').disabled = false;
+  document.getElementById('nextBtn').disabled = false;
 }
 
 function changeCard(dir) {
@@ -260,6 +263,10 @@ function evaluateSpeech(transcript) {
   document.getElementById('scoreBig').innerText = res.score + '分';
   document.getElementById('scoreBigText').innerText = res.feedback;
   panel.style.display = 'block';
+  // auto advance if weak mode
+  if (weakReviewMode && res.score >= 60) {
+    document.getElementById('nextBtn').innerText = '查看成績 📊';
+  }
 }
 
 function startPractice(mode) {
@@ -284,6 +291,32 @@ function showSummary() {
   });
 }
 
+function setupRecognition() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('此瀏覽器不支援語音辨識，請使用 Chrome 或 Edge');
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = async (event) => {
+    let finalText = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      if (result.isFinal) finalText = result[0].transcript;
+    }
+    await evaluateSpeech(finalText);
+  };
+  recognition.onerror = (e) => { isRecognizing = false; console.error(e); };
+  recognition.onend = () => { isRecognizing = false; document.getElementById('recStatus').style.display = 'none'; document.getElementById('recordBtn').innerText = '🎤 開始錄音'; };
+}
+
+document.getElementById('btnSpeak').addEventListener('click', () => {
+  speak(currentWord());
+});
+
 document.getElementById('recordBtn').addEventListener('click', () => {
   if (!recognition) setupRecognition();
   if (isRecognizing) {
@@ -293,6 +326,7 @@ document.getElementById('recordBtn').addEventListener('click', () => {
     document.getElementById('recordBtn').innerText = '🎤 開始錄音';
     return;
   }
+  window.speechSynthesis.cancel();
   recognition.start();
   isRecognizing = true;
   document.getElementById('recStatus').style.display = 'block';
@@ -303,7 +337,6 @@ document.getElementById('nextBtn').addEventListener('click', () => changeCard(1)
 document.getElementById('prevBtn').addEventListener('click', () => changeCard(-1));
 
 document.getElementById('btnRecordWord').addEventListener('click', () => startPractice('word'));
-document.getElementById('btnRecordSentence').addEventListener('click', () => startPractice('sentence'));
 document.getElementById('btnQuiz').addEventListener('click', () => showSummary());
 document.getElementById('btnHome').addEventListener('click', () => {
   document.getElementById('summary-page').classList.remove('active');
