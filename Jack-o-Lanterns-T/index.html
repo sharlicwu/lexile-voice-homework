@@ -5,42 +5,315 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jack-o'-Lanterns 語音作業 (中級)</title>
 <style>
-:root{--p:#ff9f43;--pd:#e67e22;--t:#2d3436;}
-body{font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;background:linear-gradient(135deg,#ffeaa7,#fab1a0);color:var(--t);margin:0;padding:20px;}
-.card{max-width:720px;margin:0 auto;background:#fff;border-radius:30px;padding:30px 24px;box-shadow:0 15px 40px rgba(0,0,0,0.12);}
-.word-title{font-size:36px;font-weight:900;color:var(--pd);text-align:center;margin:4px 0;}
-.table-box{width:100%;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.08);}
-.table-box th{background:linear-gradient(135deg,#fab1a0,#ff7675);color:#fff;padding:10px;}
-.table-box td{padding:10px;border-bottom:1px dashed #fab1a0;text-align:center;font-size:15px;}
+:root{--pumpkin:#ff9f43;--pumpkin-dark:#e67e22;--text-dark:#2d3436;--bg-gradient:linear-gradient(135deg,#ffeaa7,#fab1a0);}
+* {box-sizing:border-box;}
+body{font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;background:var(--bg-gradient);color:var(--text-dark);margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+.card{width:94%;max-width:820px;background:#fff;border-radius:30px;padding:30px 24px;box-shadow:0 15px 40px rgba(0,0,0,0.12);}
+.welcome-screen{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:520px;gap:16px;}
+.cute-title{font-size:36px;font-weight:900;color:var(--pumpkin-dark);line-height:1.1;text-shadow:3px 3px 0 #fab1a0;margin:0;}
+.subtitle{font-size:17px;color:#636e72;font-weight:600;}
+.welcome-input{padding:14px 22px;font-size:19px;border:3px dashed #fab1a0;border-radius:16px;text-align:center;width:280px;}
+.btn-group{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+.cute-btn{padding:14px 26px;font-size:16px;font-weight:800;border-radius:16px;border:none;color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:0.2s;}
+.btn-listen{background:linear-gradient(135deg,#81ecec,#55efc4);}
+.btn-record{background:linear-gradient(135deg,#fab1a0,#ff7675);}
+.btn-sentence{background:linear-gradient(135deg,#74b9ff,#0984e3);}
+.btn-quiz{background:linear-gradient(135deg,#a29bfe,#6c5ce7);}
+.page{display:none;flex-direction:column;align-items:center;min-height:100vh;}
+.page.active{display:flex;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;box-sizing:border-box;}
+.student-tag{font-size:15px;font-weight:800;color:var(--pumpkin-dark);background:#fff3cd;padding:6px 14px;border-radius:20px;border:2px solid var(--pumpkin);}
+.doneTag{font-size:14px;font-weight:600;color:#636e72;}
+.word-page{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.icon-large{font-size:56px;}
+.word-title{font-size:34px;font-weight:900;color:var(--pumpkin-dark);}
+.word-zh{font-size:20px;color:#636e72;font-weight:600;}
+.word-sentence{font-size:16px;line-height:1.5;color:#2d3436;}
+.highlight-blue{color:#0984e3;font-weight:800;text-decoration:underline;}
+.record-box{background:#fff;border:3px solid #81ecec;border-radius:22px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.rec-status{font-size:14px;font-weight:800;color:#e74c3c;display:none;}
+.rec-status.active{display:inline-block;animation:pulse 1s infinite;}
+@keyframes pulse{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
+.record-action-btn{background:#2ecc71;color:#fff;border:none;padding:12px 30px;border-radius:22px;font-size:16px;font-weight:800;cursor:pointer;}
+.score-panel{margin-top:12px;width:100%;border-radius:18px;padding:16px;text-align:center;display:none;}
+.score-panel.show{display:block;animation:scorePop 0.5s ease;}
+.score-panel.good{background:#e9fcf0;border:3px solid #27ae60;color:#1e7e56;}
+.score-panel.warn{background:#fdf6e3;border:3px solid #f39c12;color:#b7950b;}
+.score-panel.bad{background:#fdecea;border:3px solid #e74c3c;color:#c23616;}
+.score-big{font-size:44px;font-weight:900;margin:4px 0;}
+.playback-box{margin-top:10px;width:100%;text-align:center;}
+audio{width:100%;max-width:320px;}
+.summary-page{text-align:center;}
+.summary-title{font-size:28px;font-weight:800;color:var(--pumpkin-dark);}
+.summary-table{width:100%;border-collapse:collapse;margin-top:20px;}
+.summary-table th{background:#fdecea;color:#c23616;padding:10px;text-align:left;}
+.summary-table td{padding:8px;border-bottom:1px dashed #fab1a0;}
+.btn-home{background:#fff;color:#636e72;border:2px solid #dfe6e9;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;}
 </style>
 </head>
 <body>
-<div class="card">
-<h1 style="text-align:center;font-size:36px;color:var(--pd);font-weight:900;">🎃 Jack-o'-Lanterns</h1>
-<p style="text-align:center;font-size:18px;color:#636e72;font-weight:600;">藍思中級語音作業 · 單字卡朗讀與 AI 評分</p>
-<h2>18 個單字列表</h2>
-<table class="table-box">
-<tr><th>Word</th><th>中文</th><th>例句</th></tr>
-<tr><td><strong>porches</strong></td><td>門廊 / 走廊</td><td>They are a festive sight in windows and on doorsteps and <strong>porches</strong>.</td></tr>
-<tr><td><strong>stingy</strong></td><td>吝嗇的</td><td>A common one... named <strong>Stingy</strong> Jack.</td></tr>
-<tr><td><strong>mischievous</strong></td><td>愛惡作劇的</td><td>Stingy Jack was so <strong>mischievous</strong>...</td></tr>
-<tr><td><strong>cursed</strong></td><td>被詛咒的</td><td>...he was <strong>cursed</strong> to roam...</td></tr>
-<tr><td><strong>throughout</strong></td><td>遍及 / 在…期間</td><td>People <strong>throughout</strong> Europe lit bonfires.</td></tr>
-<tr><td><strong>bonfires</strong></td><td>篝火</td><td>People throughout Europe lit <strong>bonfires</strong>.</td></tr>
-<tr><td><strong>immigrated</strong></td><td>移民 / 遷居</td><td>When Irish... <strong>immigrated</strong> to the US...</td></tr>
-<tr><td><strong>pumpkin patches</strong></td><td>南瓜田</td><td>Every autumn, people visit <strong>pumpkin patches</strong>...</td></tr>
-<tr><td><strong>firm</strong></td><td>堅實的 / 結實的</td><td>Pumpkins that are <strong>firm</strong>, smooth...</td></tr>
-<tr><td><strong>free of marks</strong></td><td>沒有瑕疵的</td><td>Pumpkins... <strong>free of marks</strong>...</td></tr>
-<tr><td><strong>tilts</strong></td><td>傾斜 / 斜著</td><td>If it <strong>tilts</strong> to one side...</td></tr>
-<tr><td><strong>art patterns</strong></td><td>藝術圖樣</td><td>Some people buy... <strong>art patterns</strong>...</td></tr>
-<tr><td><strong>feature</strong></td><td>具有 / 特色</td><td>Some of the pumpkins <strong>feature</strong>...</td></tr>
-<tr><td><strong>characters</strong></td><td>角色 / 人物</td><td>Creative carvers... <strong>characters</strong>...</td></tr>
-<tr><td><strong>planetarium</strong></td><td>天象館</td><td>The event even has a pumpkin <strong>planetarium</strong>!</td></tr>
-<tr><td><strong>boasted</strong></td><td>誇耀 / 吹噓</td><td>The town <strong>boasted</strong> a whopping...</td></tr>
-<tr><td><strong>whopping</strong></td><td>驚人的 / 巨大的</td><td>The town boasted a <strong>whopping</strong> thirty thousand...</td></tr>
-<tr><td><strong>stencils</strong></td><td>模板 / 刻字板</td><td>They can also use <strong>stencils</strong>...</td></tr>
-</table>
-<p style="text-align:center;color:#636e72;font-size:13px;margin-top:10px;">已恢復原始 Jack-o'-Lanterns T 版 18 個單字 • 請用 <a href="https://sharlicwu.github.io/lexile-voice-homework/Jack-o-Lanterns-T/index.html?v=1028">此連結</a> 打開</p>
+<div id="welcome-page" class="page active">
+  <div class="card welcome-screen">
+    <h1 class="cute-title">🎃 Jack-o'-Lanterns</h1>
+    <div class="subtitle">藍思中級語音作業 · 單字卡朗讀與 AI 評分</div>
+    <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
+    <div class="btn-group">
+      <button class="cute-btn btn-record" id="btnRecordWord">🔤 單字錄音</button>
+      <button class="cute-btn btn-sentence" id="btnRecordSentence">📖 句子錄音</button>
+      <button class="cute-btn btn-quiz" id="btnQuiz">📝 單字測驗</button>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px;">
+      <button class="clear-progress-btn" id="btnRestart">🔁 重頭全部練習</button>
+      <button class="clear-progress-btn" id="btnClearProgress">🗑 清除這個姓名的上次進度</button>
+    </div>
+    <div id="verTag" style="font-size:12px;color:#b2bec3;font-weight:700;margin-top:6px;">🧩 版本檢查中…</div>
+  </div>
 </div>
+
+<div id="card-page" class="page">
+  <div class="top-bar">
+    <span class="student-tag" id="studentTag">🎃 藍思中級 - 單字自主練習區</span>
+    <div class="doneTag">已完成: <span id="doneTagCount">0</span> / 18</div>
+  </div>
+  <div class="word-page">
+    <div class="icon-large" id="cardIcon">🏠</div>
+    <div class="word-title" id="cardWord">porches</div>
+    <div class="word-zh" id="cardZh">門廊 / 走廊</div>
+    <div class="word-sentence" id="cardSentence"></div>
+    <div class="record-box">
+      <div class="rec-status" id="recStatus">🔴 正在錄音中...</div>
+      <div id="recDoneNote" style="display:none;background:#e9fcf0;border:3px solid #00b894;color:#1e7e56;padding:10px 14px;border-radius:16px;font-weight:800;font-size:15px;text-align:center;width:100%;max-width:420px;"></div>
+      <div class="score-panel" id="scorePanel">
+        <div id="scoreBig">0分</div>
+        <div id="scoreBigText" style="font-size:14px;color:#636e72;">評分等級將於錄音後顯示</div>
+      </div>
+      <div class="playback-box" id="playbackBox" style="display:none;">
+        <div class="playback-label">🎧 你的錄音</div>
+        <audio id="playbackAudio" controls></audio>
+      </div>
+      <button class="record-action-btn" id="recordBtn">🎤 開始錄音</button>
+      <div id="retryHint" style="font-size:13px;color:#636e72;margin-top:6px;display:none;"></div>
+    </div>
+    <div class="btn-group" style="margin-top:14px;">
+      <button class="cute-btn" id="prevBtn" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7);">⟵ 上一個</button>
+      <button class="cute-btn" id="nextBtn" style="background:linear-gradient(135deg,#fab1a0,#ff7675);">下一個 ⟶</button>
+    </div>
+  </div>
+</div>
+
+<div id="summary-page" class="page">
+  <div class="card welcome-screen">
+    <h1 class="cute-title">🏆 單字錄音成績</h1>
+    <div class="subtitle">總表單</div>
+    <table class="summary-table">
+      <tr><th>單字</th><th>中文</th><th>分數</th><th>評語</th></tr>
+      <tr><td><strong>porches</strong></td><td>門廊 / 走廊</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>stingy</strong></td><td>吝嗇的</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>mischievous</strong></td><td>愛惡作劇的</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>cursed</strong></td><td>被詛咒的</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>throughout</strong></td><td>遍及</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>bonfires</strong></td><td>篝火</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>immigrated</strong></td><td>移民</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>pumpkin patches</strong></td><td>南瓜田</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>firm</strong></td><td>堅實的</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>free of marks</strong></td><td>沒有瑕疵的</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>tilts</strong></td><td>傾斜</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>art patterns</strong></td><td>藝術圖樣</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>feature</strong></td><td>具有</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>characters</strong></td><td>角色</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>planetarium</strong></td><td>天象館</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>boasted</strong></td><td>誇耀</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>whopping</strong></td><td>驚人的</td><td>--</td><td>--</td></tr>
+      <tr><td><strong>stencils</strong></td><td>模板</td><td>--</td><td>--</td></tr>
+    </table>
+    <button class="btn-home">回首頁</button>
+  </div>
+</div>
+
+<script>
+const TOPIC = 'Jack-o-Lanterns-T';
+const APP_VER = 'VFINAL02';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
+
+const cardsData = [
+  { word: "porches", zh: "門廊 / 走廊", icon: "🏠", enSent: "They are a festive sight in windows and on doorsteps and <span class='highlight-blue'>porches</span>.", zhSent: "它們是窗戶、門口和門廊上喜慶的景象。", rawSent: "They are a festive sight in windows and on doorsteps and porches." },
+  { word: "stingy", zh: "吝嗇的", icon: "💰", enSent: "A common one from the nineteenth century tells of a man named <span class='highlight-blue'>Stingy</span> Jack.", zhSent: "十九世紀的一個常見故事講的是「吝嗇傑克」這個男人。", rawSent: "A common one from the nineteenth century tells of a man named Stingy Jack." },
+  { word: "mischievous", zh: "愛惡作劇的", icon: "😈", enSent: "Stingy Jack was so <span class='highlight-blue'>mischievous</span> that when he died, he was cursed to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，他死後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
+  { word: "cursed", zh: "被詛咒的", icon: "👻", enSent: "Stingy Jack was so mischievous that when he died, he was <span class='highlight-blue'>cursed</span> to roam the land forever.", zhSent: "吝嗇傑克非常愛惡作劇，他死後被詛咒永遠在地上流浪。", rawSent: "Stingy Jack was so mischievous that when he died, he was cursed to roam the land forever." },
+  { word: "throughout", zh: "遍及；在…期間", icon: "🌍", enSent: "People <span class='highlight-blue'>throughout</span> Europe lit bonfires.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
+  { word: "bonfires", zh: "篝火", icon: "🔥", enSent: "People throughout Europe lit <span class='highlight-blue'>bonfires</span>.", zhSent: "歐洲各地的人都點起了篝火。", rawSent: "People throughout Europe lit bonfires." },
+  { word: "immigrated", zh: "移民；遷居", icon: "✈️", enSent: "When Irish, English, and Scottish people <span class='highlight-blue'>immigrated</span> to the United States, they brought the jack-o'-lantern tradition with them.", zhSent: "愛爾蘭、英格蘭和蘇格蘭人移民到美國時，把燈籠南瓜的傳統帶了過去。", rawSent: "When Irish, English, and Scottish people immigrated to the United States, they brought the jack-o'-lantern tradition with them." },
+  { word: "pumpkin patches", zh: "南瓜田", icon: "🎃", enSent: "Every autumn, people visit <span class='highlight-blue'>pumpkin patches</span>, farms, and vegetable stands to pick just the right pumpkin.", zhSent: "每年秋天，人們去南瓜田、農場和蔬菜攤挑選剛好的南瓜。", rawSent: "Every autumn, people visit pumpkin patches, farms, and vegetable stands to pick just the right pumpkin." },
+  { word: "firm", zh: "堅實的；結實的", icon: "💪", enSent: "Pumpkins that are <span class='highlight-blue'>firm</span>, smooth, and free of marks work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
+  { word: "free of marks", zh: "沒有瑕疵的", icon: "✨", enSent: "Pumpkins that are firm, smooth, and <span class='highlight-blue'>free of marks</span> work well for jack-o'-lanterns.", zhSent: "堅實、光滑且沒有瑕疵的南瓜適合做燈籠南瓜。", rawSent: "Pumpkins that are firm, smooth, and free of marks work well for jack-o'-lanterns." },
+  { word: "tilts", zh: "傾斜；斜著", icon: "➡️", enSent: "If it <span class='highlight-blue'>tilts</span> to one side, the light inside may not stay in place.", zhSent: "如果它斜向一側，裡面的燈光可能就不會固定。", rawSent: "If it tilts to one side, the light inside may not stay in place." },
+  { word: "art patterns", zh: "藝術圖樣", icon: "🎨", enSent: "Some people buy carving kits with tools and <span class='highlight-blue'>art patterns</span> to make a great jack-o'-lantern.", zhSent: "有些人買附有工具和藝術圖樣的雕刻組，做出精美的燈籠南瓜。", rawSent: "Some people buy carving kits with tools and art patterns to make a great jack-o'-lantern." },
+  { word: "feature", zh: "具有；特色", icon: "⭐", enSent: "Some of the pumpkins <span class='highlight-blue'>feature</span> traditional scary faces.", zhSent: "有些南瓜上有傳統的恐怖面孔。", rawSent: "Some of the pumpkins feature traditional scary faces." },
+  { word: "characters", zh: "角色；人物", icon: "👥", enSent: "Creative carvers have also fashioned cartoon <span class='highlight-blue'>characters</span>, animals, and other detailed designs.", zhSent: "有創意的雕刻者也雕出卡通角色、動物和其他細緻的設計。", rawSent: "Creative carvers have also fashioned cartoon characters, animals, and other detailed designs." },
+  { word: "planetarium", zh: "天象館", icon: "🪐", enSent: "The event even has a pumpkin <span class='highlight-blue'>planetarium</span>!", zhSent: "這個活動甚至還有南瓜天象館呢！", rawSent: "The event even has a pumpkin planetarium!" },
+  { word: "boasted", zh: "誇耀；吹噓", icon: "🗣️", enSent: "The town <span class='highlight-blue'>boasted</span> a whopping thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
+  { word: "whopping", zh: "驚人的；巨大的", icon: "📈", enSent: "The town boasted a <span class='highlight-blue'>whopping</span> thirty thousand lit jack-o'-lanterns!", zhSent: "這個鎮誇耀有驚人的三萬個點亮的燈籠南瓜！", rawSent: "The town boasted a whopping thirty thousand lit jack-o'-lanterns!" },
+  { word: "stencils", zh: "模板；刻字板", icon: "🧩", enSent: "They can also use <span class='highlight-blue'>stencils</span> or even paint.", zhSent: "他們也可以使用模板，甚至直接塗色。", rawSent: "They can also use stencils or even paint." }
+];
+
+let recordedScores = {};
+let sentenceScores = {};
+let recMode = 'word';
+let currentIndex = 0;
+let weakReviewMode = null;
+let autoPractice = false;
+let recognition = null;
+let isRecognizing = false;
+let audioChunks = [];
+
+function setupRecognition() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('此瀏覽器不支援語音辨識，請使用 Chrome 或 Edge');
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = async (event) => {
+    let finalText = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      if (result.isFinal) finalText = result[0].transcript;
+    }
+    await evaluateSpeech(finalText);
+  };
+  recognition.onerror = (e) => { isRecognizing = false; console.error(e); };
+  recognition.onend = () => { isRecognizing = false; };
+}
+
+function clean(s) { return (s || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim(); }
+
+function strSimilarity(a, b) {
+  if (a === b) return 1;
+  if (!a || !b) return 0;
+  if (a.length < 2 || b.length < 2) return a[0] === b[0] ? 0.5 : 0;
+  const bigrams = (s) => { const set = new Set(); for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2)); return set; };
+  const A = bigrams(a), B = bigrams(b);
+  let inter = 0;
+  A.forEach(x => { if (B.has(x)) inter++; });
+  return (2 * inter) / (A.size + B.size);
+}
+
+function scoreWordMode(s) {
+  const sim = strSimilarity(s, currentWord().toLowerCase());
+  const contains = s.includes(currentWord().toLowerCase()) || currentWord().toLowerCase().includes(s);
+  const targetTokens = currentWord().toLowerCase().split(/\s+/).filter(Boolean);
+  const spokenTokens = s.split(/\s+/).filter(Boolean);
+  const sharedTokens = targetTokens.filter(t => spokenTokens.includes(t)).length;
+  const totallyWrong = sharedTokens === 0 && sim < 0.35;
+
+  if (totallyWrong) return { score: 55, feedback: '聽到的內容完全不一樣！你唸的是「' + s.trim() + '」，再試一次！' };
+  if (contains) {
+    if (spokenTokens.length <= targetTokens.length + 1 && sim >= 0.85) return { score: 95, feedback: '非常接近！再多練幾次會更流暢！' };
+    return { score: 55, feedback: '聽到的內容不太對喔！你唸的是「' + s.trim() + '」，再試一次！' };
+  }
+  if (sim >= 0.88) return { score: 95, feedback: '非常接近！再多練幾次會更流暢！' };
+  if (sim >= 0.75) return { score: 85, feedback: '接近了！再注意開頭的音就更完美！' };
+  if (sim >= 0.6) return { score: 80, feedback: '已經很像了！再聽 🔊 練一次！' };
+  if (sim >= 0.45) return { score: 75, feedback: '有大部分像喔！再跟著念一次！' };
+  if (sim >= 0.3) return { score: 70, feedback: '已經有一半像了！先聽 🔊 發音，再跟著念！' };
+  return { score: 50, feedback: '聽起來還差滿多的喔！先按 🔊 朗讀聽清楚，嘴巴張大再唸一次！' };
+}
+
+function currentWord() { return cardsData[currentIndex].word; }
+
+function loadCard(idx) {
+  currentIndex = idx;
+  const item = cardsData[idx];
+  document.getElementById('cardWord').innerText = item.word;
+  document.getElementById('cardZh').innerText = item.zh;
+  document.getElementById('cardIcon').innerText = item.icon;
+  document.getElementById('cardSentence').innerHTML = item.enSent;
+  document.getElementById('recStatus').style.display = 'none';
+  document.getElementById('recDoneNote').style.display = 'none';
+  document.getElementById('scorePanel').classList.remove('show', 'good', 'warn', 'bad');
+  document.getElementById('playbackBox').style.display = 'none';
+  document.getElementById('recordingPanel').innerHTML = '';
+}
+
+function changeCard(dir) {
+  if (autoPractice) return;
+  let newIdx = currentIndex + dir;
+  if (newIdx < 0) newIdx = 0;
+  if (newIdx >= cardsData.length) newIdx = cardsData.length - 1;
+  loadCard(newIdx);
+}
+
+function evaluateSpeech(transcript) {
+  const s = clean(transcript);
+  const res = scoreWordMode(s);
+  recordedScores[currentIndex] = { score: res.score, feedback: res.feedback, transcript: transcript };
+  const panel = document.getElementById('scorePanel');
+  panel.classList.add('show');
+  panel.classList.remove('good', 'warn', 'bad');
+  if (res.score >= 80) panel.classList.add('good');
+  else if (res.score >= 60) panel.classList.add('warn');
+  else panel.classList.add('bad');
+  document.getElementById('scoreBig').innerText = res.score + '分';
+  document.getElementById('scoreBigText').innerText = res.feedback;
+  panel.style.display = 'block';
+}
+
+function startPractice(mode) {
+  recMode = mode;
+  document.getElementById('welcome-page').classList.remove('active');
+  document.getElementById('card-page').classList.add('active');
+  loadCard(0);
+}
+
+function stopAutoPractice(reason) { autoPractice = false; console.log(reason || '停止'); }
+
+function showSummary() {
+  document.getElementById('card-page').classList.remove('active');
+  document.getElementById('summary-page').classList.add('active');
+  const tbody = document.querySelector('#summary-page table tbody');
+  tbody.innerHTML = '';
+  cardsData.forEach((item) => {
+    const res = recordedScores[item.word] || { score: 0, feedback: '', transcript: '' };
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><strong>${item.word}</strong></td><td>${item.zh}</td><td>${res.score}分</td><td>${res.feedback || '未錄音'}</td>`;
+    tbody.appendChild(row);
+  });
+}
+
+document.getElementById('recordBtn').addEventListener('click', () => {
+  if (!recognition) setupRecognition();
+  if (isRecognizing) {
+    recognition.stop();
+    isRecognizing = false;
+    document.getElementById('recStatus').style.display = 'none';
+    document.getElementById('recordBtn').innerText = '🎤 開始錄音';
+    return;
+  }
+  recognition.start();
+  isRecognizing = true;
+  document.getElementById('recStatus').style.display = 'block';
+  document.getElementById('recordBtn').innerText = '⏹️ 停止錄音';
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => changeCard(1));
+document.getElementById('prevBtn').addEventListener('click', () => changeCard(-1));
+
+document.getElementById('btnRecordWord').addEventListener('click', () => startPractice('word'));
+document.getElementById('btnRecordSentence').addEventListener('click', () => startPractice('sentence'));
+document.getElementById('btnQuiz').addEventListener('click', () => showSummary());
+document.getElementById('btnHome').addEventListener('click', () => {
+  document.getElementById('summary-page').classList.remove('active');
+  document.getElementById('welcome-page').classList.add('active');
+});
+
+document.getElementById('verTag').innerText = '🧩 版本 ' + APP_VER;
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('verTag').innerText = '🧩 版本 ' + APP_VER;
+});
+</script>
 </body>
 </html>
