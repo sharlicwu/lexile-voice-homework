@@ -402,7 +402,7 @@
   const TOPIC = 'Jack-o-Lanterns-T';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1028G';
+  const APP_VER = 'V1028F';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
@@ -867,7 +867,7 @@
         window._interim = ''; // 最終結果已到，暫時結果就用不著了
       }
     };
-    recognition.onerror = (event) => { window._recogError = event.error; console.log('Speech recognition:', event.error); };
+    recognition.onerror = (event) => console.log('Speech recognition:', event.error);
     recognition.onend = () => {
       isRecognizing = false;
       // Keep one recognition session running across cards; restarting per card can re-trigger permission prompts.
@@ -939,7 +939,6 @@
     window._finalAlts = [];
     window._lastSingleFinal = '';
     window._lastAppendedFinal = '';
-    window._recogError = '';
     audioChunks = [];
     try {
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -958,7 +957,7 @@
       currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
       document.getElementById('audioPreview').src = URL.createObjectURL(currentAudioBlob);
       document.getElementById('playbackBox').style.display = 'block';
-      await evaluateSpeech(window._lastTranscript || '');
+      evaluateSpeech(window._lastTranscript || '');
       if (!autoPractice) return;
       if (currentIndex >= cardsData.length - 1) {
         stopAutoPractice('🎉 全部單字完成！可查看「我的成績」');
@@ -1023,7 +1022,6 @@
       window._finalAlts = [];
       window._lastSingleFinal = '';
       window._lastAppendedFinal = '';
-      window._recogError = '';
       window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(2500);
@@ -1056,7 +1054,7 @@
         if (recognition && isRecognizing) { try { recognition.stop(); } catch (e) {} }
         isRecognizing = false;
         await new Promise(r => setTimeout(r, 700));
-        await evaluateSpeech(window._lastTranscript || window._interim || '');
+        evaluateSpeech(window._lastTranscript || window._interim || '');
         // 明確告知錄音結束＋下一步要做什麼（依補錄進度給正確的按鈕名稱）
         const noteEl = document.getElementById('recDoneNote');
         if (noteEl) {
@@ -1100,31 +1098,9 @@
     return (2 * inter) / (A.size + B.size);
   }
 
-  // 語音辨識錯誤碼 → 學生看得懂的中文提示
-  function recogErrHint() {
-    const m = {
-      'not-allowed': '（麥克風權限被拒絕：請在瀏覽器設定中允許麥克風）',
-      'service-not-allowed': '（語音辨識被封鎖：請改用 Chrome 瀏覽器）',
-      'network': '（語音辨識需要網路：請檢查網路連線）',
-      'language-not-supported': '（此裝置不支援英文語音辨識：請更新 Chrome 或換裝置測試）',
-      'audio-capture': '（麥克風被其他程式佔用：請關掉其他錄音程式）',
-      'no-speech': '（沒有聽到聲音：請靠近麥克風大聲一點）'
-    };
-    return (m && window._recogError) ? (m[window._recogError] || '') : '';
-  }
-
-  async function evaluateSpeech(transcript) {
+  function evaluateSpeech(transcript) {
     const target = mainText(cardsData[currentIndex]).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
     const clean = (s) => ((s || '') + '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
-
-    // 安卓的語音辨識走雲端、結果常晚 1~3 秒才送回：還沒收到任何結果先等（最多 2.6 秒）；
-    // 只有暫時結果時再等最終版（最多 1.4 秒），避免「還沒聽到就打分」造成固定低分
-    const hasFinal = () => (window._finalAlts || []).length > 0;
-    const hasAny = () => !!(window._lastTranscript || '').trim() || !!(window._interim || '').trim() || hasFinal();
-    let waited = 0;
-    while (!hasAny() && waited < 2600) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
-    while (!hasFinal() && hasAny() && waited < 1400) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
-    transcript = (window._lastTranscript || transcript || window._interim || '').trim() || transcript;
 
     // 候選答案：主辨識文字＋暫時結果＋所有備選結果，取「得分最高」的那個來評
     let candidates = [];
@@ -1176,7 +1152,7 @@
     let best = null;
     if (!candidates.length) {
       score = 40;
-      feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！' + recogErrHint();
+      feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！';
     } else {
       const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
       const primaryClean = clean(transcript || window._interim);
@@ -1201,7 +1177,7 @@
       window._retryCount = (window._retryCount || 0) + 1;
       if (window._retryCount >= 1) {
         score = Math.max(65, score);
-        feedback = (score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪') + recogErrHint();
+        feedback = score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪';
       }
     } else {
       window._retryCount = 0;
