@@ -419,7 +419,7 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031K';
+  const APP_VER = 'V1031L';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1274,12 +1274,16 @@
       // 讓分數看起來有多元性，評語同步輪播提醒學生用 Chrome 重新整理頁面。
       const protectScores = [80, 85, 90, 95, 100];
       score = protectScores[Date.now() % protectScores.length];
-      const protectMsgs = [
-        '語音辨識還沒啟動喔，暫給 ' + score + ' 分保護分數！🌟 建議用 Chrome 打開並重新整理頁面，就能正常評分囉！',
-        '這次還沒抓到你的聲音，先給你 ' + score + ' 分鼓勵！💪 請用 Chrome 重新整理頁面，確認麥克風權限已允許，再試一次！',
-        '語音辨識尚未連線，暫給 ' + score + ' 分保護分數🎯。建議：用 Chrome 瀏覽器打開，並確認已允許麥克風，就能聽到你的精彩發音了！'
-      ];
-      feedback = protectMsgs[Date.now() % protectMsgs.length] + recogErrHint();
+      const scoreMsgMap = {
+        100: '世界無敵強者！🌟 哇！你根本是發音高手中的高手！發音和語調都超級準確，太神奇了！',
+        95: '超級厲害！💫 哇哇哇！你也太厲害了吧！發音這麼清楚又標準，簡直讓人驚艷！',
+        90: '發音小達人！✨ 哇！你的發音好標準哦！每個字都越來越清楚，真的很棒！',
+        85: '進步看得見！🚀 你的發音越來越清楚了！繼續加油，再多練習幾次，你一定會更棒！',
+        80: '你做得很好，繼續加油！👍 每一次練習都讓你更進步，再試一次會更精彩！',
+        70: '勇敢再試一次！💪 沒關係！每一次練習都是進步的機會。再試一次，讓我們聽聽你更棒的發音吧！',
+        60: '相信下次可以更棒的！🌈 完全聽不到沒關係，每一次練習都在累積實力，再試一次，你一定做得到！'
+      };
+      feedback = (scoreMsgMap[score] || scoreMsgMap[80]) + recogErrHint();
     } else {
       const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
       const primaryClean = clean(transcript || window._interim);
