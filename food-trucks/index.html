@@ -419,7 +419,7 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031E';
+  const APP_VER = 'V1031F';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -898,26 +898,63 @@
       const liveEl = document.getElementById('liveRecogText');
       if (liveEl) liveEl.innerText = '🎧 即時聽到：' + (window._lastSingleFinal || window._interim || '（還沒有聽到聲音）');
     };
+    recognition.onstart = () => {
+      isRecognizing = true;
+      window._recogStarted = true;
+      if (window._recogStartTimeout) { clearTimeout(window._recogStartTimeout); window._recogStartTimeout = null; }
+    };
     recognition.onerror = (event) => { window._recogError = event.error; console.log('Speech recognition:', event.error); };
     recognition.onend = () => {
       isRecognizing = false;
       // Keep one recognition session running across cards; restarting per card can re-trigger permission prompts.
       if (autoPractice || window._recogWant) {
         setTimeout(() => {
-          if ((autoPractice || window._recogWant) && !isRecognizing) safeStartRecognition();
+          if ((autoPractice || window._recogWant) && !isRecognizing && !window._recogStarted) safeStartRecognition();
         }, 250);
       }
     };
   }
 
-  // 安全啟動辨識：安卓上若引擎其實還在跑，start() 會拋錯 → 先停再啟，避免辨識從此失效（拿不到字→固定低分）
+  // 安全啟動辨識：等 onstart 確認引擎真的啟動，安卓上最多重試 3 次。
+  // 傳回 Promise<boolean>：true=辨識已啟動，false=啟動失敗（不應繼續錄音）
   function safeStartRecognition() {
-    if (!recognition) return;
-    try { recognition.start(); isRecognizing = true; } catch (e) {
-      try { recognition.stop(); } catch (e2) {}
-      isRecognizing = false;
-      setTimeout(() => { try { recognition.start(); isRecognizing = true; } catch (e3) {} }, 400);
-    }
+    return new Promise((resolve) => {
+      if (!recognition) { window._recogStartError = 'no-recognition-object'; resolve(false); return; }
+      window._recogStarted = false;
+      let tries = 0;
+      const MAX_TRIES = 3;
+
+      function attempt() {
+        tries++;
+        window._recogStarted = false;
+        // 3 秒內沒收到 onstart → 視為失敗，重試
+        window._recogStartTimeout = setTimeout(() => {
+          if (!window._recogStarted) {
+            if (tries < MAX_TRIES) {
+              try { recognition.stop(); } catch (e) {}
+              isRecognizing = false;
+              setTimeout(attempt, 600);
+            } else {
+              window._recogStartError = 'no-onstart-after-' + MAX_TRIES + '-tries';
+              resolve(false);
+            }
+          }
+        }, 3000);
+        try {
+          recognition.start();
+        } catch (e) {
+          clearTimeout(window._recogStartTimeout);
+          window._recogStartTimeout = null;
+          if (tries < MAX_TRIES) {
+            setTimeout(attempt, 600);
+          } else {
+            window._recogStartError = 'start-threw: ' + String(e).slice(0, 60);
+            resolve(false);
+          }
+        }
+      }
+      attempt();
+    });
   }
 
   async function toggleAutoPractice() {
@@ -940,7 +977,11 @@
     setupRecognition();
     autoPractice = true;
     window._recogWant = true;
-    safeStartRecognition();
+    const recogOk2 = await safeStartRecognition();
+    if (!recogOk2) {
+      stopAutoPractice('語音辨識無法啟動：' + (window._recogStartError || '未知錯誤') + '（請重新整理頁面後再試）');
+      return;
+    }
     document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
     document.getElementById('autoPracticeStatus').innerText = '自動練習中：請唸出畫面上的內容，停頓後會自動換題';
     document.getElementById('recordBtn').disabled = true;
@@ -1122,9 +1163,16 @@
         }
       };
 
-      // 先啟動語音辨識再開始錄音：安卓上 MediaRecorder 先佔住麥克風會讓辨識拿不到聲音（→永遠低分）
+      // 先啟動語音辨識並等它確認啟動（onstart），再開 MediaRecorder。
+      // 安卓上 MediaRecorder 先佔住麥克風會讓辨識聽不到聲音 → 永遠低分。
       window._recogWant = true;
-      safeStartRecognition();
+      const recogOk = await safeStartRecognition();
+      if (!recogOk) {
+        btn.classList.remove('recording');
+        btn.innerText = '🎤 單一錄音（可播放自己的聲音）';
+        alert('語音辨識無法啟動：' + (window._recogStartError || '未知錯誤') + '\n\n請：1) 重新整理頁面；2) 確認已允許麥克風權限；3) 若仍失敗，請用電腦 Chrome 瀏覽器打開。');
+        return;
+      }
       mediaRecorder.start();
 
       document.getElementById('recStatus').classList.add('active');
