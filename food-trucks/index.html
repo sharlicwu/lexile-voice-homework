@@ -264,6 +264,7 @@
         <button class="clear-progress-btn" id="btnClearProgress">🗑 清除這個姓名的上次進度</button>
       </div>
       <div id="verTag" style="font-size:12px; color:#b2bec3; font-weight:700; margin-top:6px;">🧩 版本檢查中…</div>
+      <div id="inappWarn" style="display:none; background:#fff3e6; border:2px dashed #c75b39; border-radius:12px; padding:10px 14px; margin:10px 6px 0 6px; font-size:14px; font-weight:700; color:#c0392b; line-height:1.6; text-align:center;">⚠️ 偵測到你正在用 LINE／Facebook 等 App 的內建瀏覽器：這裡<b>無法使用麥克風</b>，也無法正常評分。<br>請點右上角「⋯」→「在瀏覽器開啟」（或複製網址），改用 <b>Chrome</b> 打開，就能正常錄音喔！</div>
     </div>
   </div>
 
@@ -321,6 +322,7 @@
       </div>
       <div class="record-box">
         <div class="rec-status" id="recStatus">🔴 正在錄音中...</div>
+        <div id="liveRecogText" style="min-height:22px; margin-top:4px; font-size:16px; font-weight:700; color:#2d3436; text-align:center;">🎤 開始錄音後，辨識到的文字會即時顯示在這裡</div>
         <div id="recDoneNote" style="display:none; background:#e9fcf0; border:3px solid #00b894; color:#1e7e56; padding:10px 14px; border-radius:16px; font-weight:800; font-size:15px; text-align:center; width:100%; max-width:420px;"></div>
         <button class="record-action-btn" id="autoPracticeBtn" style="background:#6c5ce7;">▶️ 開始自動練習（整組只按一次）</button>
         <div id="autoPracticeStatus" style="font-size:13px;color:#6c5ce7;font-weight:700;text-align:center;">開啟後會自動錄音、偵測停頓、評分並換下一題</div>
@@ -417,10 +419,16 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031D';
+  const APP_VER = 'V1031E';
+  // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
+  window._INAPP_BROWSER = (function () {
+    const ua = navigator.userAgent || '';
+    return /Line\/\d/i.test(ua) || /FBAN|FBAV/i.test(ua) || /Instagram/i.test(ua) || /MicroMessenger/i.test(ua) || /; wv\)/.test(ua);
+  })();
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
+    if (window._INAPP_BROWSER) { const bw = document.getElementById('inappWarn'); if (bw) bw.style.display = 'block'; }
   });
   // 載入後自查：線上檔案若不含本版本標記 → 提示並自動更新一次（每次開啟分頁最多一次，避免循環）
   setTimeout(() => {
@@ -887,24 +895,38 @@
         window._lastAppendedFinal = ft;
         window._interim = ''; // 最終結果已到，暫時結果就用不著了
       }
+      const liveEl = document.getElementById('liveRecogText');
+      if (liveEl) liveEl.innerText = '🎧 即時聽到：' + (window._lastSingleFinal || window._interim || '（還沒有聽到聲音）');
     };
     recognition.onerror = (event) => { window._recogError = event.error; console.log('Speech recognition:', event.error); };
     recognition.onend = () => {
       isRecognizing = false;
       // Keep one recognition session running across cards; restarting per card can re-trigger permission prompts.
-      if (autoPractice) {
+      if (autoPractice || window._recogWant) {
         setTimeout(() => {
-          if (autoPractice && !isRecognizing) {
-            try { recognition.start(); isRecognizing = true; } catch (e) {}
-          }
+          if ((autoPractice || window._recogWant) && !isRecognizing) safeStartRecognition();
         }, 250);
       }
     };
   }
 
+  // 安全啟動辨識：安卓上若引擎其實還在跑，start() 會拋錯 → 先停再啟，避免辨識從此失效（拿不到字→固定低分）
+  function safeStartRecognition() {
+    if (!recognition) return;
+    try { recognition.start(); isRecognizing = true; } catch (e) {
+      try { recognition.stop(); } catch (e2) {}
+      isRecognizing = false;
+      setTimeout(() => { try { recognition.start(); isRecognizing = true; } catch (e3) {} }, 400);
+    }
+  }
+
   async function toggleAutoPractice() {
     // 補錄模式只能用單一錄音鍵，避免自動練習跑回前面的字造成循環
     if (weakReviewMode) { toast('💪 補錄模式中！請直接按上面的 🎤 單一錄音鍵'); return; }
+    if (window._INAPP_BROWSER) {
+      alert('⚠️ 你正在 LINE／Facebook 內建瀏覽器裡：這裡無法使用麥克風！\n請點右上角「⋯」→「在瀏覽器開啟」，或複製網址到 Chrome 打開，就能正常錄音評分。');
+      return;
+    }
     if (autoPractice) {
       stopAutoPractice('已停止自動練習');
       return;
@@ -917,9 +939,8 @@
     }
     setupRecognition();
     autoPractice = true;
-    if (recognition && !isRecognizing) {
-      try { recognition.start(); isRecognizing = true; } catch (e) {}
-    }
+    window._recogWant = true;
+    safeStartRecognition();
     document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
     document.getElementById('autoPracticeStatus').innerText = '自動練習中：請唸出畫面上的內容，停頓後會自動換題';
     document.getElementById('recordBtn').disabled = true;
@@ -930,6 +951,7 @@
 
   function stopAutoPractice(message) {
     autoPractice = false;
+    window._recogWant = false;
     clearTimeout(silenceTimer);
     clearTimeout(autoAdvanceTimer);
     if (analyserFrame) cancelAnimationFrame(analyserFrame);
@@ -961,6 +983,8 @@
     window._lastSingleFinal = '';
     window._lastAppendedFinal = '';
     window._recogError = '';
+    const _lr0 = document.getElementById('liveRecogText');
+    if (_lr0) _lr0.innerText = '🎤 正在聽…（辨識到的文字會即時顯示在這裡）';
     audioChunks = [];
     try {
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1035,6 +1059,10 @@
 
   async function toggleRecording() {
     if (autoPractice) return;
+    if (window._INAPP_BROWSER) {
+      alert('⚠️ 你正在 LINE／Facebook 內建瀏覽器裡：這裡無法使用麥克風！\n請點右上角「⋯」→「在瀏覽器開啟」，或複製網址到 Chrome 打開，就能正常錄音評分。');
+      return;
+    }
     const btn = document.getElementById('recordBtn');
     if (!mediaRecorder || mediaRecorder.state === 'inactive') {
       audioChunks = [];
@@ -1045,6 +1073,8 @@
       window._lastSingleFinal = '';
       window._lastAppendedFinal = '';
       window._recogError = '';
+      const _lr1 = document.getElementById('liveRecogText');
+      if (_lr1) _lr1.innerText = '🎤 正在聽…（辨識到的文字會即時顯示在這裡）';
       window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(ttsWaitMs());
@@ -1092,16 +1122,17 @@
         }
       };
 
+      // 先啟動語音辨識再開始錄音：安卓上 MediaRecorder 先佔住麥克風會讓辨識拿不到聲音（→永遠低分）
+      window._recogWant = true;
+      safeStartRecognition();
       mediaRecorder.start();
-      if (recognition && !isRecognizing) {
-        try { recognition.start(); isRecognizing = true; } catch (e) {}
-      }
 
       document.getElementById('recStatus').classList.add('active');
       btn.classList.add('recording');
       btn.innerText = '⏹️ 停止錄音';
     } else {
       mediaRecorder.stop();
+      window._recogWant = false;
       if (recognition && isRecognizing) {
         try { recognition.stop(); } catch (e) {}
         isRecognizing = false;
@@ -1142,9 +1173,12 @@
     // 只有暫時結果時再等最終版（最多 1.4 秒），避免「還沒聽到就打分」造成固定低分
     const hasFinal = () => (window._finalAlts || []).length > 0;
     const hasAny = () => !!(window._lastTranscript || '').trim() || !!(window._interim || '').trim() || hasFinal();
+    const isAndroidDev = /Android/i.test(navigator.userAgent || '');
+    const waitNoneMs = isAndroidDev ? 4000 : 2600;
+    const waitFinalMs = isAndroidDev ? 1800 : 1400;
     let waited = 0;
-    while (!hasAny() && waited < 2600) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
-    while (!hasFinal() && hasAny() && waited < 1400) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
+    while (!hasAny() && waited < waitNoneMs) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
+    while (!hasFinal() && hasAny() && waited < waitFinalMs) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
     transcript = (window._lastTranscript || transcript || window._interim || '').trim() || transcript;
 
     // 候選答案：主辨識文字＋暫時結果＋所有備選結果，取「得分最高」的那個來評
@@ -1222,7 +1256,7 @@
       window._retryCount = (window._retryCount || 0) + 1;
       if (window._retryCount >= 1) {
         score = Math.max(65, score);
-        feedback = (score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪') + recogErrHint();
+        feedback = (score >= 80 ? '這次表現很棒！加油！' : '給你鼓勵分數！再試一次一定更好！💪') + recogErrHint() + (candidates.length ? '' : '（這次沒有辨識到文字，再唸一次會照實評分）');
       }
     } else {
       window._retryCount = 0;
