@@ -419,7 +419,7 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031G';
+  const APP_VER = 'V1031H';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -977,8 +977,8 @@
     setupRecognition();
     autoPractice = true;
     window._recogWant = true;
-    // 辨識失敗不阻擋自動練習：繼續開啟錄音流程，評分時若沒辨識結果會顯示原因
-    await safeStartRecognition();
+    // 辨識失敗不阻擋自動練習：fire-and-forget 啟動辨識，直接進入錄音流程
+    safeStartRecognition().catch(() => {});
     document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
     document.getElementById('autoPracticeStatus').innerText = '自動練習中：請唸出畫面上的內容，停頓後會自動換題';
     document.getElementById('recordBtn').disabled = true;
@@ -1160,12 +1160,11 @@
         }
       };
 
-      // 先啟動語音辨識並等它確認啟動（onstart），再開 MediaRecorder。
-      // 安卓上 MediaRecorder 先佔住麥克風會讓辨識聽不到聲音 → 永遠低分。
-      // 即使辨識沒啟動（iOS 某些版本 onstart 不觸發），也不阻擋錄音：開 MediaRecorder 讓學生至少能錄音，
-      // 評分時若沒辨識結果會顯示原因，不會固定低分。
+      // 啟動語音辨識（在後台嘗試，不等待）：安卓上若 MediaRecorder 先開會搶走麥克風，
+      // 所以這裡先發出 safeStartRecognition（fire-and-forget），立即開 MediaRecorder 錄音。
+      // 即使辨識沒啟動（iOS 某些版本 onstart 不觸發），也不阻擋錄音；評分時若沒辨識結果會顯示原因。
       window._recogWant = true;
-      await safeStartRecognition();
+      safeStartRecognition().catch(() => {});
       mediaRecorder.start();
 
       document.getElementById('recStatus').classList.add('active');
