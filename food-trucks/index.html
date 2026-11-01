@@ -399,23 +399,23 @@
 
 <script>
     const cardsData = [
-    { word: "food trucks", zh: "餐車（行動餐廳）", icon: "🚚", enSent: "<span class='highlight-blue'>Food trucks</span> are trucks where people make and sell food.", zhSent: "餐車是人們在裡面製作並賣食物的卡車。", rawSent: "Food trucks are trucks where people make and sell food." },
-    { word: "sell", zh: "賣；販售", icon: "💵", enSent: "Food trucks are trucks where people make and <span class='highlight-blue'>sell</span> food.", zhSent: "餐車是人們在裡面製作並賣食物的卡車。", rawSent: "Food trucks are trucks where people make and sell food." },
-    { word: "fish and chips", zh: "炸魚薯條", icon: "🍟", enSent: "This food truck sells <span class='highlight-blue'>fish and chips</span>.", zhSent: "這輛餐車賣炸魚薯條。", rawSent: "This food truck sells fish and chips." },
-    { word: "Japanese food", zh: "日式料理", icon: "🍣", enSent: "This food truck sells <span class='highlight-blue'>Japanese food</span>.", zhSent: "這輛餐車賣日式料理。", rawSent: "This food truck sells Japanese food." },
-    { word: "Indian food", zh: "印度料理", icon: "🍛", enSent: "This food truck sells <span class='highlight-blue'>Indian food</span>.", zhSent: "這輛餐車賣印度料理。", rawSent: "This food truck sells Indian food." },
-    { word: "grilled", zh: "烤的；燒烤的", icon: "🥪", enSent: "This food truck sells <span class='highlight-blue'>grilled</span> cheese sandwiches.", zhSent: "這輛餐車賣烤起司三明治。", rawSent: "This food truck sells grilled cheese sandwiches." },
-    { word: "ribs", zh: "肋排", icon: "🍗", enSent: "This food truck sells <span class='highlight-blue'>ribs</span>.", zhSent: "這輛餐車賣肋排。", rawSent: "This food truck sells ribs." },
-    { word: "wherever", zh: "無論在哪裡", icon: "📍", enSent: "Food trucks go <span class='highlight-blue'>wherever</span> there are crowds of people.", zhSent: "餐車會開到任何有人群的地方。", rawSent: "Food trucks go wherever there are crowds of people." },
-    { word: "seafood", zh: "海鮮", icon: "🦐", enSent: "This food truck sells <span class='highlight-blue'>seafood</span>.", zhSent: "這輛餐車賣海鮮。", rawSent: "This food truck sells seafood." },
-    { word: "tacos", zh: "墨西哥卷餅", icon: "🌮", enSent: "This food truck sells <span class='highlight-blue'>tacos</span>.", zhSent: "這輛餐車賣墨西哥卷餅。", rawSent: "This food truck sells tacos." }
+    { word: "food trucks", zh: "餐車 ㄔㄢ ㄔㄜ（行動餐廳）", icon: "🚚", enSent: "<span class='highlight-blue'>Food trucks</span> are trucks where people make and sell food.", zhSent: "餐車 ㄔㄢ ㄔㄜ 是 ㄕˋ 人們 ㄖㄣˊ ㄇㄣ 在 ㄗㄞˋ 裡面 ㄌㄧˇ ㄇㄧㄢˋ 製作 ㄓˋ ㄗㄨㄛˋ 並 ㄅㄧㄥˋ 賣 ㄇㄞˋ 食物 ㄕˊ ㄨˋ 的 ㄉㄜ 卡車 ㄎㄚˇ ㄔㄜ。", rawSent: "Food trucks are trucks where people make and sell food." },
+    { word: "sell", zh: "賣 ㄇㄞˋ；販售 ㄈㄢˋ ㄕㄡˋ", icon: "💵", enSent: "Food trucks are trucks where people make and <span class='highlight-blue'>sell</span> food.", zhSent: "餐車 ㄔㄢ ㄔㄜ 是 ㄕˋ 人們 ㄖㄣˊ ㄇㄣ 在 ㄗㄞˋ 裡面 ㄌㄧˇ ㄇㄧㄢˋ 製作 ㄓˋ ㄗㄨㄛˋ 並 ㄅㄧㄥˋ 賣 ㄇㄞˋ 食物 ㄕˊ ㄨˋ 的 ㄉㄜ 卡車 ㄎㄚˇ ㄔㄜ。", rawSent: "Food trucks are trucks where people make and sell food." },
+    { word: "fish and chips", zh: "炸魚薯條 ㄓㄚˊ ㄩˊ ㄕㄨˇ ㄊㄧㄠˊ", icon: "🍟", enSent: "This food truck sells <span class='highlight-blue'>fish and chips</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 炸魚薯條 ㄓㄚˊ ㄩˊ ㄕㄨˇ ㄊㄧㄠˊ。", rawSent: "This food truck sells fish and chips." },
+    { word: "Japanese food", zh: "日式料理 ㄖˋ ㄕˋ ㄌㄧㄠˋ ㄌㄧˇ", icon: "🍣", enSent: "This food truck sells <span class='highlight-blue'>Japanese food</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 日式料理 ㄖˋ ㄕˋ ㄌㄧㄠˋ ㄌㄧˇ。", rawSent: "This food truck sells Japanese food." },
+    { word: "Indian food", zh: "印度料理 ㄧㄣˋ ㄉㄨˋ ㄌㄧㄠˋ ㄌㄧˇ", icon: "🍛", enSent: "This food truck sells <span class='highlight-blue'>Indian food</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 印度料理 ㄧㄣˋ ㄉㄨˋ ㄌㄧㄠˋ ㄌㄧˇ。", rawSent: "This food truck sells Indian food." },
+    { word: "grilled", zh: "烤的 ㄎㄠˇ ㄉㄜ；燒烤的 ㄕㄠ ㄎㄠˇ ㄉㄜ", icon: "🥪", enSent: "This food truck sells <span class='highlight-blue'>grilled</span> cheese sandwiches.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 烤 ㄎㄠˇ 起司 ㄑㄧˇ ㄙ 三明治 ㄙㄢ ㄇㄧㄥˊ ㄓˋ。", rawSent: "This food truck sells grilled cheese sandwiches." },
+    { word: "ribs", zh: "肋排 ㄌㄟˋ ㄆㄞˊ", icon: "🍗", enSent: "This food truck sells <span class='highlight-blue'>ribs</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 肋排 ㄌㄟˋ ㄆㄞˊ。", rawSent: "This food truck sells ribs." },
+    { word: "wherever", zh: "無論在哪裡 ㄨˊ ㄌㄨㄣˋ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ", icon: "📍", enSent: "Food trucks go <span class='highlight-blue'>wherever</span> there are crowds of people.", zhSent: "餐車 ㄔㄢ ㄔㄜ 會 ㄏㄨㄟˋ 開 ㄎㄞ 到 ㄉㄠˋ 任何 ㄖㄣˊ ㄏㄜˋ 有 ㄧㄡˇ 人群 ㄖㄣˊ ㄑㄩㄣˊ 的 ㄉㄜ 地方 ㄉㄧˋ ㄈㄤ。", rawSent: "Food trucks go wherever there are crowds of people." },
+    { word: "seafood", zh: "海鮮 ㄏㄞˇ ㄒㄧㄢ", icon: "🦐", enSent: "This food truck sells <span class='highlight-blue'>seafood</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 海鮮 ㄏㄞˇ ㄒㄧㄢ。", rawSent: "This food truck sells seafood." },
+    { word: "tacos", zh: "墨西哥卷餅 ㄇㄛˋ ㄒㄧ ㄍㄜ ㄐㄩㄢˇ ㄅㄧㄥˇ", icon: "🌮", enSent: "This food truck sells <span class='highlight-blue'>tacos</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 墨西哥卷餅 ㄇㄛˋ ㄒㄧ ㄍㄜ ㄐㄩㄢˇ ㄅㄧㄥˇ。", rawSent: "This food truck sells tacos." }
   ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031A';
+  const APP_VER = 'V1031B';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
@@ -575,7 +575,7 @@
         showSummary();
       } else {
         loadCard(idx, false);
-        speak(mainText(cardsData[currentIndex]));
+        speakCardText(cardsData[currentIndex]);
       }
     } else {
       loadCard(0, true);
@@ -776,7 +776,7 @@
     const doneNote = document.getElementById('recDoneNote');
     if (doneNote) doneNote.style.display = 'none';
     
-    speak(mainText(item));
+    speakCardText(item);
   }
 
   function mainText(item) {
@@ -784,13 +784,14 @@
   }
 
   let ttsQuietResolve = null;
-  function speak(text) {
+  function speak(text, rate) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     // 換新的發音時，先結束上一個「等發音結束」的承諾
     if (ttsQuietResolve) { try { ttsQuietResolve(); } catch (e) {} }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
+    utterance.rate = (typeof rate === 'number') ? rate : 1.0;
     const p = new Promise(resolve => { ttsQuietResolve = resolve; });
     utterance.onend = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
     utterance.onerror = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
@@ -813,8 +814,13 @@
     });
   }
 
+  // ===== 句子模式：語速放慢 0.7、發音等待時間拉長（單字維持正常速度）=====
+  const SENT_RATE = 0.7;
+  function speakCardText(item) { speak(mainText(item), (recMode === 'sentence') ? SENT_RATE : 1.0); }
+  function ttsWaitMs() { return (recMode === 'sentence') ? 9000 : 4000; }
+
   function speakMain() {
-    speak(mainText(cardsData[currentIndex]));
+    speakCardText(cardsData[currentIndex]);
   }
 
   function changeCard(dir) {
@@ -943,7 +949,7 @@
   async function startAutoRecording() {
     if (!autoPractice) return;
     // 先等系統朗讀播完再開始錄音，避免麥克風把示範發音錄進去造成假高分
-    await waitTtsDone(4000);
+    await waitTtsDone(ttsWaitMs());
     if (!autoPractice) return;
     clearTimeout(silenceTimer);
     speechStarted = false;
@@ -1037,7 +1043,7 @@
       window._lastAppendedFinal = '';
       window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
-      await waitTtsDone(2500);
+      await waitTtsDone(ttsWaitMs());
       const doneNote = document.getElementById('recDoneNote');
       if (doneNote) doneNote.style.display = 'none';
       try {
