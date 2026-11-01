@@ -238,6 +238,8 @@
   #welcome-page .cute-btn:hover { box-shadow: 0 6px 14px rgba(45,52,54,0.15); transform: translateY(-2px); }
   #welcome-page .clear-progress-btn { background: #fdfbf8; border: 1.5px solid #e3d5c5; color: #8a7f74; border-radius: 12px; }
   #welcome-page .clear-progress-btn:hover { border-color: #c75b39; color: #c75b39; }
+  /* 註音放中文下一行：保留換行字元 */
+  .word-translation, .sentence-zh, .listen-zh, .option-btn { white-space: pre-line; }
 </style>
 </head>
 <body>
@@ -399,23 +401,23 @@
 
 <script>
     const cardsData = [
-    { word: "food trucks", zh: "餐車 ㄔㄢ ㄔㄜ（行動餐廳）", icon: "🚚", enSent: "<span class='highlight-blue'>Food trucks</span> are trucks where people make and sell food.", zhSent: "餐車 ㄔㄢ ㄔㄜ 是 ㄕˋ 人們 ㄖㄣˊ ㄇㄣ 在 ㄗㄞˋ 裡面 ㄌㄧˇ ㄇㄧㄢˋ 製作 ㄓˋ ㄗㄨㄛˋ 並 ㄅㄧㄥˋ 賣 ㄇㄞˋ 食物 ㄕˊ ㄨˋ 的 ㄉㄜ 卡車 ㄎㄚˇ ㄔㄜ。", rawSent: "Food trucks are trucks where people make and sell food." },
-    { word: "sell", zh: "賣 ㄇㄞˋ；販售 ㄈㄢˋ ㄕㄡˋ", icon: "💵", enSent: "Food trucks are trucks where people make and <span class='highlight-blue'>sell</span> food.", zhSent: "餐車 ㄔㄢ ㄔㄜ 是 ㄕˋ 人們 ㄖㄣˊ ㄇㄣ 在 ㄗㄞˋ 裡面 ㄌㄧˇ ㄇㄧㄢˋ 製作 ㄓˋ ㄗㄨㄛˋ 並 ㄅㄧㄥˋ 賣 ㄇㄞˋ 食物 ㄕˊ ㄨˋ 的 ㄉㄜ 卡車 ㄎㄚˇ ㄔㄜ。", rawSent: "Food trucks are trucks where people make and sell food." },
-    { word: "fish and chips", zh: "炸魚薯條 ㄓㄚˊ ㄩˊ ㄕㄨˇ ㄊㄧㄠˊ", icon: "🍟", enSent: "This food truck sells <span class='highlight-blue'>fish and chips</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 炸魚薯條 ㄓㄚˊ ㄩˊ ㄕㄨˇ ㄊㄧㄠˊ。", rawSent: "This food truck sells fish and chips." },
-    { word: "Japanese food", zh: "日式料理 ㄖˋ ㄕˋ ㄌㄧㄠˋ ㄌㄧˇ", icon: "🍣", enSent: "This food truck sells <span class='highlight-blue'>Japanese food</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 日式料理 ㄖˋ ㄕˋ ㄌㄧㄠˋ ㄌㄧˇ。", rawSent: "This food truck sells Japanese food." },
-    { word: "Indian food", zh: "印度料理 ㄧㄣˋ ㄉㄨˋ ㄌㄧㄠˋ ㄌㄧˇ", icon: "🍛", enSent: "This food truck sells <span class='highlight-blue'>Indian food</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 印度料理 ㄧㄣˋ ㄉㄨˋ ㄌㄧㄠˋ ㄌㄧˇ。", rawSent: "This food truck sells Indian food." },
-    { word: "grilled", zh: "烤的 ㄎㄠˇ ㄉㄜ；燒烤的 ㄕㄠ ㄎㄠˇ ㄉㄜ", icon: "🥪", enSent: "This food truck sells <span class='highlight-blue'>grilled</span> cheese sandwiches.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 烤 ㄎㄠˇ 起司 ㄑㄧˇ ㄙ 三明治 ㄙㄢ ㄇㄧㄥˊ ㄓˋ。", rawSent: "This food truck sells grilled cheese sandwiches." },
-    { word: "ribs", zh: "肋排 ㄌㄟˋ ㄆㄞˊ", icon: "🍗", enSent: "This food truck sells <span class='highlight-blue'>ribs</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 肋排 ㄌㄟˋ ㄆㄞˊ。", rawSent: "This food truck sells ribs." },
-    { word: "wherever", zh: "無論在哪裡 ㄨˊ ㄌㄨㄣˋ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ", icon: "📍", enSent: "Food trucks go <span class='highlight-blue'>wherever</span> there are crowds of people.", zhSent: "餐車 ㄔㄢ ㄔㄜ 會 ㄏㄨㄟˋ 開 ㄎㄞ 到 ㄉㄠˋ 任何 ㄖㄣˊ ㄏㄜˋ 有 ㄧㄡˇ 人群 ㄖㄣˊ ㄑㄩㄣˊ 的 ㄉㄜ 地方 ㄉㄧˋ ㄈㄤ。", rawSent: "Food trucks go wherever there are crowds of people." },
-    { word: "seafood", zh: "海鮮 ㄏㄞˇ ㄒㄧㄢ", icon: "🦐", enSent: "This food truck sells <span class='highlight-blue'>seafood</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 海鮮 ㄏㄞˇ ㄒㄧㄢ。", rawSent: "This food truck sells seafood." },
-    { word: "tacos", zh: "墨西哥卷餅 ㄇㄛˋ ㄒㄧ ㄍㄜ ㄐㄩㄢˇ ㄅㄧㄥˇ", icon: "🌮", enSent: "This food truck sells <span class='highlight-blue'>tacos</span>.", zhSent: "這輛 ㄓㄜˋ ㄌㄧㄤˋ 餐車 ㄔㄢ ㄔㄜ 賣 ㄇㄞˋ 墨西哥卷餅 ㄇㄛˋ ㄒㄧ ㄍㄜ ㄐㄩㄢˇ ㄅㄧㄥˇ。", rawSent: "This food truck sells tacos." }
+    { word: "food trucks", zh: "餐車（行動餐廳）\nㄔㄢ ㄔㄜ（ㄒㄧㄥˊ ㄉㄨㄥˋ ㄘㄢ ㄊㄧㄥ）", icon: "🚚", enSent: "<span class='highlight-blue'>Food trucks</span> are trucks where people make and sell food.", zhSent: "餐車是人們在裡面製作並賣食物的卡車。\nㄔㄢ ㄔㄜ ㄕˋ ㄖㄣˊ ㄇㄣ ㄗㄞˋ ㄌㄧˇ ㄇㄧㄢˋ ㄓˋ ㄗㄨㄛˋ ㄅㄧㄥˋ ㄇㄞˋ ㄕˊ ㄨˋ ㄉㄜ ㄎㄚˇ ㄔㄜ。", rawSent: "Food trucks are trucks where people make and sell food." },
+    { word: "sell", zh: "賣；販售\nㄇㄞˋ；ㄈㄢˋ ㄕㄡˋ", icon: "💵", enSent: "Food trucks are trucks where people make and <span class='highlight-blue'>sell</span> food.", zhSent: "餐車是人們在裡面製作並賣食物的卡車。\nㄔㄢ ㄔㄜ ㄕˋ ㄖㄣˊ ㄇㄣ ㄗㄞˋ ㄌㄧˇ ㄇㄧㄢˋ ㄓˋ ㄗㄨㄛˋ ㄅㄧㄥˋ ㄇㄞˋ ㄕˊ ㄨˋ ㄉㄜ ㄎㄚˇ ㄔㄜ。", rawSent: "Food trucks are trucks where people make and sell food." },
+    { word: "fish and chips", zh: "炸魚薯條\nㄓㄚˊ ㄩˊ ㄕㄨˇ ㄊㄧㄠˊ", icon: "🍟", enSent: "This food truck sells <span class='highlight-blue'>fish and chips</span>.", zhSent: "這輛餐車賣炸魚薯條。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄓㄚˊ ㄩˊ ㄕㄨˇ ㄊㄧㄠˊ。", rawSent: "This food truck sells fish and chips." },
+    { word: "Japanese food", zh: "日式料理\nㄖˋ ㄕˋ ㄌㄧㄠˋ ㄌㄧˇ", icon: "🍣", enSent: "This food truck sells <span class='highlight-blue'>Japanese food</span>.", zhSent: "這輛餐車賣日式料理。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄖˋ ㄕˋ ㄌㄧㄠˋ ㄌㄧˇ。", rawSent: "This food truck sells Japanese food." },
+    { word: "Indian food", zh: "印度料理\nㄧㄣˋ ㄉㄨˋ ㄌㄧㄠˋ ㄌㄧˇ", icon: "🍛", enSent: "This food truck sells <span class='highlight-blue'>Indian food</span>.", zhSent: "這輛餐車賣印度料理。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄧㄣˋ ㄉㄨˋ ㄌㄧㄠˋ ㄌㄧˇ。", rawSent: "This food truck sells Indian food." },
+    { word: "grilled", zh: "烤的；燒烤的\nㄎㄠˇ ㄉㄜ；ㄕㄠ ㄎㄠˇ ㄉㄜ", icon: "🥪", enSent: "This food truck sells <span class='highlight-blue'>grilled</span> cheese sandwiches.", zhSent: "這輛餐車賣烤起司三明治。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄎㄠˇ ㄑㄧˇ ㄙ ㄙㄢ ㄇㄧㄥˊ ㄓˋ。", rawSent: "This food truck sells grilled cheese sandwiches." },
+    { word: "ribs", zh: "肋排\nㄌㄟˋ ㄆㄞˊ", icon: "🍗", enSent: "This food truck sells <span class='highlight-blue'>ribs</span>.", zhSent: "這輛餐車賣肋排。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄌㄟˋ ㄆㄞˊ。", rawSent: "This food truck sells ribs." },
+    { word: "wherever", zh: "無論在哪裡\nㄨˊ ㄌㄨㄣˋ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ", icon: "📍", enSent: "Food trucks go <span class='highlight-blue'>wherever</span> there are crowds of people.", zhSent: "餐車會開到任何有人群的地方。\nㄔㄢ ㄔㄜ ㄏㄨㄟˋ ㄎㄞ ㄉㄠˋ ㄖㄣˊ ㄏㄜˋ ㄧㄡˇ ㄖㄣˊ ㄑㄩㄣˊ ㄉㄜ ㄉㄧˋ ㄈㄤ。", rawSent: "Food trucks go wherever there are crowds of people." },
+    { word: "seafood", zh: "海鮮\nㄏㄞˇ ㄒㄧㄢ", icon: "🦐", enSent: "This food truck sells <span class='highlight-blue'>seafood</span>.", zhSent: "這輛餐車賣海鮮。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄏㄞˇ ㄒㄧㄢ。", rawSent: "This food truck sells seafood." },
+    { word: "tacos", zh: "墨西哥卷餅\nㄇㄛˋ ㄒㄧ ㄍㄜ ㄐㄩㄢˇ ㄅㄧㄥˇ", icon: "🌮", enSent: "This food truck sells <span class='highlight-blue'>tacos</span>.", zhSent: "這輛餐車賣墨西哥卷餅。\nㄓㄜˋ ㄌㄧㄤˋ ㄔㄢ ㄔㄜ ㄇㄞˋ ㄇㄛˋ ㄒㄧ ㄍㄜ ㄐㄩㄢˇ ㄅㄧㄥˇ。", rawSent: "This food truck sells tacos." }
   ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031B';
+  const APP_VER = 'V1031C';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
