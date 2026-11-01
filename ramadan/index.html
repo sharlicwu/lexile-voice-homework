@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Observing Ramadan 語音作業 (基礎)</title>
+<title>Food Trucks 語音作業 (基礎)</title>
 <style>
   :root {
     --pumpkin: #ff9f43;
@@ -221,7 +221,7 @@
   }
 </style>
 <style>
-  /* ===== Ramadan · 簡約風格 ===== */
+  /* ===== Food Trucks · 美食簡約風格 ===== */
   body { background: #faf5ee; }
   .presentation-container { background: #ffffff; border: 1px solid #efe3d4; border-radius: 24px; box-shadow: 0 10px 30px rgba(45,52,54,0.07); }
   .food-strip { font-size: 25px; letter-spacing: 8px; opacity: 0.92; margin-top: -4px; }
@@ -248,10 +248,10 @@
   <!-- Welcome -->
   <div class="page active" id="welcome-page">
     <div class="welcome-screen">
-      <div class="cute-title">🌙 Observing Ramadan</div>
-      <div class="food-strip">🕌 🌙 📅 ✨ 🌙 🍽️</div>
+      <div class="cute-title">🚚 Food Trucks</div>
+      <div class="food-strip">🍔 🌮 🍣 🍛 🦐 🍟 🌭</div>
       <div class="thin-divider"></div>
-      <div class="subtitle">藍思基礎語音作業 · 12 個 Ramadan 單字與句子</div>
+      <div class="subtitle">藍思基礎語音作業 · 單字卡朗讀與 AI 評分系統</div>
       <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
       <div class="btn-group">
         <button class="cute-btn btn-listen" id="btnListen">🎧 聽力練習</button>
@@ -416,13 +416,12 @@
     { word: "crescent", zh: "新月形；月牙\nㄒㄧㄣ ㄩㄝˋ ㄒㄧㄥˊ；ㄩㄝˋ ㄧㄚ", icon: "🌙", enSent: "The rise of a <span class='highlight-blue'>crescent</span> moon marks the end of Ramadan.", zhSent: "月牙的升起標記齋戒月的結束。\nㄩㄝˋ ㄧㄚ ㄉㄜˋ ㄕㄥ ㄑㄧˇ ㄅㄧㄠˇ ㄐㄧˋ ㄓㄞ ㄐㄧㄝˋ ㄩㄝˋ ㄉㄜˋ ㄐㄧㄝˊ ㄕㄨˋ。", rawSent: "The rise of a crescent moon marks the end of Ramadan." },
     { word: "coal miners", zh: "煤礦工人\nㄇㄟˊ ㄎㄨㄤˋ ㄍㄨㄥ ㄖㄣˊ", icon: "⛏️", enSent: "<span class='highlight-blue'>Coal miners</span> take a break during Ramadan.", zhSent: "煤礦工人在齋戒月期間休息。\nㄇㄟˊ ㄎㄨㄤˋ ㄍㄨㄥ ㄖㄣˊ ㄗㄞˋ ㄓㄞ ㄐㄧㄝˋ ㄩㄝˋ ㄑㄧㄐㄧㄢ ㄒㄧㄡ ㄒㄧˇ。", rawSent: "Coal miners in Turkey take a break to enjoy suhoor underground." }
   ];
-  ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
-  const TOPIC = 'ramadan-基礎';
+  const TOPIC = 'ramadan-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1101';
+  const APP_VER = 'V1102';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
