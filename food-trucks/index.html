@@ -419,7 +419,7 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031F';
+  const APP_VER = 'V1031G';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -916,7 +916,7 @@
   }
 
   // 安全啟動辨識：等 onstart 確認引擎真的啟動，安卓上最多重試 3 次。
-  // 傳回 Promise<boolean>：true=辨識已啟動，false=啟動失敗（不應繼續錄音）
+  // 傳回 Promise<boolean>：true=辨識已啟動，false=啟動失敗（但錄音仍會進行，不阻擋用戶）
   function safeStartRecognition() {
     return new Promise((resolve) => {
       if (!recognition) { window._recogStartError = 'no-recognition-object'; resolve(false); return; }
@@ -977,11 +977,8 @@
     setupRecognition();
     autoPractice = true;
     window._recogWant = true;
-    const recogOk2 = await safeStartRecognition();
-    if (!recogOk2) {
-      stopAutoPractice('語音辨識無法啟動：' + (window._recogStartError || '未知錯誤') + '（請重新整理頁面後再試）');
-      return;
-    }
+    // 辨識失敗不阻擋自動練習：繼續開啟錄音流程，評分時若沒辨識結果會顯示原因
+    await safeStartRecognition();
     document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
     document.getElementById('autoPracticeStatus').innerText = '自動練習中：請唸出畫面上的內容，停頓後會自動換題';
     document.getElementById('recordBtn').disabled = true;
@@ -1165,14 +1162,10 @@
 
       // 先啟動語音辨識並等它確認啟動（onstart），再開 MediaRecorder。
       // 安卓上 MediaRecorder 先佔住麥克風會讓辨識聽不到聲音 → 永遠低分。
+      // 即使辨識沒啟動（iOS 某些版本 onstart 不觸發），也不阻擋錄音：開 MediaRecorder 讓學生至少能錄音，
+      // 評分時若沒辨識結果會顯示原因，不會固定低分。
       window._recogWant = true;
-      const recogOk = await safeStartRecognition();
-      if (!recogOk) {
-        btn.classList.remove('recording');
-        btn.innerText = '🎤 單一錄音（可播放自己的聲音）';
-        alert('語音辨識無法啟動：' + (window._recogStartError || '未知錯誤') + '\n\n請：1) 重新整理頁面；2) 確認已允許麥克風權限；3) 若仍失敗，請用電腦 Chrome 瀏覽器打開。');
-        return;
-      }
+      await safeStartRecognition();
       mediaRecorder.start();
 
       document.getElementById('recStatus').classList.add('active');
