@@ -419,7 +419,7 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031I';
+  const APP_VER = 'V1031K';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1270,13 +1270,14 @@
     let feedback = '';
     let best = null;
     if (!candidates.length) {
-      // 安卓語音辨識常抓不到文字：不再給 40 分→65，改給正面保護分數 80，
-      // 評語輪播提醒學生用 Chrome 重新整理頁面，確認麥克風權限。
-      score = 80;
+      // 安卓語音辨識常抓不到文字：不再給 40 分→65，改給正面保護分數輪播 80/85/90/95/100，
+      // 讓分數看起來有多元性，評語同步輪播提醒學生用 Chrome 重新整理頁面。
+      const protectScores = [80, 85, 90, 95, 100];
+      score = protectScores[Date.now() % protectScores.length];
       const protectMsgs = [
-        '語音辨識還沒啟動喔，暫給 80 分保護分數！🌟 建議用 Chrome 打開並重新整理頁面，就能正常評分囉！',
-        '這次還沒抓到你的聲音，先給你 80 分鼓勵！💪 請用 Chrome 重新整理頁面，確認麥克風權限已允許，再試一次！',
-        '語音辨識尚未連線，暫給 80 分保護分數🎯。建議：用 Chrome 瀏覽器打開，並確認已允許麥克風，就能聽到你的精彩發音了！'
+        '語音辨識還沒啟動喔，暫給 ' + score + ' 分保護分數！🌟 建議用 Chrome 打開並重新整理頁面，就能正常評分囉！',
+        '這次還沒抓到你的聲音，先給你 ' + score + ' 分鼓勵！💪 請用 Chrome 重新整理頁面，確認麥克風權限已允許，再試一次！',
+        '語音辨識尚未連線，暫給 ' + score + ' 分保護分數🎯。建議：用 Chrome 瀏覽器打開，並確認已允許麥克風，就能聽到你的精彩發音了！'
       ];
       feedback = protectMsgs[Date.now() % protectMsgs.length] + recogErrHint();
     } else {
@@ -1287,7 +1288,9 @@
       best = judged[0];
       // 回音防呆：最高分的候選剛好「完全等於目標」，但學生自己嘴裡說的（主辨識）卻完全不像
       // → 多半是示範朗讀被麥克風錄進去，不能給高分，降為 80 並請學生重錄
-      if (best.cand !== primaryClean && primaryClean) {
+      if (primaryClean && best.cand !== primaryClean) {
+        // 只有當學生自己的辨識結果有內容（非空白）時才啟動「回音防呆」降分；
+        // 若 primaryClean 為空（辨識沒抓到學生聲音），跳過降分，直接給真正的高分（90+）
         const primaryJudge = judged.find(j => j.cand === primaryClean);
         if (primaryJudge && primaryJudge.score <= 65 && best.score >= 90) {
           best.score = 80;
