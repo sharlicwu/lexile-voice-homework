@@ -419,7 +419,7 @@
   const TOPIC = 'food-trucks-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1031H';
+  const APP_VER = 'V1031I';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1270,8 +1270,15 @@
     let feedback = '';
     let best = null;
     if (!candidates.length) {
-      score = 40;
-      feedback = '沒有聽到你的聲音 😢 再靠近一點、大聲一點唸一次看看！' + recogErrHint();
+      // 安卓語音辨識常抓不到文字：不再給 40 分→65，改給正面保護分數 80，
+      // 評語輪播提醒學生用 Chrome 重新整理頁面，確認麥克風權限。
+      score = 80;
+      const protectMsgs = [
+        '語音辨識還沒啟動喔，暫給 80 分保護分數！🌟 建議用 Chrome 打開並重新整理頁面，就能正常評分囉！',
+        '這次還沒抓到你的聲音，先給你 80 分鼓勵！💪 請用 Chrome 重新整理頁面，確認麥克風權限已允許，再試一次！',
+        '語音辨識尚未連線，暫給 80 分保護分數🎯。建議：用 Chrome 瀏覽器打開，並確認已允許麥克風，就能聽到你的精彩發音了！'
+      ];
+      feedback = protectMsgs[Date.now() % protectMsgs.length] + recogErrHint();
     } else {
       const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
       const primaryClean = clean(transcript || window._interim);
