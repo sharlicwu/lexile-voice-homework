@@ -1491,63 +1491,66 @@
       quizList = [...cardsData].sort(() => Math.random() - 0.5); // 全部 18 個單字都考，不截斷
       document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
       switchPage('quiz-page');
-      loadQuizQuestion();
+      loadMatchRound();
   }
 
-  function loadQuizQuestion() {
-    if (quizIndex >= quizList.length) {
-      showQuizResult();
-      return;
+  function loadMatchRound() {
+    // Split cardsData into 2 rounds of 6 words each
+    let roundWords = cardsData.slice(0, 6);
+    let matchCards = [];
+    roundWords.forEach(w => {
+      matchCards.push({ type: 'en', text: w.word, pair: w.word, matched: false });
+      matchCards.push({ type: 'zh', text: w.zh.split('\n')[0], pair: w.word, matched: false });
+    });
+    matchCards.sort(() => Math.random() - 0.5);
+    const grid = document.getElementById('matchGrid');
+    if (grid) {
+      grid.innerHTML = '';
+      matchCards.forEach((card, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.style.fontSize = '14px';
+        btn.style.padding = '10px 6px';
+        btn.style.borderRadius = '14px';
+        btn.style.background = '#fff';
+        btn.style.border = '2px solid #e3cba8';
+        btn.style.color = card.type === 'en' ? '#c75b39' : '#6f5b4a';
+        btn.style.fontWeight = '700';
+        btn.style.cursor = 'pointer';
+        btn.innerText = card.text;
+        btn.disabled = card.matched;
+        btn.style.opacity = card.matched ? '0.25' : '1';
+        btn.addEventListener('click', () => selectMatchCard(btn, card, idx));
+        grid.appendChild(btn);
+      });
     }
-    canAnswer = true;
-    const current = quizList[quizIndex];
-    document.getElementById('quizProgress').innerText = `第 ${quizIndex + 1} / ${quizList.length} 題`;
-    document.getElementById('quizWord').innerText = current.word;
+    document.getElementById('quizProgress').innerText = '第 1 組 / 2 組 · 已配對 0 / 6';
+    document.getElementById('matchPaired').innerText = '0';
+    document.getElementById('matchRound').innerText = '1';
+  }
 
-    // 進到題目就自動發音，學生不用自己按按鈕（按鈕仍保留可用於重聽）
-    speak(current.word);
-    
-    let options = [current.zh];
-    while (options.length < 4) {
-      const randomItem = cardsData[Math.floor(Math.random() * cardsData.length)];
-      if (!options.includes(randomItem.zh)) {
-        options.push(randomItem.zh);
+  let matchFirst = null;
+  function selectMatchCard(btn, card, idx) {
+    if (!btn || !card) return;
+    if (card.matched || btn.disabled || (matchFirst && matchFirst.btn === btn)) return;
+    if (!matchFirst) {
+      matchFirst = { btn: btn, card: card, idx: idx };
+      btn.style.background = '#ffeaa7';
+      btn.style.borderColor = '#fab1a0';
+    } else {
+      const first = matchFirst;
+      matchFirst = null;
+      btn.style.background = '#fff';
+      first.btn.style.background = '#fff';
+      if (first.card.pair === card.pair && first.card.type !== card.type) {
+        first.card.matched = true; card.matched = true;
+        first.btn.disabled = true; btn.disabled = true;
+        first.btn.style.opacity = '0.3'; btn.style.opacity = '0.3';
+        first.btn.style.background = '#c8e6c9'; btn.style.background = '#c8e6c9';
+        first.btn.style.borderColor = '#81c784'; btn.style.borderColor = '#81c784';
+        document.getElementById('matchPaired').innerText = parseInt(document.getElementById('matchPaired').innerText || '0') + 1;
       }
     }
-    options.sort(() => Math.random() - 0.5);
-    
-    const grid = document.getElementById('matchGrid');
-    grid.innerHTML = '';
-    options.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.innerText = opt;
-      btn.addEventListener('click', () => selectQuizOption(btn, opt, current.zh));
-      grid.appendChild(btn);
-    });
-    
-    document.getElementById('quizBox').style.display = 'flex';
-    document.getElementById('quizResultBox').style.display = 'none';
-  }
-
-  function selectQuizOption(btn, selected, correct) {
-    if (!canAnswer) return;
-    canAnswer = false;
-    
-    const buttons = document.querySelectorAll('.option-btn');
-    buttons.forEach(b => {
-      if (b.innerText === correct) b.classList.add('correct');
-      if (b === btn && selected !== correct) b.classList.add('wrong');
-    });
-    
-    if (selected === correct) {
-      quizScore++;
-    }
-    
-    setTimeout(() => {
-      quizIndex++;
-      loadQuizQuestion();
-    }, 1200);
   }
 
   function speakQuizWord() {
@@ -1555,26 +1558,13 @@
     if (current) speak(current.word);
   }
 
-  function showQuizResult() {
-    document.getElementById('quizBox').style.display = 'none';
+  function showMatchResult() {
+    document.getElementById('matchGrid').style.display = 'none';
+    document.getElementById('quizProgress').style.display = 'none';
     const resBox = document.getElementById('quizResultBox');
-    resBox.style.display = 'flex';
-    document.getElementById('finalScore').innerText = `答對 ${quizScore} / ${quizList.length} 題`;
-    
-    if (!scriptURL.includes('YOUR_GAS')) {
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          type: 'quiz',
-          topic: TOPIC,
-          studentName: studentName,
-          score: quizScore,
-          total: quizList.length
-        })
-      }).catch(e => console.log(e));
-    }
+    if (resBox) resBox.style.display = 'flex';
+    const finalEl = document.getElementById('finalScore');
+    if (finalEl) finalEl.innerText = '配對完成！';
   }
 </script>
 </body>
