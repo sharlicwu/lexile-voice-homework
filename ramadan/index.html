@@ -378,6 +378,7 @@
         <span class="student-tag" id="quizStudentName">學生：--</span>
         <div class="nav-btn-group">
           <span class="page-indicator" id="quizProgress">已配對 0 / 12 對</span>
+          <span class="page-indicator" id="matchTimer">⏱ 0 秒</span>
           <button class="home-btn" id="btnHomeQuiz">🏠 首頁</button>
         </div>
       </div>
@@ -391,6 +392,7 @@
         <div class="result-emoji">🏆</div>
         <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">配對完成！</h2>
         <div class="score-display" id="finalScore">配對成功 0 / 12 對</div>
+        <div id="finalTime" style="font-size:18px;color:#6f5b4a;font-weight:700;margin-top:4px;">⏱ 用時 0 秒</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top: 10px;">
           <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再配對一次</button>
           <button class="cute-btn btn-listen" id="btnHomeQuizResult">🏠 回首頁</button>
@@ -422,7 +424,7 @@
   const TOPIC = 'ramadan-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1105';
+  const APP_VER = 'V1106';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1488,6 +1490,35 @@
   let matchPairsFound = 0;
   let matchLock = false;
   const MATCH_TOTAL = 12;
+  let matchTimerId = null;
+  let matchSeconds = 0;
+
+  function formatMatchTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s2 = sec % 60;
+    return m > 0 ? `${m} 分 ${s2} 秒` : `${s2} 秒`;
+  }
+
+  function updateMatchTimerDisplay() {
+    const el = document.getElementById('matchTimer');
+    if (el) el.innerText = `⏱ ${formatMatchTime(matchSeconds)}`;
+  }
+
+  function startMatchTimer() {
+    stopMatchTimer();
+    matchSeconds = 0;
+    updateMatchTimerDisplay();
+    matchTimerId = setInterval(() => {
+      const wrap = document.getElementById('matchWrap');
+      if (!wrap || wrap.style.display === 'none') return;
+      matchSeconds++;
+      updateMatchTimerDisplay();
+    }, 1000);
+  }
+
+  function stopMatchTimer() {
+    if (matchTimerId) { clearInterval(matchTimerId); matchTimerId = null; }
+  }
 
   function startQuiz() {
     if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
@@ -1497,6 +1528,7 @@
     document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
     switchPage('quiz-page');
     renderMatchGrid();
+    startMatchTimer();
   }
 
   function renderMatchGrid() {
@@ -1572,12 +1604,15 @@
   }
 
   function showMatchResult() {
+    stopMatchTimer();
     const wrap = document.getElementById('matchWrap');
     if (wrap) wrap.style.display = 'none';
     const resBox = document.getElementById('quizResultBox');
     if (resBox) resBox.style.display = 'flex';
     const finalEl = document.getElementById('finalScore');
     if (finalEl) finalEl.innerText = `配對成功 ${matchPairsFound} / ${MATCH_TOTAL} 對`;
+    const timeEl = document.getElementById('finalTime');
+    if (timeEl) timeEl.innerText = `⏱ 用時 ${formatMatchTime(matchSeconds)}`;
     if (!scriptURL.includes('YOUR_GAS')) {
       fetch(scriptURL, {
         method: 'POST',
