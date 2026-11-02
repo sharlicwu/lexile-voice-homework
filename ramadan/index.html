@@ -377,27 +377,28 @@
       <div class="top-bar">
         <span class="student-tag" id="quizStudentName">學生：--</span>
         <div class="nav-btn-group">
-          <span class="page-indicator" id="quizProgress">第 1 / 18 題</span>
+          <span class="page-indicator" id="quizProgress">第 1 組 / 2 組 · 已配對 0 / 6</span>
           <button class="home-btn" id="btnHomeQuiz">🏠 首頁</button>
         </div>
       </div>
-      <div class="quiz-container" id="quizBox">
-        <div class="quiz-word" id="quizWord">Word</div>
-        <button class="btn-subtle" id="speakQuizBtn" style="background:#fff;color:var(--pumpkin-dark);border:2px solid var(--pumpkin);padding:9px 22px;border-radius:22px;font-size:14px;font-weight:700;cursor:pointer;">🔊 發音</button>
-        <div class="options-grid" id="optionsGrid"></div>
+      <div style="text-align:center;font-size:16px;color:#6f5b4a;font-weight:600;margin-bottom:8px;">
+        🎯 點選一張英文卡，再點選對應的中文卡來配對！配對成功卡片會消失。
       </div>
-      <div class="quiz-result" id="quizResultBox">
+      <div id="matchGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px auto;max-width:640px;padding:0 8px;"></div>
+      <div style="text-align:center;margin-top:10px;font-weight:700;color:#c75b39;font-size:15px;">
+        第 <span id="matchRound">1</span> 組 / 2 組 · 已配對 <span id="matchPaired">0</span> / 6
+      </div>
+      <div class="quiz-result" id="quizResultBox" style="display:none;text-align:center;margin-top:18px;">
         <div class="result-emoji">🏆</div>
-        <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">測驗完成！</h2>
-        <div class="score-display" id="finalScore">答對 0 / 18 題</div>
+        <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">配對完成！</h2>
+        <div class="score-display" id="finalScore">配對成功 0 對 / 12 對</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top: 10px;">
-          <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再測驗一次</button>
+          <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再配對一次</button>
           <button class="cute-btn btn-listen" id="btnHomeQuizResult">🏠 回首頁</button>
         </div>
       </div>
     </div>
   </div>
-</div>
 
 <div class="keyboard-hint" id="keyboardHint">💡 自動練習：按一次「開始自動練習」，系統會偵測停頓、自動停止、評分並換下一題</div>
 
@@ -1515,7 +1516,7 @@
     }
     options.sort(() => Math.random() - 0.5);
     
-    const grid = document.getElementById('optionsGrid');
+    const grid = document.getElementById('matchGrid');
     grid.innerHTML = '';
     options.forEach(opt => {
       const btn = document.createElement('button');
