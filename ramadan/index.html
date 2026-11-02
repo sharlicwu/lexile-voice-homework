@@ -381,14 +381,12 @@
           <button class="home-btn" id="btnHomeQuiz">🏠 首頁</button>
         </div>
       </div>
-      <div style="text-align:center;font-size:16px;color:#6f5b4a;font-weight:600;margin-bottom:8px;">
-        🎯 點選一張英文卡，再點選對應的中文卡來配對！配對成功卡片會消失。
+      <div class="quiz-container" id="quizBox">
+        <div class="quiz-word" id="quizWord">Word</div>
+        <button class="btn-subtle" id="speakQuizBtn" style="background:#fff;color:var(--pumpkin-dark);border:2px solid var(--pumpkin);padding:9px 22px;border-radius:22px;font-size:14px;font-weight:700;cursor:pointer;">🔊 發音</button>
+        <div class="options-grid" id="optionsGrid"></div>
       </div>
-      <div id="matchGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px auto;max-width:640px;padding:0 8px;"></div>
-      <div style="text-align:center;margin-top:10px;font-weight:700;color:#c75b39;font-size:15px;">
-        第 <span id="matchRound">1</span> 組 / 2 組 · 已配對 <span id="matchPaired">0</span> / 6
-      </div>
-      <div class="quiz-result" id="quizResultBox" style="display:none;text-align:center;margin-top:18px;">
+      <div class="quiz-result" id="quizResultBox">
         <div class="result-emoji">🏆</div>
         <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">測驗完成！</h2>
         <div class="score-display" id="finalScore">答對 0 / 18 題</div>
@@ -416,14 +414,14 @@
     { word: "harvest", zh: "收成；收穫", icon: "🌾", enSent: "Farmers in Pakistan <span class='highlight-blue'>harvest</span> dates.", zhSent: "巴基斯坦的農民收成椰棗。", rawSent: "Farmers in Pakistan harvest dates." },
     { word: "telescope", zh: "望遠鏡", icon: "🔭", enSent: "Men use a <span class='highlight-blue'>telescope</span> to look for a crescent moon.", zhSent: "人們用望遠鏡尋找新月。", rawSent: "Men and boys use a telescope to look for a crescent moon." },
     { word: "crescent", zh: "新月形；月牙", icon: "🌙", enSent: "The rise of a <span class='highlight-blue'>crescent</span> moon marks the end of Ramadan.", zhSent: "月牙的升起標記齋戒月的結束。", rawSent: "The rise of a crescent moon marks the end of Ramadan." },
-    { word: "coal miners", zh: "煤礦工人", icon: "⛏️", enSent: "<span class='highlight-blue'>Coal miners</span> take a break during Ramadan.", zhSent: "煤礦工人在齋戒月期間休息。", rawSent: "Coal miners in Turkey take a break to enjoy suhoor underground." }
+    { word: "coal miners", zh: "煤礦工人", icon: "⛏️", enSent: "<span class='highlight-blue'>Coal miners</span> take a break during Ramadan.", zhSent: "煤礦工人在齋戒月期間休息。", rawSent: "Coal miners in Turkey take a break to enjoy suhoor underground." },
   ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
   const TOPIC = 'ramadan-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1102';
+  const APP_VER = 'V1103';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1485,111 +1483,82 @@
     }
   }
 
-  // Matching card quiz variables
-  let matchRound = 0, matchPairsFound = 0, matchScore = 0, matchCards = [];
-  let matchFirst = null;
-
   function startQuiz() {
-    if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
-    matchRound = 0; matchPairsFound = 0; matchScore = 0;
-    document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
-    document.getElementById('quizResultBox').style.display = 'none';
-    switchPage('quiz-page');
-    loadMatchRound();
+      if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
+      quizIndex = 0;
+      quizScore = 0;
+      quizList = [...cardsData].sort(() => Math.random() - 0.5); // 全部 18 個單字都考，不截斷
+      document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
+      switchPage('quiz-page');
+      loadQuizQuestion();
   }
 
-  function loadMatchRound() {
-    if (matchRound >= 2) {
-      showMatchResult();
+  function loadQuizQuestion() {
+    if (quizIndex >= quizList.length) {
+      showQuizResult();
       return;
     }
-    const startIdx = matchRound * 6;
-    const roundWords = cardsData.slice(startIdx, startIdx + 6);
-    matchPairsFound = 0;
-    document.getElementById('quizProgress').innerText = `第 ${matchRound + 1} 組 / 2 組 · 已配對 ${matchPairsFound} / 6`;
-    matchCards = [];
-    roundWords.forEach(w => {
-      matchCards.push({ type: 'en', text: w.word, pair: w.word, matched: false });
-      matchCards.push({ type: 'zh', text: w.zh.split('\\n')[0], pair: w.word, matched: false });
-    });
-    matchCards.sort(() => Math.random() - 0.5);
-    renderMatchGrid();
-  }
+    canAnswer = true;
+    const current = quizList[quizIndex];
+    document.getElementById('quizProgress').innerText = `第 ${quizIndex + 1} / ${quizList.length} 題`;
+    document.getElementById('quizWord').innerText = current.word;
 
-  function renderMatchGrid() {
-    const grid = document.getElementById('matchGrid');
-    grid.innerHTML = '';
-    matchCards.forEach((card, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.style.fontSize = '15px';
-      btn.style.padding = '14px 8px';
-      btn.style.borderRadius = '16px';
-      btn.style.background = '#fff';
-      btn.style.border = '2.5px solid #e3cba8';
-      btn.style.color = card.type === 'en' ? '#c75b39' : '#6f5b4a';
-      btn.style.fontWeight = '800';
-      btn.style.cursor = 'pointer';
-      btn.style.transition = 'all 0.2s ease';
-      btn.innerText = card.text;
-      btn.disabled = card.matched;
-      btn.style.opacity = card.matched ? '0.25' : '1';
-      btn.style.pointerEvents = card.matched ? 'none' : 'auto';
-      btn.addEventListener('click', () => selectMatchCard(btn, card, idx));
-      grid.appendChild(btn);
-    });
-  }
-
-  function selectMatchCard(btn, card, idx) {
-    if (card.matched || btn.disabled || (matchFirst && matchFirst.idx === idx)) return;
-    if (!matchFirst) {
-      matchFirst = { btn, card, idx };
-      btn.style.background = '#ffeaa7';
-      btn.style.borderColor = '#fab1a0';
-      btn.style.transform = 'scale(1.05)';
-    } else {
-      const first = matchFirst;
-      matchFirst = null;
-      btn.style.transform = 'scale(1)';
-      first.btn.style.transform = 'scale(1)';
-      if (first.card.pair === card.pair && first.card.type !== card.type) {
-        first.card.matched = true; card.matched = true;
-        first.btn.disabled = true; btn.disabled = true;
-        first.btn.style.opacity = '0.3'; btn.style.opacity = '0.3';
-        first.btn.style.background = '#c8e6c9'; btn.style.background = '#c8e6c9';
-        first.btn.style.borderColor = '#81c784'; btn.style.borderColor = '#81c784';
-        matchPairsFound++;
-        matchScore++;
-        setTimeout(() => {
-          document.getElementById('quizProgress').innerText = `第 ${matchRound + 1} 組 / 2 組 · 已配對 ${matchPairsFound} / 6`;
-          renderMatchGrid();
-          if (matchPairsFound >= 6) {
-            setTimeout(() => {
-              matchRound++;
-              if (matchRound >= 2) {
-                showMatchResult();
-              } else {
-                loadMatchRound();
-              }
-            }, 600);
-          }
-        }, 400);
-      } else {
-        first.btn.style.background = '#fff';
-        first.btn.style.borderColor = '#e3cba8';
-        btn.style.background = '#fff';
-        btn.style.borderColor = '#e3cba8';
+    // 進到題目就自動發音，學生不用自己按按鈕（按鈕仍保留可用於重聽）
+    speak(current.word);
+    
+    let options = [current.zh];
+    while (options.length < 4) {
+      const randomItem = cardsData[Math.floor(Math.random() * cardsData.length)];
+      if (!options.includes(randomItem.zh)) {
+        options.push(randomItem.zh);
       }
     }
+    options.sort(() => Math.random() - 0.5);
+    
+    const grid = document.getElementById('optionsGrid');
+    grid.innerHTML = '';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerText = opt;
+      btn.addEventListener('click', () => selectQuizOption(btn, opt, current.zh));
+      grid.appendChild(btn);
+    });
+    
+    document.getElementById('quizBox').style.display = 'flex';
+    document.getElementById('quizResultBox').style.display = 'none';
   }
 
-  function showMatchResult() {
-    document.getElementById('matchGrid').style.display = 'none';
-    document.getElementById('quizProgress').style.display = 'none';
+  function selectQuizOption(btn, selected, correct) {
+    if (!canAnswer) return;
+    canAnswer = false;
+    
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(b => {
+      if (b.innerText === correct) b.classList.add('correct');
+      if (b === btn && selected !== correct) b.classList.add('wrong');
+    });
+    
+    if (selected === correct) {
+      quizScore++;
+    }
+    
+    setTimeout(() => {
+      quizIndex++;
+      loadQuizQuestion();
+    }, 1200);
+  }
+
+  function speakQuizWord() {
+    const current = quizList[quizIndex];
+    if (current) speak(current.word);
+  }
+
+  function showQuizResult() {
+    document.getElementById('quizBox').style.display = 'none';
     const resBox = document.getElementById('quizResultBox');
     resBox.style.display = 'flex';
-    document.getElementById('finalScore').innerText = `配對成功 ${matchScore} 對 / 12 對 (${matchRound >= 2 ? '全部完成' : ''})`;
-  }
+    document.getElementById('finalScore').innerText = `答對 ${quizScore} / ${quizList.length} 題`;
     
     if (!scriptURL.includes('YOUR_GAS')) {
       fetch(scriptURL, {
