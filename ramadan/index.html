@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food Trucks 語音作業 (基礎)</title>
+<title>Ramadan 語音作業 (中級)</title>
 <style>
   :root {
     --pumpkin: #ff9f43;
@@ -377,21 +377,22 @@
       <div class="top-bar">
         <span class="student-tag" id="quizStudentName">學生：--</span>
         <div class="nav-btn-group">
-          <span class="page-indicator" id="quizProgress">第 1 / 18 題</span>
+          <span class="page-indicator" id="quizProgress">已配對 0 / 12 對</span>
           <button class="home-btn" id="btnHomeQuiz">🏠 首頁</button>
         </div>
       </div>
-      <div class="quiz-container" id="quizBox">
-        <div class="quiz-word" id="quizWord">Word</div>
-        <button class="btn-subtle" id="speakQuizBtn" style="background:#fff;color:var(--pumpkin-dark);border:2px solid var(--pumpkin);padding:9px 22px;border-radius:22px;font-size:14px;font-weight:700;cursor:pointer;">🔊 發音</button>
-        <div class="options-grid" id="optionsGrid"></div>
+      <div id="matchWrap">
+        <div style="text-align:center;font-size:15px;color:#6f5b4a;font-weight:700;margin:8px auto 4px;padding:0 12px;">
+          🎯 點一張英文卡，再點它的中文卡，配對成功卡片會消失！
+        </div>
+        <div id="matchGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:640px;margin:8px auto;padding:0 10px;"></div>
       </div>
-      <div class="quiz-result" id="quizResultBox">
+      <div class="quiz-result" id="quizResultBox" style="display:none;">
         <div class="result-emoji">🏆</div>
-        <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">測驗完成！</h2>
-        <div class="score-display" id="finalScore">答對 0 / 18 題</div>
+        <h2 style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">配對完成！</h2>
+        <div class="score-display" id="finalScore">配對成功 0 / 12 對</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top: 10px;">
-          <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再測驗一次</button>
+          <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再配對一次</button>
           <button class="cute-btn btn-listen" id="btnHomeQuizResult">🏠 回首頁</button>
         </div>
       </div>
@@ -403,23 +404,25 @@
 
 <script>
     const cardsData = [
-    { word: "Muslims", zh: "穆斯林", icon: "🕌", enSent: "<span class='highlight-blue'>Muslims</span> follow the religion of Islam.", zhSent: "穆斯林信奉伊斯蘭教。", rawSent: "Muslims follow the religion of Islam." },
-    { word: "calendar", zh: "日曆；曆法", icon: "📅", enSent: "Ramadan depends on a <span class='highlight-blue'>calendar</span> that marks the start of each month with a new moon.", zhSent: "齋戒月的日期取決於以新月標記每月開始的曆法。", rawSent: "Ramadan depends on a calendar that marks the start of each month with a new moon." },
-    { word: "observing", zh: "觀察；慶祝；遵守", icon: "👀", enSent: "This book is called <span class='highlight-blue'>Observing</span> Ramadan.", zhSent: "這本書叫做《觀察齋戒月》。", rawSent: "This book is called Observing Ramadan." },
-    { word: "faith", zh: "信仰；信心", icon: "✨", enSent: "Fasting helps Muslims focus on why their <span class='highlight-blue'>faith</span> is important.", zhSent: "齋戒幫助穆斯林專注於為什麼他們的信仰很重要。", rawSent: "Fasting helps Muslims focus on why their faith is important." },
-    { word: "community", zh: "社區；群體", icon: "👥", enSent: "Ramadan helps Muslims connect with their family and <span class='highlight-blue'>community</span>.", zhSent: "齋戒月幫助穆斯林與家人和社區建立連結。", rawSent: "Ramadan helps Muslims connect with their family and community." },
-    { word: "hold back", zh: "抑制；克制", icon: "✋", enSent: "Muslims <span class='highlight-blue'>hold back</span> from arguing during Ramadan.", zhSent: "穆斯林在齋戒月期間克制不爭吵。", rawSent: "Muslims hold back from arguing during Ramadan." },
-    { word: "holy", zh: "神聖的；聖的", icon: "🕊️", enSent: "Muslims hold back from arguing during the <span class='highlight-blue'>holy</span> month.", zhSent: "穆斯林在神聖的月份裡克制不爭吵。", rawSent: "Muslims hold back from arguing during the holy month." },
-    { word: "firing of cannon", zh: "發射大砲", icon: "💥", enSent: "Families watch the <span class='highlight-blue'>firing of cannon</span> on television.", zhSent: "家人們在電視上觀看大砲發射。", rawSent: "Families watch the firing of cannon on television." },
-    { word: "harvest", zh: "收成；收穫", icon: "🌾", enSent: "Farmers in Pakistan <span class='highlight-blue'>harvest</span> dates.", zhSent: "巴基斯坦的農民收成椰棗。", rawSent: "Farmers in Pakistan harvest dates." },
-    { word: "telescope", zh: "望遠鏡", icon: "🔭", enSent: "Men use a <span class='highlight-blue'>telescope</span> to look for a crescent moon.", zhSent: "人們用望遠鏡尋找新月。", rawSent: "Men and boys use a telescope to look for a crescent moon." },
-    { word: "crescent", zh: "新月形；月牙", icon: "🌙", enSent: "The rise of a <span class='highlight-blue'>crescent</span> moon marks the end of Ramadan.", zhSent: "月牙的升起標記齋戒月的結束。", rawSent: "The rise of a crescent moon marks the end of Ramadan." },
-    { word: "coal miners", zh: "煤礦工人", icon: "⛏️", enSent: "<span class='highlight-blue'>Coal miners</span> take a break during Ramadan.", zhSent: "煤礦工人在齋戒月期間休息。", rawSent: "Coal miners in Turkey take a break to enjoy suhoor underground." }
-  ]; = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
+    { word: "Muslims", zh: "穆斯林", icon: "🕌", enSent: "<span class=\'highlight-blue\'>Muslims</span> follow the religion of Islam.", zhSent: "穆斯林信奉伊斯蘭教。", rawSent: "Muslims follow the religion of Islam." },
+    { word: "calendar", zh: "日曆；曆法", icon: "📅", enSent: "Ramadan depends on a <span class=\'highlight-blue\'>calendar</span> that marks the start of each month with a new moon.", zhSent: "齋戒月的日期取決於以新月標記每月開始的曆法。", rawSent: "Ramadan depends on a calendar that marks the start of each month with a new moon." },
+    { word: "observing", zh: "觀察；慶祝；遵守", icon: "👀", enSent: "This book is called <span class=\'highlight-blue\'>Observing</span> Ramadan.", zhSent: "這本書叫做《觀察齋戒月》。", rawSent: "This book is called Observing Ramadan." },
+    { word: "faith", zh: "信仰；信心", icon: "✨", enSent: "Fasting helps Muslims focus on why their <span class=\'highlight-blue\'>faith</span> is important.", zhSent: "齋戒幫助穆斯林專注於為什麼他們的信仰很重要。", rawSent: "Fasting helps Muslims focus on why their faith is important." },
+    { word: "community", zh: "社區；群體", icon: "👥", enSent: "Ramadan helps Muslims connect with their family and <span class=\'highlight-blue\'>community</span>.", zhSent: "齋戒月幫助穆斯林與家人和社區建立連結。", rawSent: "Ramadan helps Muslims connect with their family and community." },
+    { word: "hold back", zh: "抑制；克制", icon: "✋", enSent: "Muslims <span class=\'highlight-blue\'>hold back</span> from arguing during Ramadan.", zhSent: "穆斯林在齋戒月期間克制不爭吵。", rawSent: "Muslims hold back from arguing during Ramadan." },
+    { word: "holy", zh: "神聖的；聖的", icon: "🕊️", enSent: "Muslims hold back from arguing during the <span class=\'highlight-blue\'>holy</span> month.", zhSent: "穆斯林在神聖的月份裡克制不爭吵。", rawSent: "Muslims hold back from arguing during the holy month." },
+    { word: "firing of cannon", zh: "發射大砲", icon: "💥", enSent: "Families watch the <span class=\'highlight-blue\'>firing of cannon</span> on television.", zhSent: "家人們在電視上觀看大砲發射。", rawSent: "Families watch the firing of cannon on television." },
+    { word: "harvest", zh: "收成；收穫", icon: "🌾", enSent: "Farmers in Pakistan <span class=\'highlight-blue\'>harvest</span> dates.", zhSent: "巴基斯坦的農民收成椰棗。", rawSent: "Farmers in Pakistan harvest dates." },
+    { word: "telescope", zh: "望遠鏡", icon: "🔭", enSent: "Men use a <span class=\'highlight-blue\'>telescope</span> to look for a crescent moon.", zhSent: "人們用望遠鏡尋找新月。", rawSent: "Men and boys use a telescope to look for a crescent moon." },
+    { word: "crescent", zh: "新月形；月牙", icon: "🌙", enSent: "The rise of a <span class=\'highlight-blue\'>crescent</span> moon marks the end of Ramadan.", zhSent: "月牙的升起標記齋戒月的結束。", rawSent: "The rise of a crescent moon marks the end of Ramadan." },
+    { word: "coal miners", zh: "煤礦工人", icon: "⛏️", enSent: "<span class=\'highlight-blue\'>Coal miners</span> take a break during Ramadan.", zhSent: "煤礦工人在齋戒月期間休息。", rawSent: "Coal miners in Turkey take a break to enjoy suhoor underground." }
+  ];
+
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
   const TOPIC = 'ramadan-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1104';
+  const APP_VER = 'V1105';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -515,7 +518,6 @@
     document.getElementById('btnQuizSummary').addEventListener('click', startQuiz);
 
     document.getElementById('btnHomeQuiz').addEventListener('click', goHome);
-    document.getElementById('speakQuizBtn').addEventListener('click', speakQuizWord);
     document.getElementById('btnRestartQuiz').addEventListener('click', startQuiz);
     document.getElementById('btnHomeQuizResult').addEventListener('click', goHome);
 
@@ -1481,83 +1483,101 @@
     }
   }
 
+  // ---------- 配對遊戲：12 組英中配對 ----------
+  let matchFirst = null;
+  let matchPairsFound = 0;
+  let matchLock = false;
+  const MATCH_TOTAL = 12;
+
   function startQuiz() {
-      if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
-      quizIndex = 0;
-      quizScore = 0;
-      quizList = [...cardsData].sort(() => Math.random() - 0.5); // 全部 18 個單字都考，不截斷
-      document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
-      switchPage('quiz-page');
-      loadQuizQuestion();
+    if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
+    matchFirst = null;
+    matchPairsFound = 0;
+    matchLock = false;
+    document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
+    switchPage('quiz-page');
+    renderMatchGrid();
   }
 
-  function loadQuizQuestion() {
-    if (quizIndex >= quizList.length) {
-      showQuizResult();
-      return;
+  function renderMatchGrid() {
+    matchFirst = null;
+    matchLock = false;
+    let cards = [];
+    cardsData.forEach(w => {
+      cards.push({ kind: 'en', text: w.word, pair: w.word });
+      cards.push({ kind: 'zh', text: w.zh.split('\n')[0].split('；')[0], pair: w.word });
+    });
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = cards[i]; cards[i] = cards[j]; cards[j] = tmp;
     }
-    canAnswer = true;
-    const current = quizList[quizIndex];
-    document.getElementById('quizProgress').innerText = `第 ${quizIndex + 1} / ${quizList.length} 題`;
-    document.getElementById('quizWord').innerText = current.word;
-
-    // 進到題目就自動發音，學生不用自己按按鈕（按鈕仍保留可用於重聽）
-    speak(current.word);
-    
-    let options = [current.zh];
-    while (options.length < 4) {
-      const randomItem = cardsData[Math.floor(Math.random() * cardsData.length)];
-      if (!options.includes(randomItem.zh)) {
-        options.push(randomItem.zh);
-      }
-    }
-    options.sort(() => Math.random() - 0.5);
-    
-    const grid = document.getElementById('optionsGrid');
+    const grid = document.getElementById('matchGrid');
     grid.innerHTML = '';
-    options.forEach(opt => {
+    cards.forEach(card => {
       const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.innerText = opt;
-      btn.addEventListener('click', () => selectQuizOption(btn, opt, current.zh));
+      btn.type = 'button';
+      btn.innerText = card.text;
+      btn.style.fontSize = '14px';
+      btn.style.padding = '10px 4px';
+      btn.style.borderRadius = '14px';
+      btn.style.fontWeight = '700';
+      btn.style.cursor = 'pointer';
+      btn.style.minHeight = '56px';
+      btn.style.lineHeight = '1.3';
+      btn.style.background = '#fff8e1';
+      btn.style.border = '2px solid #e0c9a6';
+      btn.style.color = card.kind === 'en' ? '#c75b39' : '#5b4636';
+      btn.addEventListener('click', () => selectMatchCard(btn, card));
       grid.appendChild(btn);
     });
-    
-    document.getElementById('quizBox').style.display = 'flex';
+    document.getElementById('matchWrap').style.display = 'block';
     document.getElementById('quizResultBox').style.display = 'none';
+    updateMatchProgress();
   }
 
-  function selectQuizOption(btn, selected, correct) {
-    if (!canAnswer) return;
-    canAnswer = false;
-    
-    const buttons = document.querySelectorAll('.option-btn');
-    buttons.forEach(b => {
-      if (b.innerText === correct) b.classList.add('correct');
-      if (b === btn && selected !== correct) b.classList.add('wrong');
-    });
-    
-    if (selected === correct) {
-      quizScore++;
+  function updateMatchProgress() {
+    const el = document.getElementById('quizProgress');
+    if (el) el.innerText = `已配對 ${matchPairsFound} / ${MATCH_TOTAL} 對`;
+  }
+
+  function selectMatchCard(btn, card) {
+    if (matchLock || btn.disabled || (matchFirst && matchFirst.btn === btn)) return;
+    btn.style.background = '#ffeaa7';
+    btn.style.border = '2px solid #f39c12';
+    if (!matchFirst) { matchFirst = { btn: btn, card: card }; return; }
+    const first = matchFirst;
+    matchFirst = null;
+    if (first.card.pair === card.pair && first.card.kind !== card.kind) {
+      first.btn.disabled = true;
+      btn.disabled = true;
+      first.btn.style.visibility = 'hidden';
+      btn.style.visibility = 'hidden';
+      matchPairsFound++;
+      updateMatchProgress();
+      if (matchPairsFound >= MATCH_TOTAL) setTimeout(showMatchResult, 500);
+    } else {
+      matchLock = true;
+      first.btn.style.background = '#ffd9d0';
+      btn.style.background = '#ffd9d0';
+      first.btn.style.border = '2px solid #e74c3c';
+      btn.style.border = '2px solid #e74c3c';
+      setTimeout(() => {
+        [first.btn, btn].forEach(b => {
+          b.style.background = '#fff8e1';
+          b.style.border = '2px solid #e0c9a6';
+        });
+        matchLock = false;
+      }, 700);
     }
-    
-    setTimeout(() => {
-      quizIndex++;
-      loadQuizQuestion();
-    }, 1200);
   }
 
-  function speakQuizWord() {
-    const current = quizList[quizIndex];
-    if (current) speak(current.word);
-  }
-
-  function showQuizResult() {
-    document.getElementById('quizBox').style.display = 'none';
+  function showMatchResult() {
+    const wrap = document.getElementById('matchWrap');
+    if (wrap) wrap.style.display = 'none';
     const resBox = document.getElementById('quizResultBox');
-    resBox.style.display = 'flex';
-    document.getElementById('finalScore').innerText = `答對 ${quizScore} / ${quizList.length} 題`;
-    
+    if (resBox) resBox.style.display = 'flex';
+    const finalEl = document.getElementById('finalScore');
+    if (finalEl) finalEl.innerText = `配對成功 ${matchPairsFound} / ${MATCH_TOTAL} 對`;
     if (!scriptURL.includes('YOUR_GAS')) {
       fetch(scriptURL, {
         method: 'POST',
@@ -1567,12 +1587,13 @@
           type: 'quiz',
           topic: TOPIC,
           studentName: studentName,
-          score: quizScore,
-          total: quizList.length
+          score: matchPairsFound,
+          total: MATCH_TOTAL
         })
       }).catch(e => console.log(e));
     }
   }
+
 </script>
 </body>
 </html>
