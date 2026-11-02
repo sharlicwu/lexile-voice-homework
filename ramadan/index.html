@@ -1496,7 +1496,8 @@
 
   function loadMatchRound() {
     // Split cardsData into 2 rounds of 6 words each
-    let roundWords = cardsData.slice(0, 6);
+    const startIdx = matchRound * 6;
+    const roundWords = cardsData.slice(startIdx, startIdx + 6);
     let matchCards = [];
     roundWords.forEach(w => {
       matchCards.push({ type: 'en', text: w.word, pair: w.word, matched: false });
@@ -1524,9 +1525,9 @@
         grid.appendChild(btn);
       });
     }
-    document.getElementById('quizProgress').innerText = '第 1 組 / 2 組 · 已配對 0 / 6';
-    document.getElementById('matchPaired').innerText = '0';
-    document.getElementById('matchRound').innerText = '1';
+    document.getElementById('quizProgress').innerText = `第 ${matchRound + 1} 組 / 2 組 · 已配對 ${matchPairsFound} / 6`;
+    document.getElementById('matchPaired').innerText = String(matchPairsFound);
+    document.getElementById('matchRound').innerText = String(matchRound + 1);
   }
 
   let matchFirst = null;
@@ -1549,6 +1550,17 @@
         first.btn.style.background = '#c8e6c9'; btn.style.background = '#c8e6c9';
         first.btn.style.borderColor = '#81c784'; btn.style.borderColor = '#81c784';
         document.getElementById('matchPaired').innerText = parseInt(document.getElementById('matchPaired').innerText || '0') + 1;
+        const pairedCount = parseInt(document.getElementById('matchPaired').innerText || '0');
+        if (pairedCount >= 6) {
+          setTimeout(() => {
+            if (matchRound < 1) {
+              matchRound++;
+              loadMatchRound();
+            } else {
+              showMatchResult();
+            }
+          }, 800);
+        }
       }
     }
   }
