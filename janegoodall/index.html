@@ -425,11 +425,14 @@
   const TOPIC = 'janegoodall-初級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1107';
+  const APP_VER = 'V1108';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
-    return /Line\/\d/i.test(ua) || /FBAN|FBAV/i.test(ua) || /Instagram/i.test(ua) || /MicroMessenger/i.test(ua) || /; wv\)/.test(ua);
+    const inapp = /Line\/\d/i.test(ua) || /FBAN|FBAV/i.test(ua) || /Instagram/i.test(ua) || /MicroMessenger/i.test(ua) || /; wv\)/.test(ua);
+    // iOS 的 LINE 內建瀏覽器可以取得麥克風（2026-11 實測可用）→ 不提醒；只有安卓的 App 內建瀏覽器才引導去 Chrome
+    const isIOS = /iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+    return inapp && !isIOS;
   })();
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
