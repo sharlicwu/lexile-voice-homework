@@ -257,7 +257,7 @@
         <button class="cute-btn btn-listen" id="btnListen">🎧 聽力練習</button>
         <button class="cute-btn btn-record" id="btnRecordWord">🔤 單字錄音</button>
         <button class="cute-btn btn-sentence" id="btnRecordSentence">📖 句子錄音</button>
-        <button class="cute-btn btn-quiz" id="btnQuiz">📝 單字測驗</button>
+        <button class="cute-btn btn-quiz" id="btnQuiz">📝 單字配對</button>
       </div>
       <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:4px;">
         <button class="clear-progress-btn" id="btnRestart">🔁 重頭全部練習</button>
@@ -366,7 +366,7 @@
       </div>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
         <button class="cute-btn btn-record" id="btnRestartSummary">🔄 回去重頭再錄</button>
-        <button class="cute-btn btn-quiz" id="btnQuizSummary">📝 去做單字測驗</button>
+        <button class="cute-btn btn-quiz" id="btnQuizSummary">📝 去做單字配對</button>
       </div>
     </div>
   </div>
@@ -377,7 +377,7 @@
       <div class="top-bar">
         <span class="student-tag" id="quizStudentName">學生：--</span>
         <div class="nav-btn-group">
-          <span class="page-indicator" id="quizProgress">已配對 0 / 13 對</span>
+          <span class="page-indicator" id="quizProgress">第 1 組 / 2 組 · 已配對 0 / 7 對</span>
           <span class="page-indicator" id="matchTimer">⏱ 0 秒</span>
           <button class="home-btn" id="btnHomeQuiz">🏠 首頁</button>
         </div>
@@ -425,7 +425,7 @@
   const TOPIC = 'janegoodall-初級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1108';
+  const APP_VER = 'V1109';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1494,6 +1494,9 @@
   let matchPairsFound = 0;
   let matchLock = false;
   const MATCH_TOTAL = cardsData.length;
+  let matchRound = 0;
+  let matchRoundPairs = 0;
+  let matchRoundTotal = 0;
   let matchTimerId = null;
   let matchSeconds = 0;
 
@@ -1528,6 +1531,8 @@
     if (!studentName) { const nameInput = document.getElementById('studentNameInput').value.trim(); if (!nameInput) { alert('請先輸入學生姓名喔！'); return; } studentName = nameInput; }
     matchFirst = null;
     matchPairsFound = 0;
+    matchRound = 0;
+    matchRoundPairs = 0;
     matchLock = false;
     document.getElementById('quizStudentName').innerText = `學生：${studentName}`;
     switchPage('quiz-page');
@@ -1538,8 +1543,13 @@
   function renderMatchGrid() {
     matchFirst = null;
     matchLock = false;
+    matchRoundPairs = 0;
+    const firstCount = Math.ceil(cardsData.length / 2);
+    const start = matchRound === 0 ? 0 : firstCount;
+    const end = matchRound === 0 ? firstCount : cardsData.length;
+    matchRoundTotal = end - start;
     let cards = [];
-    cardsData.forEach(w => {
+    cardsData.slice(start, end).forEach(w => {
       cards.push({ kind: 'en', text: w.word, pair: w.word });
       cards.push({ kind: 'zh', text: w.zh.split('\n')[0].split('；')[0], pair: w.word });
     });
@@ -1573,7 +1583,12 @@
 
   function updateMatchProgress() {
     const el = document.getElementById('quizProgress');
-    if (el) el.innerText = `已配對 ${matchPairsFound} / ${MATCH_TOTAL} 對`;
+    if (el) el.innerText = `第 ${matchRound + 1} 組 / 2 組 · 已配對 ${matchRoundPairs} / ${matchRoundTotal} 對`;
+  }
+
+  function nextMatchRound() {
+    matchRound = 1;
+    renderMatchGrid();
   }
 
   function selectMatchCard(btn, card) {
@@ -1589,8 +1604,12 @@
       first.btn.style.visibility = 'hidden';
       btn.style.visibility = 'hidden';
       matchPairsFound++;
+      matchRoundPairs++;
       updateMatchProgress();
-      if (matchPairsFound >= MATCH_TOTAL) setTimeout(showMatchResult, 500);
+      if (matchRoundPairs >= matchRoundTotal) {
+        if (matchRound === 0) { setTimeout(nextMatchRound, 900); }
+        else { setTimeout(showMatchResult, 500); }
+      }
     } else {
       matchLock = true;
       first.btn.style.background = '#ffd9d0';
