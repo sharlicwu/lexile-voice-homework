@@ -424,7 +424,7 @@
   const TOPIC = 'ilikemyhair-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1111';
+  const APP_VER = 'V1112';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1029,7 +1029,7 @@
     window._lastAppendedFinal = '';
     window._recogError = '';
     const _lr0 = document.getElementById('liveRecogText');
-    if (_lr0) _lr0.innerText = '🎤 正在聽…（辨識到的文字會即時顯示在這裡）';
+    if (_lr0) _lr0.innerText = '🎤 正在聽…';
     audioChunks = [];
     try {
       if (!audioStream) audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1119,7 +1119,7 @@
       window._lastAppendedFinal = '';
       window._recogError = '';
       const _lr1 = document.getElementById('liveRecogText');
-      if (_lr1) _lr1.innerText = '🎤 正在聽…（辨識到的文字會即時顯示在這裡）';
+      if (_lr1) _lr1.innerText = '🎤 正在聽…';
       window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(ttsWaitMs());
@@ -1550,7 +1550,7 @@
     let cards = [];
     cardsData.slice(start, end).forEach(w => {
       cards.push({ kind: 'en', text: w.word, pair: w.word });
-      cards.push({ kind: 'zh', text: w.zh.split('\n')[0].split('；')[0], pair: w.word });
+      cards.push({ kind: 'zh', text: (w.zh.split('\n')[1] || w.zh.split('\n')[0]).split('；')[0], pair: w.word });
     });
     for (let i = cards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
