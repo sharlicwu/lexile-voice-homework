@@ -411,7 +411,7 @@
     { word: "curly", zh: "捲髮的；捲捲的\nㄐㄩㄢˇ ㄈㄚˇ ㄉㄜ；ㄐㄩㄢˇ ㄐㄩㄢˇ ㄉㄜ", icon: "🌀", enSent: "My hair is <span class=\'highlight-blue\'>curly</span>.", zhSent: "我的頭髮是捲的。\nㄨㄛˊ ㄉㄜ ㄊㄡˊ ㄈㄚˇ ㄕˋ ㄐㄩㄢˇ ㄉㄜ。", rawSent: "My hair is curly." },
     { word: "grow", zh: "生長；長長\nㄕㄥ ㄓㄤˇ；ㄓㄤˇ ㄔㄤˊ", icon: "🌱", enSent: "I like to let it <span class=\'highlight-blue\'>grow</span>.", zhSent: "我喜歡讓它長長。\nㄨㄛˊ ㄒㄧˇ ㄏㄨㄢ ㄖㄤˋ ㄊㄚ ㄓㄤˇ ㄔㄤˊ。", rawSent: "I like to let it grow." },
     { word: "straight", zh: "直的；筆直的\nㄓˊ ㄉㄜ；ㄅㄧˇ ㄓˊ ㄉㄜ", icon: "📏", enSent: "My hair is <span class=\'highlight-blue\'>straight</span>.", zhSent: "我的頭髮是直的。\nㄨㄛˊ ㄉㄜ ㄊㄡˊ ㄈㄚˇ ㄕˋ ㄓˊ ㄉㄜ。", rawSent: "My hair is straight." },
-    { word: "swing", zh: "擺動；搖擺\nㄅㄞˇ ㄉㄨㄥˋ；ㄧㄡˊ ㄅㄞˇ", icon: "🌬️", enSent: "I like it to <span class=\'highlight-blue\'>swing</span> when I walk my dog.", zhSent: "我遛狗時喜歡讓它擺動。\nㄨㄛˊ ㄌㄧㄡˋ ㄍㄡˇ ㄕˊ ㄒㄧˇ ㄏㄨㄢ ㄖㄤˋ ㄊㄚ ㄅㄞˇ ㄉㄨㄥˋ。", rawSent: "I like it to swing when I walk my dog." },
+    { word: "swing", zh: "擺動；搖擺\nㄅㄞˇ ㄉㄨㄥˋ；ㄧㄠˊ ㄅㄞˇ", icon: "🌬️", enSent: "I like it to <span class=\'highlight-blue\'>swing</span> when I walk my dog.", zhSent: "我遛狗時喜歡讓它擺動。\nㄨㄛˊ ㄌㄧㄡˋ ㄍㄡˇ ㄕˊ ㄒㄧˇ ㄏㄨㄢ ㄖㄤˋ ㄊㄚ ㄅㄞˇ ㄉㄨㄥˋ。", rawSent: "I like it to swing when I walk my dog." },
     { word: "match", zh: "相配；配對\nㄒㄧㄤ ㄆㄟˋ；ㄆㄟˋ ㄉㄨㄟˋ", icon: "🧩", enSent: "I like it to <span class=\'highlight-blue\'>match</span> my freckles.", zhSent: "我喜歡它和我的雀斑相配。\nㄨㄛˊ ㄒㄧˇ ㄏㄨㄢ ㄊㄚ ㄏㄜˊ ㄨㄛˊ ㄉㄜ ㄑㄩㄝˋ ㄅㄢ ㄒㄧㄤ ㄆㄟˋ。", rawSent: "I like it to match my freckles." },
     { word: "freckles", zh: "雀斑\nㄑㄩㄝˋ ㄅㄢ", icon: "👩‍🦰", enSent: "My hair is red. I like it to match my <span class=\'highlight-blue\'>freckles</span>.", zhSent: "我的頭髮是紅色的。我喜歡它和我的雀斑相配。\nㄨㄛˊ ㄉㄜ ㄊㄡˊ ㄈㄚˇ ㄕˋ ㄏㄨㄥˊ ㄙㄜˋ ㄉㄜ。ㄨㄛˊ ㄒㄧˇ ㄏㄨㄢ ㄊㄚ ㄏㄜˊ ㄨㄛˊ ㄉㄜ ㄑㄩㄝˋ ㄅㄢ ㄒㄧㄤ ㄆㄟˋ。", rawSent: "My hair is red. I like it to match my freckles." },
     { word: "braids", zh: "編髮；辮子\nㄅㄧㄢ ㄈㄚˇ；ㄅㄧㄢˋ ㄗ˙", icon: "🪢", enSent: "My hair has <span class=\'highlight-blue\'>braids</span>.", zhSent: "我的頭髮有辮子。\nㄨㄛˊ ㄉㄜ ㄊㄡˊ ㄈㄚˇ ㄧㄡˇ ㄅㄧㄢˋ ㄗ˙。", rawSent: "My hair has braids." },
@@ -424,7 +424,7 @@
   const TOPIC = 'ilikemyhair-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1110';
+  const APP_VER = 'V1111';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
