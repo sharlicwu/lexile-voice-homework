@@ -425,7 +425,7 @@
   const TOPIC = 'janegoodallo-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1110';
+  const APP_VER = 'V1111';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -600,7 +600,7 @@
     }
   }
 
-  function progressKey() { return 'jolT2_progress_' + encodeURIComponent(studentName); }
+  function progressKey() { return 'jolT2_progress_janegoodallo_' + encodeURIComponent(studentName); }
   function saveProgress() {
     if (!studentName) return;
     try {
