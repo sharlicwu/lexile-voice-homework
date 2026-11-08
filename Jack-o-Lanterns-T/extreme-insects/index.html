@@ -399,7 +399,7 @@
   const TOPIC = 'jack-o-lanterns-extreme-insects-初級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1028D';
+  const APP_VER = 'V1029D';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
@@ -566,7 +566,7 @@
     }
   }
 
-  function progressKey() { return 'jolT2_progress_' + encodeURIComponent(studentName); }
+  function progressKey() { return 'jolT2_progress_extremeinsects_' + encodeURIComponent(studentName); }
   function saveProgress() {
     if (!studentName) return;
     try {
