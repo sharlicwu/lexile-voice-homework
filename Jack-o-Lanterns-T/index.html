@@ -402,7 +402,7 @@
   const TOPIC = 'Jack-o-Lanterns-T';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1028F';
+  const APP_VER = 'V1029F';
   document.addEventListener('DOMContentLoaded', () => {
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
@@ -569,7 +569,7 @@
     }
   }
 
-  function progressKey() { return 'jolT2_progress_' + encodeURIComponent(studentName); }
+  function progressKey() { return 'jolT2_progress_jackolantern_' + encodeURIComponent(studentName); }
   function saveProgress() {
     if (!studentName) return;
     try {
