@@ -362,6 +362,16 @@
     </div>
   </div>
 
+  <!-- 分組完成：休息選擇（繼續下一組 / 回首頁） -->
+  <div id="groupBreakBox" style="display:none; position:fixed; inset:0; background:rgba(2,119,189,0.45); z-index:999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:24px; padding:26px 22px; max-width:340px; width:88%; text-align:center; box-shadow:0 12px 40px rgba(2,119,189,0.35);">
+      <div id="breakTitle" style="font-size:22px; font-weight:900; color:#0277bd; margin-bottom:6px;">🎉 第 1 組完成！</div>
+      <div style="font-size:15px; color:#636e72; font-weight:700; margin-bottom:16px;">辛苦了！可以休息一下，再選擇繼續或換別的練習 😊</div>
+      <button class="cute-btn btn-record" id="breakContinue" style="width:100%; margin-bottom:10px;">🎤 繼續（下一組）</button>
+      <button class="cute-btn btn-sentence" id="breakHome" style="width:100%;">🏠 回首頁選其他練習</button>
+    </div>
+  </div>
+
   <!-- Spell (聽拼單字) -->
   <div class="page" id="spell-page">
     <div>
@@ -374,7 +384,7 @@
       <div class="word-section">
         <div class="icon-large" id="spellIcon">✍️</div>
         <div class="word-title" id="spellZh">中文</div>
-        <div style="font-size:15px; color:#636e72; font-weight:700; margin:2px 0 10px 0;">🔊 按下面的按鈕聽發音（可以多聽幾次）<br>💡 點下面的字母鍵拼出單字（無智慧選字干擾）；每個字「第一次就拼對」才算分喔！</div>
+        <div style="font-size:15px; color:#636e72; font-weight:700; margin:2px 0 10px 0;">🔊 按下面的按鈕聽發音（可以多聽幾次）<br>💡 點下面的字母鍵拼出單字（無智慧選字干擾；⇧ 可切換大小寫）；每個字「第一次就拼對」才算分喔！</div>
         <button class="word-audio-btn" id="spellSpeakBtn">🔊 聽發音</button>
       </div>
       <div style="text-align:center; margin:10px 0 4px 0;">
@@ -468,7 +478,7 @@
   const TOPIC = '康軒B1L3';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1117';
+  const APP_VER = 'V1118';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -570,11 +580,14 @@
     document.getElementById('spellCheckBtn').addEventListener('click', checkSpell);
     document.getElementById('spellNextBtn').addEventListener('click', spellNext);
     document.getElementById('btnHomeSpell').addEventListener('click', goHome);
+    document.getElementById('breakContinue').addEventListener('click', () => { hideGroupBreak(); if (breakContinueFn) breakContinueFn(); });
+    document.getElementById('breakHome').addEventListener('click', () => { hideGroupBreak(); goHome(); });
     // 自訂字母鍵盤（無智慧選字）；桌機也支援實體鍵盤輸入
     document.addEventListener('keydown', (e) => {
       const sp = document.getElementById('spell-page');
       if (!sp || !sp.classList.contains('active')) return;
-      if (/^[a-zA-Z]$/.test(e.key)) { spellTypeKey(e.key.toUpperCase()); e.preventDefault(); }
+      if (/^[a-zA-Z]$/.test(e.key)) { spellTypeKey(e.key); e.preventDefault(); }
+      else if (e.key === "'") { spellTypeKey("'"); e.preventDefault(); }
       else if (e.key === 'Backspace') { spellTypeKey('BACK'); e.preventDefault(); }
       else if (e.key === ' ') { spellTypeKey(' '); e.preventDefault(); }
       else if (e.key === 'Enter') { e.preventDefault(); if (!spellAsked) checkSpell(); }
@@ -920,10 +933,10 @@
       showSummary(); // 最後一張卡再按「下一個/看總成績」→ 進總成績，不循環回第一張
       return;
     }
-    // 分組練習：第 1 組最後一個字按「下一組 →」→ 宣告完成後接續第 2 組
+    // 分組練習：第 1 組最後一個字按「下一組 →」→ 先停下來，讓學生選擇繼續或換其他練習
     if (dir === 1 && currentIndex === recGroupInfo(currentIndex).end - 1 && recGroupInfo(currentIndex).g < recGroupCount()) {
-      toast(`🎉 第 ${recGroupInfo(currentIndex).g} 組完成！休息一下，接著第 ${recGroupInfo(currentIndex).g + 1} 組 💪`);
-      setTimeout(() => { loadCard(currentIndex + 1, true); }, 1200);
+      const gg = recGroupInfo(currentIndex).g;
+      showGroupBreak(`🎉 第 ${gg} 組完成！`, `🎤 繼續錄音（第 ${gg + 1} 組）`, () => { loadCard(currentIndex + 1, true); });
       return;
     }
     let newIdx = currentIndex + dir;
@@ -1113,8 +1126,8 @@
       document.getElementById('recStatus').classList.remove('active');
       document.getElementById('recordBtn').classList.remove('recording');
       currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-      document.getElementById('audioPreview').src = URL.createObjectURL(currentAudioBlob);
-      document.getElementById('playbackBox').style.display = 'block';
+      // 整組自動練習不顯示播放（錄完會自動跳題，來不及聽）；播放只保留在「單一錄音」
+      document.getElementById('playbackBox').style.display = 'none';
       await evaluateSpeech(window._lastTranscript || '');
       if (!autoPractice) return;
       if (currentIndex >= cardsData.length - 1) {
@@ -1123,8 +1136,22 @@
       }
       autoAdvanceTimer = setTimeout(() => {
         if (!autoPractice) return;
+        // 第 1 組完成 → 停止自動練習，讓學生選擇繼續或換其他練習
         if (currentIndex === recGroupInfo(currentIndex).end - 1 && recGroupInfo(currentIndex).g < recGroupCount()) {
-          toast(`🎉 第 ${recGroupInfo(currentIndex).g} 組完成！接著第 ${recGroupInfo(currentIndex).g + 1} 組 💪`);
+          const gg = recGroupInfo(currentIndex).g;
+          stopAutoPractice(`🎉 第 ${gg} 組完成！休息一下 😊`);
+          showGroupBreak(`🎉 第 ${gg} 組完成！`, `🎤 繼續錄音（第 ${gg + 1} 組）`, () => {
+            autoPractice = true;
+            window._recogWant = true;
+            safeStartRecognition().catch(() => {});
+            document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
+            document.getElementById('recordBtn').disabled = true;
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            loadCard(currentIndex + 1, true);
+            startAutoRecording();
+          });
+          return;
         }
         loadCard(currentIndex + 1, true);
         startAutoRecording();
@@ -1713,6 +1740,18 @@
   }
 
 
+  // ---------- 分組完成休息：讓學生選擇繼續下一組或回首頁 ----------
+  let breakContinueFn = null;
+  function showGroupBreak(title, contLabel, contFn) {
+    breakContinueFn = contFn || null;
+    document.getElementById('breakTitle').innerText = title;
+    document.getElementById('breakContinue').innerText = contLabel;
+    document.getElementById('groupBreakBox').style.display = 'flex';
+  }
+  function hideGroupBreak() {
+    document.getElementById('groupBreakBox').style.display = 'none';
+  }
+
   // ---------- 聽拼寫單字（聽發音 → 打字拼字，第一次就對才計分）----------
   let spellOrder = [];
   let spellIndex = 0;
@@ -1720,21 +1759,30 @@
   let spellFirstTryCorrect = 0;
 
   // ---------- 自訂字母鍵盤（不叫出系統鍵盤 → 完全沒有智慧選字／自動改字）----------
+  let spellCaps = true; // 預設大寫；按 ⇧ 可切換大小寫
+  function spellKeyChar(ch) { return spellCaps ? ch.toUpperCase() : ch.toLowerCase(); }
+
   function buildSpellKeyboard() {
+    renderSpellKeyboard();
+  }
+
+  function renderSpellKeyboard() {
     const kb = document.getElementById('spellKeyboard');
-    if (!kb || kb.dataset.built) return;
-    kb.dataset.built = '1';
+    if (!kb) return;
+    kb.innerHTML = '';
     ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].forEach(r => {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex; justify-content:center; gap:4px; margin:4px 0;';
-      r.split('').forEach(ch => row.appendChild(makeSpellKey(ch, ch)));
+      r.split('').forEach(ch => row.appendChild(makeSpellKey(spellKeyChar(ch), spellKeyChar(ch))));
       kb.appendChild(row);
     });
     const last = document.createElement('div');
     last.style.cssText = 'display:flex; justify-content:center; gap:4px; margin:4px 0;';
-    last.appendChild(makeSpellKey('␣ 空白', ' ', 'flex:1.8;'));
-    last.appendChild(makeSpellKey('.', '.'));
-    last.appendChild(makeSpellKey('⌫ 退格', 'BACK', 'flex:1.8;'));
+    last.appendChild(makeSpellKey(spellCaps ? '⇧ 大寫' : '⇧ 小寫', 'CAPS', 'flex:1.2;'));
+    last.appendChild(makeSpellKey("'", "'", 'flex:0.7;'));
+    last.appendChild(makeSpellKey('␣ 空白', ' ', 'flex:1.5;'));
+    last.appendChild(makeSpellKey('.', '.', 'flex:0.7;'));
+    last.appendChild(makeSpellKey('⌫ 退格', 'BACK', 'flex:1.2;'));
     kb.appendChild(last);
   }
 
@@ -1743,7 +1791,10 @@
     b.type = 'button';
     b.innerText = label;
     b.style.cssText = 'flex:1; min-width:0; padding:10px 0; font-size:16px; font-weight:800; border:none; border-radius:10px; background:#e3f2fd; color:#0277bd; cursor:pointer; touch-action:manipulation;' + (extra || '');
-    b.addEventListener('click', () => spellTypeKey(val));
+    b.addEventListener('click', () => {
+      if (val === 'CAPS') { spellCaps = !spellCaps; renderSpellKeyboard(); return; }
+      spellTypeKey(val);
+    });
     return b;
   }
 
@@ -1752,6 +1803,15 @@
     if (!input || input.disabled) return;
     if (val === 'BACK') input.value = input.value.slice(0, -1);
     else input.value += val;
+  }
+
+  // ---------- 聽拼 2 組分組（與錄音分組同概念）----------
+  function spellGroupInfo(i) {
+    const per = Math.ceil(cardsData.length / 2);
+    const g = Math.min(Math.floor(i / per) + 1, 2);
+    const start = (g - 1) * per;
+    const end = Math.min(start + per, cardsData.length);
+    return { g: g, start: start, end: end, len: end - start };
   }
 
   function startSpell() {
@@ -1773,7 +1833,8 @@
     const item = cardsData[spellOrder[spellIndex]];
     document.getElementById('spellIcon').innerText = item.icon;
     document.getElementById('spellZh').innerText = item.zh;
-    document.getElementById('spellProgress').innerText = `${spellIndex + 1} / ${cardsData.length}`;
+    const sg = spellGroupInfo(spellIndex);
+    document.getElementById('spellProgress').innerText = `第 ${sg.g} 組 · ${spellIndex - sg.start + 1} / ${sg.len}`;
     const input = document.getElementById('spellInput');
     input.value = '';
     input.disabled = false;
@@ -1781,7 +1842,8 @@
     fb.innerText = '';
     fb.style.color = '#2d3436';
     document.getElementById('spellCheckBtn').disabled = false;
-    document.getElementById('spellNextBtn').innerText = (spellIndex === cardsData.length - 1) ? '看成績 📊' : '下一個 →';
+    document.getElementById('spellNextBtn').innerText = (sg.g < 2 && spellIndex === sg.end - 1) ? '下一組 →'
+      : (spellIndex === cardsData.length - 1) ? '看成績 📊' : '下一個 →';
     if (speakIt) speakSpellWord();
   }
 
@@ -1816,6 +1878,15 @@
   }
 
   function spellNext() {
+    const sg = spellGroupInfo(spellIndex);
+    // 第 1 組最後一個字按「下一組 →」→ 先停下來，讓學生選擇繼續或換其他練習
+    if (sg.g < 2 && spellIndex === sg.end - 1) {
+      showGroupBreak(`🎉 第 ${sg.g} 組拼字完成！`, `✍️ 繼續拼第 ${sg.g + 1} 組`, () => {
+        spellIndex++;
+        loadSpellCard(true);
+      });
+      return;
+    }
     if (spellIndex < cardsData.length - 1) {
       spellIndex++;
       loadSpellCard(true);
