@@ -374,12 +374,13 @@
       <div class="word-section">
         <div class="icon-large" id="spellIcon">✍️</div>
         <div class="word-title" id="spellZh">中文</div>
-        <div style="font-size:15px; color:#636e72; font-weight:700; margin:2px 0 10px 0;">🔊 按下面的按鈕聽發音（可以多聽幾次），再把英文拼出來<br>💡 每個字「第一次就拼對」才算分喔！</div>
+        <div style="font-size:15px; color:#636e72; font-weight:700; margin:2px 0 10px 0;">🔊 按下面的按鈕聽發音（可以多聽幾次）<br>💡 點下面的字母鍵拼出單字（無智慧選字干擾）；每個字「第一次就拼對」才算分喔！</div>
         <button class="word-audio-btn" id="spellSpeakBtn">🔊 聽發音</button>
       </div>
       <div style="text-align:center; margin:10px 0 4px 0;">
-        <input type="text" id="spellInput" placeholder="輸入你聽到的英文…" autocapitalize="off" autocomplete="off" spellcheck="false" style="font-size:20px; font-weight:800; padding:12px 14px; border:3px solid var(--pumpkin); border-radius:16px; outline:none; width:88%; max-width:360px; text-align:center; background:#fff;">
+        <input type="text" id="spellInput" placeholder="點下面的字母拼出來…" readonly autocomplete="off" spellcheck="false" style="font-size:20px; font-weight:800; padding:12px 10px; border:3px solid var(--pumpkin); border-radius:16px; outline:none; width:88%; max-width:360px; text-align:center; background:#fff; letter-spacing:1px;">
       </div>
+      <div id="spellKeyboard" style="max-width:520px; margin:6px auto 0; padding:0 8px; user-select:none; -webkit-user-select:none;"></div>
       <div id="spellFeedback" style="min-height:34px; text-align:center; font-size:17px; font-weight:800; margin:6px 0; white-space:pre-line;"></div>
       <div class="nav-controls">
         <button class="nav-btn" id="spellCheckBtn">✔ 檢查答案</button>
@@ -467,7 +468,7 @@
   const TOPIC = '康軒B1';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1113';
+  const APP_VER = 'V1114';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -569,7 +570,15 @@
     document.getElementById('spellCheckBtn').addEventListener('click', checkSpell);
     document.getElementById('spellNextBtn').addEventListener('click', spellNext);
     document.getElementById('btnHomeSpell').addEventListener('click', goHome);
-    document.getElementById('spellInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); if (!spellAsked) checkSpell(); } });
+    // 自訂字母鍵盤（無智慧選字）；桌機也支援實體鍵盤輸入
+    document.addEventListener('keydown', (e) => {
+      const sp = document.getElementById('spell-page');
+      if (!sp || !sp.classList.contains('active')) return;
+      if (/^[a-zA-Z]$/.test(e.key)) { spellTypeKey(e.key.toUpperCase()); e.preventDefault(); }
+      else if (e.key === 'Backspace') { spellTypeKey('BACK'); e.preventDefault(); }
+      else if (e.key === ' ') { spellTypeKey(' '); e.preventDefault(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (!spellAsked) checkSpell(); }
+    });
 
     document.getElementById('btnHomeQuiz').addEventListener('click', goHome);
     document.getElementById('btnRestartQuiz').addEventListener('click', startQuiz);
@@ -1689,6 +1698,41 @@
   let spellAsked = false; // 這個字是否已經檢查過（第一次就對才計分）
   let spellFirstTryCorrect = 0;
 
+  // ---------- 自訂字母鍵盤（不叫出系統鍵盤 → 完全沒有智慧選字／自動改字）----------
+  function buildSpellKeyboard() {
+    const kb = document.getElementById('spellKeyboard');
+    if (!kb || kb.dataset.built) return;
+    kb.dataset.built = '1';
+    ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].forEach(r => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; justify-content:center; gap:4px; margin:4px 0;';
+      r.split('').forEach(ch => row.appendChild(makeSpellKey(ch, ch)));
+      kb.appendChild(row);
+    });
+    const last = document.createElement('div');
+    last.style.cssText = 'display:flex; justify-content:center; gap:4px; margin:4px 0;';
+    last.appendChild(makeSpellKey('␣ 空白', ' ', 'flex:1.8;'));
+    last.appendChild(makeSpellKey('.', '.'));
+    last.appendChild(makeSpellKey('⌫ 退格', 'BACK', 'flex:1.8;'));
+    kb.appendChild(last);
+  }
+
+  function makeSpellKey(label, val, extra) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerText = label;
+    b.style.cssText = 'flex:1; min-width:0; padding:10px 0; font-size:16px; font-weight:800; border:none; border-radius:10px; background:#e3f2fd; color:#0277bd; cursor:pointer; touch-action:manipulation;' + (extra || '');
+    b.addEventListener('click', () => spellTypeKey(val));
+    return b;
+  }
+
+  function spellTypeKey(val) {
+    const input = document.getElementById('spellInput');
+    if (!input || input.disabled) return;
+    if (val === 'BACK') input.value = input.value.slice(0, -1);
+    else input.value += val;
+  }
+
   function startSpell() {
     spellOrder = cardsData.map((_, i) => i);
     for (let i = spellOrder.length - 1; i > 0; i--) {
@@ -1699,6 +1743,7 @@
     spellFirstTryCorrect = 0;
     document.getElementById('spellStudentName').innerText = `學生：${studentName}`;
     switchPage('spell-page');
+    buildSpellKeyboard();
     loadSpellCard(true);
   }
 
