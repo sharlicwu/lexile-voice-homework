@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>康軒B1 單字 語音作業</title>
+<title>康軒B1 L3 Vocabulary 語音作業</title>
 <style>
   :root {
     --pumpkin: #29b6f6;
@@ -247,10 +247,10 @@
   <!-- Welcome -->
   <div class="page active" id="welcome-page">
     <div class="welcome-screen">
-      <div class="cute-title">📘 康軒B1 單字</div>
+      <div class="cute-title">📘 康軒B1 L3 Vocabulary</div>
       <div class="food-strip">📘 🎧 ✍️ 🎤 🧩 ✨</div>
       <div class="thin-divider"></div>
-      <div class="subtitle">康軒B1 語音作業 · 單字卡朗讀、聽拼寫與 AI 評分系統</div>
+      <div class="subtitle">康軒B1 L3 語音作業 · 單字卡朗讀、聽拼寫與 AI 評分系統</div>
       <input type="text" id="studentNameInput" class="welcome-input" placeholder="請輸入你的姓名" autofocus>
       <div class="btn-group">
         <button class="cute-btn btn-listen" id="btnListen">🎧 聽力練習</button>
@@ -271,7 +271,7 @@
   <div class="page" id="listening-page">
     <div>
       <div class="top-bar">
-        <span class="student-tag">🎧 康軒B1 - 聽力自主練習區</span>
+        <span class="student-tag">🎧 康軒B1 L3 - 聽力自主練習區</span>
         <div class="nav-btn-group"><button class="home-btn" id="btnHomeListen">🏠 首頁</button></div>
       </div>
       <div class="listen-grid" id="listenGrid"></div>
@@ -465,10 +465,10 @@
   ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbwlyA5ELgWopHHYuEZzzPk2C5hEcdf5QZnHWDLJ2kcyKV6GvTTZVIydwBYOCUm_xFH8HQ/exec';
-  const TOPIC = '康軒B1';
+  const TOPIC = '康軒B1L3';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1116';
+  const APP_VER = 'V1117';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -657,7 +657,7 @@
     }
   }
 
-  function progressKey() { return 'jolT2_progress_kangxuanb1_' + encodeURIComponent(studentName); }
+  function progressKey() { return 'jolT2_progress_kangxuanb1l3_' + encodeURIComponent(studentName); }
   function saveProgress() {
     if (!studentName) return;
     try {
