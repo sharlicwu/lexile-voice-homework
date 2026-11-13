@@ -468,7 +468,7 @@
   const TOPIC = '康軒B1';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1115';
+  const APP_VER = 'V1116';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -817,7 +817,8 @@
     recordBtn.className = 'record-action-btn ' + (wordMode ? '' : 'blue');
     recordBtn.innerText = '🎤 單一錄音（可播放自己的聲音）';
     
-    document.getElementById('pageCounter').innerText = `${currentIndex + 1} / ${cardsData.length}`;
+    const gInfo = recGroupInfo(currentIndex);
+    document.getElementById('pageCounter').innerText = `第 ${gInfo.g} 組 · ${currentIndex - gInfo.start + 1} / ${gInfo.len} 字`;
     document.getElementById('doneTag').innerText = `已完成: ${doneCount(recMode)} / ${cardsData.length}`;
     // 最後一張卡：右下按鈕改成「看總成績」，避免無限循環
     // 補錄模式：還有沒過關的字 → 「下一個 →」；全部過關 → 「查看成績 📊」
@@ -826,7 +827,8 @@
     if (weakReviewMode) {
       navNext.innerText = (firstWeakIndex(weakReviewMode) === -1) ? '查看成績 📊' : '下一個 →';
     } else {
-      navNext.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊' : '下一個 →';
+      navNext.innerText = (currentIndex === cardsData.length - 1) ? '看總成績 📊'
+        : (gInfo.g < recGroupCount() && currentIndex === gInfo.end - 1) ? '下一組 →' : '下一個 →';
     }
     
     if (resetUI) {
@@ -843,6 +845,16 @@
     if (doneNote) doneNote.style.display = 'none';
     
     speakCardText(item);
+  }
+
+  // ---------- 錄音練習分組（2 組：19 + 18）----------
+  function recGroupCount() { return 2; }
+  function recGroupInfo(i) {
+    const per = Math.ceil(cardsData.length / recGroupCount());
+    const g = Math.min(Math.floor(i / per) + 1, recGroupCount());
+    const start = (g - 1) * per;
+    const end = Math.min(start + per, cardsData.length);
+    return { g: g, start: start, end: end, len: end - start };
   }
 
   function mainText(item) {
@@ -906,6 +918,12 @@
     }
     if (currentIndex === cardsData.length - 1 && dir === 1) {
       showSummary(); // 最後一張卡再按「下一個/看總成績」→ 進總成績，不循環回第一張
+      return;
+    }
+    // 分組練習：第 1 組最後一個字按「下一組 →」→ 宣告完成後接續第 2 組
+    if (dir === 1 && currentIndex === recGroupInfo(currentIndex).end - 1 && recGroupInfo(currentIndex).g < recGroupCount()) {
+      toast(`🎉 第 ${recGroupInfo(currentIndex).g} 組完成！休息一下，接著第 ${recGroupInfo(currentIndex).g + 1} 組 💪`);
+      setTimeout(() => { loadCard(currentIndex + 1, true); }, 1200);
       return;
     }
     let newIdx = currentIndex + dir;
@@ -1105,6 +1123,9 @@
       }
       autoAdvanceTimer = setTimeout(() => {
         if (!autoPractice) return;
+        if (currentIndex === recGroupInfo(currentIndex).end - 1 && recGroupInfo(currentIndex).g < recGroupCount()) {
+          toast(`🎉 第 ${recGroupInfo(currentIndex).g} 組完成！接著第 ${recGroupInfo(currentIndex).g + 1} 組 💪`);
+        }
         loadCard(currentIndex + 1, true);
         startAutoRecording();
       }, 1800);
