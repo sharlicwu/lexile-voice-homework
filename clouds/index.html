@@ -406,7 +406,7 @@
 
 <script>
     const cardsData = [
-    { word: "fill", zh: "填滿；裝滿\nㄈㄧˊ ㄇㄢˇ；ㄓㄨㄤ ㄇㄢˇ", icon: "🌌", enSent: "The clouds <span class=\'highlight-blue\'>fill</span> the whole sky.", zhSent: "雲填滿了整個天空。\nㄩㄣˊ ㄊㄧㄢˊ ㄇㄢˇ ㄌㄜ˙ ㄓㄥˋ ㄍㄜ˙ ㄊㄧㄢ ㄎㄨㄥ。", rawSent: "The clouds fill the whole sky." },
+    { word: "fill", zh: "填滿；裝滿\nㄊㄧㄢˊ ㄇㄢˇ；ㄓㄨㄤ ㄇㄢˇ", icon: "🌌", enSent: "The clouds <span class=\'highlight-blue\'>fill</span> the whole sky.", zhSent: "雲填滿了整個天空。\nㄩㄣˊ ㄊㄧㄢˊ ㄇㄢˇ ㄌㄜ˙ ㄓㄥˋ ㄍㄜ˙ ㄊㄧㄢ ㄎㄨㄥ。", rawSent: "The clouds fill the whole sky." },
     { word: "puffy", zh: "蓬蓬的\nㄆㄥˊ ㄆㄥˊ ㄉㄜ˙", icon: "☁️", enSent: "Look at the <span class=\'highlight-blue\'>puffy</span> clouds. I see a sheep.", zhSent: "看那些蓬蓬的雲。我看到一隻綿羊。\nㄎㄢˋ ㄋㄚˋ ㄒㄧㄝ ㄆㄥˊ ㄆㄥˊ ㄉㄜ˙ ㄩㄣˊ。ㄨㄛˊ ㄎㄢˋ ㄉㄠˋ ㄧˊ ㄓㄧ ㄇㄧㄢˊ ㄧㄤˊ。", rawSent: "Look at the puffy clouds. I see a sheep." },
     { word: "jumbo", zh: "巨大的\nㄐㄩˋ ㄉㄚˋ ㄉㄜ˙", icon: "🐋", enSent: "Look at the <span class=\'highlight-blue\'>jumbo</span> clouds. A whale is what I see.", zhSent: "看那巨大的雲。我看到的是一隻鯨魚。\nㄎㄢˋ ㄋㄚˋ ㄐㄩˋ ㄉㄚˋ ㄉㄜ˙ ㄩㄣˊ。ㄨㄛˊ ㄎㄢˋ ㄉㄠˋ ㄉㄜ˙ ㄕˋ ㄧˊ ㄓㄧ ㄐㄧㄥ ㄩˊ。", rawSent: "Look at the jumbo clouds. A whale is what I see." },
     { word: "round", zh: "圓圓的\nㄩㄢˊ ㄩㄢˊ ㄉㄜ˙", icon: "🌕", enSent: "Look at the <span class=\'highlight-blue\'>round</span> clouds. I see a creamy pie.", zhSent: "看那些圓圓的雲。我看到一個奶油般的派。\nㄎㄢˋ ㄋㄚˋ ㄒㄧㄝ ㄩㄢˊ ㄩㄢˊ ㄉㄜ˙ ㄩㄣˊ。ㄨㄛˊ ㄎㄢˋ ㄉㄠˋ ㄧˊ ㄍㄜ˙ ㄋㄞˊ ㄧㄡˊ ㄅㄢ ㄉㄜ˙ ㄆㄞˋ。", rawSent: "Look at the round clouds. I see a creamy pie." },
@@ -422,7 +422,7 @@
   const TOPIC = 'clouds-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1118';
+  const APP_VER = 'V1119';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1044,8 +1044,8 @@
       document.getElementById('recStatus').classList.remove('active');
       document.getElementById('recordBtn').classList.remove('recording');
       currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-      document.getElementById('audioPreview').src = URL.createObjectURL(currentAudioBlob);
-      document.getElementById('playbackBox').style.display = 'block';
+      // 整組自動錄音不顯示播放（錄完會自動跳題，來不及聽）；播放只保留在「單一錄音」
+      document.getElementById('playbackBox').style.display = 'none';
       await evaluateSpeech(window._lastTranscript || '');
       if (!autoPractice) return;
       if (currentIndex >= cardsData.length - 1) {
