@@ -68,7 +68,7 @@
   .welcome-screen { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 520px; gap: 16px; }
   .cute-title { font-size: 40px; font-weight: 900; color: var(--pumpkin-dark); line-height: 1.1; text-shadow: 3px 3px 0 #ffe0b2; margin: 0; }
   .subtitle { font-size: 17px; color: #636e72; font-weight: 600; }
-  .welcome-input { padding: 14px 22px; font-size: 19px; border: 3px dashed #ffcc80; border-radius: 16px; outline: none; text-align: center; width: 280px; transition: 0.2s; background: #fff; }
+  .welcome-input { padding: 14px 22px; font-size: 19px; border: 3px dashed #ffe0b2; border-radius: 16px; outline: none; text-align: center; width: 280px; transition: 0.2s; background: #fff; }
   .welcome-input:focus { border-color: var(--pumpkin-dark); box-shadow: 0 0 0 4px rgba(255,167,38,0.2); }
   .btn-group { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
   .cute-btn {
@@ -94,7 +94,7 @@
   /* Mode tabs */
   .mode-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
   .mode-tab {
-    padding: 10px 26px; border-radius: 22px; border: 2px solid #ffcc80; background: #fff;
+    padding: 10px 26px; border-radius: 22px; border: 2px solid #ffe0b2; background: #fff;
     color: var(--pumpkin-dark); font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;
   }
   .mode-tab.active-word { background: linear-gradient(135deg, #ffcc80, #ff7043); color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(255,112,67,0.35); }
@@ -108,7 +108,7 @@
   .word-audio-btn.blue { background: #0984e3; box-shadow: 0 4px 10px rgba(9,132,227,0.3); }
   .word-audio-btn:hover { filter: brightness(0.92); }
   .sentence-container {
-    background: linear-gradient(135deg, #fff3e0, #ffe0b2); border-left: 8px solid var(--pumpkin);
+    background: linear-gradient(135deg, #fffde7, #ffe0b2); border-left: 8px solid var(--pumpkin);
     border-radius: 16px; padding: 14px 20px; margin-top: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.08);
   }
   .sentence-container.blue { background: linear-gradient(135deg, #dff9fb, #cdeeff); border-left-color: #0984e3; }
@@ -229,12 +229,12 @@
   #welcome-page .cute-title { font-size: 42px; letter-spacing: 1px; color: #e65100; text-shadow: none; font-weight: 800; }
   #welcome-page .subtitle { color: #8a7f74; font-size: 15px; letter-spacing: 2px; font-weight: 600; }
   #welcome-page .welcome-input { border: 2px solid #e3d5c5; border-radius: 12px; background: #fdfbf8; font-weight: 600; }
-  #welcome-page .welcome-input:focus { border-color: #e65100; box-shadow: 0 0 0 3px rgba(199,91,57,0.12); }
+  #welcome-page .welcome-input:focus { border-color: #e65100; box-shadow: 0 0 0 3px rgba(230,81,0,0.12); }
   #welcome-page .cute-btn { border-radius: 12px; box-shadow: none; font-weight: 700; letter-spacing: 0.5px; }
   #welcome-page .btn-listen { background: #00897b; }
   #welcome-page .btn-record { background: #e65100; }
   #welcome-page .btn-sentence { background: #fb8c00; }
-  #welcome-page .btn-quiz { background: #7e57c2; }
+  #welcome-page .btn-quiz { background: #5d4037; }
   #welcome-page .cute-btn:hover { box-shadow: 0 6px 14px rgba(45,52,54,0.15); transform: translateY(-2px); }
   #welcome-page .clear-progress-btn { background: #fdfbf8; border: 1.5px solid #e3d5c5; color: #8a7f74; border-radius: 12px; }
   #welcome-page .clear-progress-btn:hover { border-color: #e65100; color: #e65100; }
@@ -406,28 +406,28 @@
 
 <script>
     const cardsData = [
-    { word: "obstacle", zh: "障礙物\nㄓㄤˋ ㄞˋ ㄨˋ", icon: "🚧", enSent: "Monster trucks can drive over almost any <span class=\'highlight-blue\'>obstacle</span> in their path.", zhSent: "大腳卡車幾乎可以開過任何障礙物。\nㄉㄚˋ ㄐㄧㄠˇ ㄎㄚˇ ㄔㄜ ㄐㄧˊ ㄏㄨ ㄎㄜˇ ㄧˇ ㄎㄞ ㄍㄨㄛˋ ㄖㄣˊ ㄏㄜˊ ㄓㄤˋ ㄞˋ ㄨˋ。", rawSent: "Monster trucks can drive over almost any obstacle in their path." },
-    { word: "gigantic", zh: "巨大的\nㄐㄩˋ ㄉㄚˋ ㄉㄜ˙", icon: "🐘", enSent: "Some vehicles are even bigger than <span class=\'highlight-blue\'>gigantic</span> monster trucks.", zhSent: "有些車子比巨大的大腳卡車還大。\nㄧㄡˇ ㄒㄧㄝ ㄔㄜ ㄗ˙ ㄅㄧˇ ㄐㄩˋ ㄉㄚˋ ㄉㄜ˙ ㄉㄚˋ ㄐㄧㄠˇ ㄎㄚˇ ㄔㄜ ㄏㄞˊ ㄉㄚˋ。", rawSent: "Some vehicles are even bigger than gigantic monster trucks." },
-    { word: "propeller", zh: "螺旋槳\nㄌㄨㄛˊ ㄒㄩㄢˊ ㄐㄧㄤˇ", icon: "🌀", enSent: "In the water, the Duck uses a <span class=\'highlight-blue\'>propeller</span>.", zhSent: "在水裡，鴨子車用螺旋槳前進。\nㄗㄞˋ ㄕㄨㄟˇ ㄌㄧˇ，ㄧㄚ ㄗ˙ ㄔㄜ ㄩㄥˋ ㄌㄨㄛˊ ㄒㄩㄢˊ ㄐㄧㄤˇ ㄑㄧㄢˊ ㄐㄧㄣˋ。", rawSent: "In the water, the Duck uses a propeller." },
-    { word: "evacuate", zh: "疏散；撤離\nㄕㄨ ㄙㄢˋ；ㄔㄜˋ ㄌㄧˊ", icon: "🚨", enSent: "Rescue workers use this truck to <span class=\'highlight-blue\'>evacuate</span> people in storms.", zhSent: "救難人員用這臺車在暴風雨時疏散民眾。\nㄐㄧㄡˋ ㄋㄢˋ ㄖㄣˊ ㄩㄢˊ ㄩㄥˋ ㄓㄜˋ ㄊㄞˊ ㄔㄜ ㄗㄞˋ ㄅㄠˋ ㄈㄥ ㄩˇ ㄕˊ ㄕㄨ ㄙㄢˋ ㄇㄧㄣˊ ㄓㄨㄥˋ。", rawSent: "Rescue workers use this truck to evacuate people in storms." },
-    { word: "crane", zh: "起重機；吊車\nㄑㄧˇ ㄓㄨㄥˋ ㄐㄧ；ㄉㄧㄠˋ ㄔㄜ", icon: "🏗️", enSent: "<span class=\'highlight-blue\'>Cranes</span> lift and move heavy objects.", zhSent: "起重機能舉起並搬動很重的東西。\nㄑㄧˇ ㄓㄨㄥˋ ㄐㄧ ㄋㄥˊ ㄐㄩˇ ㄑㄧˇ ㄅㄧㄥˋ ㄅㄢ ㄉㄨㄥˋ ㄏㄣˇ ㄓㄨㄥˋ ㄉㄜ˙ ㄉㄨㄥ ㄒㄧ。", rawSent: "Cranes lift and move heavy objects." },
-    { word: "construct", zh: "建造\nㄐㄧㄢˋ ㄗㄠˋ", icon: "🏢", enSent: "Cranes help workers <span class=\'highlight-blue\'>construct</span> buildings.", zhSent: "起重機幫助工人建造大樓。\nㄑㄧˇ ㄓㄨㄥˋ ㄐㄧ ㄅㄤ ㄓㄨˋ ㄍㄨㄥ ㄖㄣˊ ㄐㄧㄢˋ ㄗㄠˋ ㄉㄚˋ ㄌㄡˊ。", rawSent: "Cranes help workers construct buildings." },
-    { word: "cargo", zh: "貨物\nㄏㄨㄛˋ ㄨˋ", icon: "📦", enSent: "Big cranes load and unload <span class=\'highlight-blue\'>cargo</span>.", zhSent: "大型起重機會裝卸貨物。\nㄉㄚˋ ㄒㄧㄥˊ ㄑㄧˇ ㄓㄨㄥˋ ㄐㄧ ㄏㄨㄟˋ ㄓㄨㄤ ㄒㄧㄝˋ ㄏㄨㄛˋ ㄨˋ。", rawSent: "Big cranes load and unload cargo." },
-    { word: "skyscrapers", zh: "摩天大樓\nㄇㄛˊ ㄊㄧㄢ ㄉㄚˋ ㄌㄡˊ", icon: "🏙️", enSent: "Cranes lift supplies to the tops of <span class=\'highlight-blue\'>skyscrapers</span>.", zhSent: "起重機把物資吊到摩天大樓的頂端。\nㄑㄧˇ ㄓㄨㄥˋ ㄐㄧ ㄅㄚˇ ㄨˋ ㄗ ㄉㄧㄠˋ ㄉㄠˋ ㄇㄛˊ ㄊㄧㄢ ㄉㄚˋ ㄌㄡˊ ㄉㄜ˙ ㄉㄧㄥ ㄉㄨㄢ。", rawSent: "Cranes lift supplies to the tops of skyscrapers." },
-    { word: "haul", zh: "拖運；搬運\nㄊㄨㄛ ㄩㄣˋ；ㄅㄢ ㄩㄣˋ", icon: "🚚", enSent: "Dump trucks <span class=\'highlight-blue\'>haul</span> loads of rocks and dirt.", zhSent: "傾卸卡車拖運一車車的石頭和泥土。\nㄑㄧㄥ ㄒㄧㄝˋ ㄎㄚˇ ㄔㄜ ㄊㄨㄛ ㄩㄣˋ ㄧˊ ㄔㄜ ㄔㄜ ㄉㄜ˙ ㄕˊ ㄊㄡ˙ ㄏㄜˊ ㄋㄧˊ ㄊㄨˇ。", rawSent: "Dump trucks haul loads of rocks and dirt." },
-    { word: "remote", zh: "遙遠的；遙控的\nㄧㄠˊ ㄩㄢˇ ㄉㄜ˙；ㄧㄠˊ ㄎㄨㄥˋ ㄉㄜ˙", icon: "🛰️", enSent: "The trains haul loads to <span class=\'highlight-blue\'>remote</span> places without roads.", zhSent: "這些火車把貨物拖運到沒有公路的偏遠地方。\nㄓㄜˋ ㄒㄧㄝ ㄏㄨㄛˇ ㄔㄜ ㄅㄚˇ ㄏㄨㄛˋ ㄨˋ ㄊㄨㄛ ㄩㄣˋ ㄉㄠˋ ㄇㄟˊ ㄧㄡˇ ㄍㄨㄥ ㄌㄨˋ ㄉㄜ˙ ㄆㄧㄢ ㄩㄢˇ ㄉㄧˋ ㄈㄤ。", rawSent: "The trains haul loads to remote places without roads." },
-    { word: "spacecraft", zh: "太空船\nㄊㄞˋ ㄎㄨㄥ ㄔㄨㄢˊ", icon: "🚀", enSent: "Some of the biggest vehicles move <span class=\'highlight-blue\'>spacecraft</span>.", zhSent: "有些最大的車輛是用來搬運太空船的。\nㄧㄡˇ ㄒㄧㄝ ㄗㄨㄟˋ ㄉㄚˋ ㄉㄜ˙ ㄔㄜ ㄌㄧㄤˊ ㄕㄨㄙ ㄩㄥˋ ㄌㄞˊ ㄅㄢ ㄩㄣˋ ㄊㄞˋ ㄎㄨㄥ ㄔㄨㄢˊ ㄉㄜ˙。", rawSent: "Some of the biggest vehicles move spacecraft." },
-    { word: "platform", zh: "平台\nㄆㄧㄥˊ ㄊㄞˊ", icon: "🚏", enSent: "The crawler carries spacecraft on a <span class=\'highlight-blue\'>platform</span> two stories high.", zhSent: "履帶運輸車把太空船放在兩層樓高的平台上。\nㄌㄩˇ ㄉㄞˋ ㄩㄣˋ ㄕㄨ ㄔㄜ ㄅㄚˇ ㄊㄞˋ ㄎㄨㄥ ㄔㄨㄢˊ ㄈㄤˋ ㄗㄞˋ ㄌㄧㄤˇ ㄘㄥˊ ㄌㄡˊ ㄍㄠ ㄉㄜ˙ ㄆㄧㄥˊ ㄊㄞˊ ㄕㄤˋ。", rawSent: "The crawler carries spacecraft on a platform two stories high." },
-    { word: "power shovels", zh: "動力鏟車；挖土機\nㄉㄨㄥˋ ㄌㄧˋ ㄔㄢˇ ㄔㄜ；ㄨㄚ ㄊㄨˇ ㄐㄧ", icon: "⛏️", enSent: "Giant <span class=\'highlight-blue\'>power shovels</span> dig loads of rocks and dirt.", zhSent: "巨型動力鏟車挖出成堆的石頭和泥土。\nㄐㄩˋ ㄒㄧㄥˊ ㄉㄨㄥˋ ㄌㄧˋ ㄔㄢˇ ㄔㄜ ㄨㄚ ㄔㄨ ㄔㄥˊ ㄉㄨㄟ ㄉㄜ˙ ㄕˊ ㄊㄡ˙ ㄏㄜˊ ㄋㄧˊ ㄊㄨˇ。", rawSent: "Giant power shovels dig loads of rocks and dirt." },
-    { word: "complex", zh: "複雜的\nㄈㄨˋ ㄗㄚˊ ㄉㄜ˙", icon: "🧩", enSent: "These <span class=\'highlight-blue\'>complex</span> machines can be as tall as a sixteen-story building.", zhSent: "這些複雜的機器可以跟十六層樓一樣高。\nㄓㄜˋ ㄒㄧㄝ ㄈㄨˋ ㄗㄚˊ ㄉㄜ˙ ㄐㄧ ㄑㄧˋ ㄎㄜˇ ㄧˇ ㄍㄣ ㄕˊ ㄌㄧㄡˋ ㄘㄥˊ ㄌㄡˊ ㄧˊ ㄧㄤˋ ㄍㄠ。", rawSent: "These complex machines can be as tall as a sixteen-story building." },
-    { word: "tunneling", zh: "挖隧道\nㄨㄚ ㄙㄨㄟˋ ㄉㄠˋ", icon: "🕳️", enSent: "<span class=\'highlight-blue\'>Tunneling</span> machines dig tunnels under the ocean.", zhSent: "挖隧道機器可以在海底挖隧道。\nㄨㄚ ㄙㄨㄟˋ ㄉㄠˋ ㄐㄧ ㄑㄧˋ ㄎㄜˇ ㄧˇ ㄗㄞˋ ㄏㄞˇ ㄉㄧˇ ㄨㄚ ㄙㄨㄟˋ ㄉㄠˋ。", rawSent: "Tunneling machines dig tunnels under the ocean." }
+    { word: "obstacle", zh: "障礙物", icon: "🚧", enSent: "Monster trucks can drive over almost any <span class=\'highlight-blue\'>obstacle</span> in their path.", zhSent: "大腳卡車幾乎可以開過任何障礙物。", rawSent: "Monster trucks can drive over almost any obstacle in their path." },
+    { word: "gigantic", zh: "巨大的", icon: "🐘", enSent: "Some vehicles are even bigger than <span class=\'highlight-blue\'>gigantic</span> monster trucks.", zhSent: "有些車子比巨大的大腳卡車還大。", rawSent: "Some vehicles are even bigger than gigantic monster trucks." },
+    { word: "propeller", zh: "螺旋槳", icon: "🌀", enSent: "In the water, the Duck uses a <span class=\'highlight-blue\'>propeller</span>.", zhSent: "在水裡，鴨子車用螺旋槳前進。", rawSent: "In the water, the Duck uses a propeller." },
+    { word: "evacuate", zh: "疏散；撤離", icon: "🚨", enSent: "Rescue workers use this truck to <span class=\'highlight-blue\'>evacuate</span> people in storms.", zhSent: "救難人員用這臺車在暴風雨時疏散民眾。", rawSent: "Rescue workers use this truck to evacuate people in storms." },
+    { word: "crane", zh: "起重機；吊車", icon: "🏗️", enSent: "<span class=\'highlight-blue\'>Cranes</span> lift and move heavy objects.", zhSent: "起重機能舉起並搬動很重的東西。", rawSent: "Cranes lift and move heavy objects." },
+    { word: "construct", zh: "建造", icon: "🏢", enSent: "Cranes help workers <span class=\'highlight-blue\'>construct</span> buildings.", zhSent: "起重機幫助工人建造大樓。", rawSent: "Cranes help workers construct buildings." },
+    { word: "cargo", zh: "貨物", icon: "📦", enSent: "Big cranes load and unload <span class=\'highlight-blue\'>cargo</span>.", zhSent: "大型起重機會裝卸貨物。", rawSent: "Big cranes load and unload cargo." },
+    { word: "skyscrapers", zh: "摩天大樓", icon: "🏙️", enSent: "Cranes lift supplies to the tops of <span class=\'highlight-blue\'>skyscrapers</span>.", zhSent: "起重機把物資吊到摩天大樓的頂端。", rawSent: "Cranes lift supplies to the tops of skyscrapers." },
+    { word: "haul", zh: "拖運；搬運", icon: "🚚", enSent: "Dump trucks <span class=\'highlight-blue\'>haul</span> loads of rocks and dirt.", zhSent: "傾卸卡車拖運一車車的石頭和泥土。", rawSent: "Dump trucks haul loads of rocks and dirt." },
+    { word: "remote", zh: "遙遠的；遙控的", icon: "🛰️", enSent: "The trains haul loads to <span class=\'highlight-blue\'>remote</span> places without roads.", zhSent: "這些火車把貨物拖運到沒有公路的偏遠地方。", rawSent: "The trains haul loads to remote places without roads." },
+    { word: "spacecraft", zh: "太空船", icon: "🚀", enSent: "Some of the biggest vehicles move <span class=\'highlight-blue\'>spacecraft</span>.", zhSent: "有些最大的車輛是用來搬運太空船的。", rawSent: "Some of the biggest vehicles move spacecraft." },
+    { word: "platform", zh: "平台", icon: "🚏", enSent: "The crawler carries spacecraft on a <span class=\'highlight-blue\'>platform</span> two stories high.", zhSent: "履帶運輸車把太空船放在兩層樓高的平台上。", rawSent: "The crawler carries spacecraft on a platform two stories high." },
+    { word: "power shovels", zh: "動力鏟車；挖土機", icon: "⛏️", enSent: "Giant <span class=\'highlight-blue\'>power shovels</span> dig loads of rocks and dirt.", zhSent: "巨型動力鏟車挖出成堆的石頭和泥土。", rawSent: "Giant power shovels dig loads of rocks and dirt." },
+    { word: "complex", zh: "複雜的", icon: "🧩", enSent: "These <span class=\'highlight-blue\'>complex</span> machines can be as tall as a sixteen-story building.", zhSent: "這些複雜的機器可以跟十六層樓一樣高。", rawSent: "These complex machines can be as tall as a sixteen-story building." },
+    { word: "tunneling", zh: "挖隧道", icon: "🕳️", enSent: "<span class=\'highlight-blue\'>Tunneling</span> machines dig tunnels under the ocean.", zhSent: "挖隧道機器可以在海底挖隧道。", rawSent: "Tunneling machines dig tunnels under the ocean." }
   ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbx3Z11JW-WKyllfGVA-NgfM4rv6iOq8-txemaoxaY-MxyKLo-1smT4GRMqL03NoUbsw/exec';
   const TOPIC = 'monstertruckO-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1121';
+  const APP_VER = 'V1122';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -714,7 +714,7 @@
     const items = cardsData.map((item, i) => ({ item, s: scores[item.word] }))
       .filter(x => x.s && (Number(x.s.score) || 0) < 60);
     listEl.innerHTML = items.map(x =>
-      `<div style="background:#fff8e7; border:2px solid #ffe082; border-radius:12px; padding:6px 12px; font-weight:800; font-size:15px; color:#2d3436;">${x.item.icon} ${x.item.word}　<span style="color:#e17055;">${Number(x.s.score) || 0}分</span></div>`
+      `<div style="background:#fff8e0; border:2px solid #ffe082; border-radius:12px; padding:6px 12px; font-weight:800; font-size:15px; color:#2d3436;">${x.item.icon} ${x.item.word}　<span style="color:#e17055;">${Number(x.s.score) || 0}分</span></div>`
     ).join('');
     const modal = document.getElementById('weakModal');
     modal.style.display = 'flex';
@@ -1553,7 +1553,7 @@
     let cards = [];
     cardsData.slice(start, end).forEach(w => {
       cards.push({ kind: 'en', text: w.word, pair: w.word });
-      cards.push({ kind: 'zh', text: (w.zh.split('\n')[1] || w.zh.split('\n')[0]).split('；')[0], pair: w.word });
+      cards.push({ kind: 'zh', text: w.zh.split('\n')[0].split('；')[0], pair: w.word });
     });
     for (let i = cards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -1572,7 +1572,7 @@
       btn.style.cursor = 'pointer';
       btn.style.minHeight = '56px';
       btn.style.lineHeight = '1.3';
-      btn.style.background = '#ffffff';
+      btn.style.background = '#fff8e0';
       btn.style.border = '2px solid #ffe0b2';
       btn.style.color = card.kind === 'en' ? '#e65100' : '#5d4037';
       btn.addEventListener('click', () => selectMatchCard(btn, card));
@@ -1620,7 +1620,7 @@
       btn.style.border = '2px solid #e74c3c';
       setTimeout(() => {
         [first.btn, btn].forEach(b => {
-          b.style.background = '#ffffff';
+          b.style.background = '#fff8e0';
           b.style.border = '2px solid #ffe0b2';
         });
         matchLock = false;
