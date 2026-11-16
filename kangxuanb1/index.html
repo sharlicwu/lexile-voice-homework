@@ -481,7 +481,7 @@
   const TOPIC = '康軒B1L3';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1124';
+  const APP_VER = 'V1125';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -1936,6 +1936,9 @@
     }
     const wrap = document.getElementById('matchWrap');
     if (wrap) wrap.style.display = 'none';
+    // 成績框放在配對頁裡：從拼字頁按「看成績」要先切到配對頁才看得到（修正按了沒反應）
+    if (studentName) { const qn = document.getElementById('quizStudentName'); if (qn) qn.innerText = `學生：${studentName}`; }
+    switchPage('quiz-page');
     const resBox = document.getElementById('quizResultBox');
     if (resBox) {
       resBox.style.display = 'flex';
