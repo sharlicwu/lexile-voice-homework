@@ -336,7 +336,7 @@
     </div>
     <div class="nav-controls">
       <button class="nav-btn prev" id="prevBtn">← 上一個</button>
-      <span style="font-weight: 800; color: #636e72;" id="pageCounter">1 / 36</span>
+      <span style="font-weight: 800; color: #636e72;" id="pageCounter">1 / 40</span>
       <button class="nav-btn" id="nextBtn">下一個 →</button>
     </div>
   </div>
@@ -394,7 +394,7 @@
       <div id="spellFeedback" style="min-height:34px; text-align:center; font-size:17px; font-weight:800; margin:6px 0; white-space:pre-line;"></div>
       <div class="nav-controls">
         <button class="nav-btn" id="spellCheckBtn">✔ 檢查答案</button>
-        <span class="page-indicator" id="spellProgress">1 / 36</span>
+        <span class="page-indicator" id="spellProgress">1 / 40</span>
         <button class="nav-btn" id="spellNextBtn">下一個 →</button>
       </div>
     </div>
@@ -420,7 +420,7 @@
       <div class="quiz-result" id="quizResultBox" style="display:none;">
         <div class="result-emoji">🏆</div>
         <h2 id="quizResultTitle" style="margin:4px 0;color:var(--pumpkin-dark);font-weight:900;">配對完成！</h2>
-        <div class="score-display" id="finalScore">配對成功 0 / 36 對</div>
+        <div class="score-display" id="finalScore">配對成功 0 / 40 對</div>
         <div id="finalTime" style="font-size:18px;color:#0277bd;font-weight:700;margin-top:4px;">⏱ 用時 0 秒</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top: 10px;">
           <button class="cute-btn btn-quiz" id="btnRestartQuiz">🔄 再配對一次</button>
@@ -435,49 +435,53 @@
 
 <script>
     const cardsData = [
-    { word: "listen", zh: "聽", icon: "👂" },
-    { word: "voice", zh: "聲音", icon: "🗣️" },
-    { word: "stand up", zh: "起立；站起來", icon: "🧍" },
-    { word: "sit down", zh: "坐下", icon: "🪑" },
-    { word: "take a photo", zh: "拍照", icon: "📷" },
-    { word: "make", zh: "製作；做", icon: "🔨" },
-    { word: "any", zh: "任何的", icon: "❔" },
-    { word: "noise", zh: "噪音；吵鬧聲", icon: "🔊" },
-    { word: "can't", zh: "不能（= cannot）", icon: "🚫" },
-    { word: "talk", zh: "說話；交談", icon: "💬" },
-    { word: "noisy", zh: "吵鬧的", icon: "📢" },
-    { word: "late", zh: "遲的；晚的", icon: "⏰" },
-    { word: "early", zh: "早的", icon: "🌅" },
-    { word: "sidewalk", zh: "人行道", icon: "🚶" },
-    { word: "song", zh: "歌曲", icon: "🎵" },
-    { word: "check out", zh: "查看；檢查", icon: "🔍" },
-    { word: "cross", zh: "穿越；橫越", icon: "➡️" },
-    { word: "road", zh: "馬路；道路", icon: "🛣️" },
-    { word: "watch out", zh: "小心；注意", icon: "⚠️" },
-    { word: "real", zh: "真實的", icon: "✅" },
-    { word: "all the time", zh: "一直；總是", icon: "🔁" },
-    { word: "Guess what?", zh: "你猜怎麼著？", icon: "🤔" },
-    { word: "traffic lights", zh: "紅綠燈", icon: "🚦" },
-    { word: "ground", zh: "地面；土地", icon: "🌍" },
-    { word: "design", zh: "設計", icon: "📐" },
-    { word: "user", zh: "使用者", icon: "👤" },
-    { word: "download", zh: "下載", icon: "⬇️" },
-    { word: "warn", zh: "警告", icon: "🚨" },
-    { word: "oncoming", zh: "迎面而來的", icon: "↔️" },
-    { word: "crosswalk", zh: "行人穿越道；斑馬線", icon: "🚸" },
-    { word: "also", zh: "也", icon: "➕" },
-    { word: "the USA", zh: "美國", icon: "🇺🇸" },
-    { word: "special", zh: "特別的", icon: "⭐" },
-    { word: "lane", zh: "車道", icon: "🛞" },
-    { word: "way", zh: "方法；道路", icon: "🧭" },
-    { word: "other", zh: "其他的", icon: "🔀" }
+    { word: "living room", zh: "客廳", icon: "🛋️" },
+    { word: "bedroom", zh: "臥室", icon: "🛏️" },
+    { word: "bathroom", zh: "浴室", icon: "🛁" },
+    { word: "dining room", zh: "飯廳", icon: "🍽️" },
+    { word: "behind", zh: "在......後面", icon: "🔙" },
+    { word: "in front of", zh: "在......前面", icon: "⏩" },
+    { word: "between", zh: "在......中間", icon: "↔️" },
+    { word: "next to", zh: "在......旁邊", icon: "➡️" },
+    { word: "near", zh: "在......附近", icon: "📍" },
+    { word: "please", zh: "請", icon: "🙏" },
+    { word: "house", zh: "房子", icon: "🏠" },
+    { word: "quiet", zh: "安靜的", icon: "🤫" },
+    { word: "style", zh: "風格；款式", icon: "👗" },
+    { word: "idea", zh: "想法；點子", icon: "💡" },
+    { word: "let's...", zh: "我們一起......吧", icon: "🙌" },
+    { word: "get", zh: "獲得", icon: "🎁" },
+    { word: "some", zh: "一些的；代一些", icon: "🔸" },
+    { word: "tool", zh: "工具", icon: "🔧" },
+    { word: "smartphone", zh: "智慧型手機", icon: "📱" },
+    { word: "step", zh: "步驟；一步", icon: "🦶" },
+    { word: "upload", zh: "上傳", icon: "⬆️" },
+    { word: "photo", zh: "相片", icon: "🖼️" },
+    { word: "choose", zh: "選擇", icon: "☑️" },
+    { word: "type", zh: "種類", icon: "🗂️" },
+    { word: "theme", zh: "主題", icon: "🎨" },
+    { word: "wait", zh: "等待", icon: "⏳" },
+    { word: "expensive", zh: "昂貴的", icon: "💰" },
+    { word: "with", zh: "對......來說；和", icon: "🤝" },
+    { word: "question", zh: "問題", icon: "❓" },
+    { word: "I see.", zh: "我了解了。", icon: "👀" },
+    { word: "soft", zh: "柔軟的", icon: "🧸" },
+    { word: "hard", zh: "硬的", icon: "🪨" },
+    { word: "in fact", zh: "事實上", icon: "📌" },
+    { word: "around", zh: "圍繞；副到處", icon: "🔄" },
+    { word: "world", zh: "世界", icon: "🌍" },
+    { word: "kitchen", zh: "廚房", icon: "🍳" },
+    { word: "beside", zh: "在......旁邊", icon: "🧍" },
+    { word: "ice", zh: "冰", icon: "🧊" },
+    { word: "inside", zh: "在......裡面；副在室內", icon: "📦" },
+    { word: "blanket", zh: "毛毯", icon: "🛌" }
   ];
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbwlyA5ELgWopHHYuEZzzPk2C5hEcdf5QZnHWDLJ2kcyKV6GvTTZVIydwBYOCUm_xFH8HQ/exec';
   const TOPIC = '康軒B1L3';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1123';
+  const APP_VER = 'V1124';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -487,6 +491,7 @@
     return inapp && !isIOS;
   })();
   document.addEventListener('DOMContentLoaded', () => {
+    postScore(null); // 補送上次沒送出去的成績
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
     if (window._INAPP_BROWSER) { const bw = document.getElementById('inappWarn'); if (bw) bw.style.display = 'block'; }
@@ -1493,6 +1498,40 @@
 
   // 同一學生同樣進度只送一次（避免重複開「我的成績」就洗板）
   let lastSentSnapshot = '';
+    // ---------- 成績上傳（帶重試與離線補送：送不出去時先存 localStorage，下次開頁自動補送）----------
+  function postScore(payload) {
+    const KEY = 'jolT2_pending_' + TOPIC;
+    let queue = [];
+    try { queue = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { queue = []; }
+    if (payload) queue.push(payload);
+    try { localStorage.setItem(KEY, JSON.stringify(queue)); } catch (e) {}
+    const trySend = (attempt) => {
+      let cur = [];
+      try { cur = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { cur = []; }
+      if (!cur.length) return;
+      const item = cur[0];
+      // With mode:'no-cors', application/json is not a CORS-safelisted Content-Type.
+      // text/plain avoids a preflight and still lets Apps Script parse e.postData.contents as JSON.
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(item)
+      }).then(() => {
+        // 送達瀏覽器排程才算成功，才從佇列移除（no-cors 無法讀回應）
+        let rest = [];
+        try { rest = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { rest = []; }
+        if (rest.length && JSON.stringify(rest[0]) === JSON.stringify(item)) {
+          rest.shift();
+          try { localStorage.setItem(KEY, JSON.stringify(rest)); } catch (e) {}
+        }
+      }).catch(() => {
+        if (attempt < 2) setTimeout(() => trySend(attempt + 1), 3000);
+      });
+    };
+    trySend(1);
+  }
+
   function sendToServer() {
     if (!scriptURL || scriptURL.includes('YOUR_GAS')) return;
     if (!studentName) return;
@@ -1530,14 +1569,7 @@
       sentenceWeak: sentenceStats.weak
     };
 
-    // With mode:'no-cors', application/json is not a CORS-safelisted Content-Type.
-    // text/plain avoids a preflight and still lets Apps Script parse e.postData.contents as JSON.
-    fetch(scriptURL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).catch(err => console.error('上傳失敗', err));
+    postScore(payload);
   }
 
   function showSummary(force) {
@@ -1722,19 +1754,14 @@
     const timeEl = document.getElementById('finalTime');
     if (timeEl) timeEl.innerText = `⏱ 用時 ${formatMatchTime(matchSeconds)}`;
     if (!scriptURL.includes('YOUR_GAS')) {
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          type: 'match',
-          topic: TOPIC,
-          studentName: studentName,
-          score: matchPairsFound,
-          total: MATCH_TOTAL,
-          timeSeconds: matchSeconds
-        })
-      }).catch(e => console.log(e));
+      postScore({
+        type: 'match',
+        topic: TOPIC,
+        studentName: studentName,
+        score: matchPairsFound,
+        total: MATCH_TOTAL,
+        timeSeconds: matchSeconds
+      });
     }
   }
 
@@ -1781,6 +1808,7 @@
     last.appendChild(makeSpellKey("'", "'", 'flex:0.7;'));
     last.appendChild(makeSpellKey('␣ 空白', ' ', 'flex:1.5;'));
     last.appendChild(makeSpellKey('.', '.', 'flex:0.7;'));
+    last.appendChild(makeSpellKey('?', '?', 'flex:0.7;'));
     last.appendChild(makeSpellKey('⌫ 退格', 'BACK', 'flex:1.2;'));
     kb.appendChild(last);
   }
@@ -1898,18 +1926,13 @@
     saveProgress();
     const total = cardsData.length;
     if (!scriptURL.includes('YOUR_GAS')) {
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          type: 'quiz',
-          topic: TOPIC,
-          studentName: studentName,
-          score: spellFirstTryCorrect,
-          total: total
-        })
-      }).catch(e => console.log(e));
+      postScore({
+        type: 'quiz',
+        topic: TOPIC,
+        studentName: studentName,
+        score: spellFirstTryCorrect,
+        total: total
+      });
     }
     const wrap = document.getElementById('matchWrap');
     if (wrap) wrap.style.display = 'none';
