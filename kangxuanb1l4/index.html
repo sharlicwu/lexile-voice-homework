@@ -468,7 +468,7 @@
     { word: "also", zh: "也；而且", icon: "➕" },
     { word: "the USA", zh: "美國", icon: "🇺🇸" },
     { word: "special", zh: "特別的", icon: "⭐" },
-    { word: "lane", zh: "車道", icon: "🛤️" },
+    { word: "lane", zh: "小路；小巷", icon: "🛤️" },
     { word: "way", zh: "路；方法", icon: "🧭" },
     { word: "other", zh: "其他的", icon: "🔀" }
   ];
@@ -477,7 +477,7 @@
   const TOPIC = '康軒B1L4';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1118';
+  const APP_VER = 'V1119';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -487,6 +487,7 @@
     return inapp && !isIOS;
   })();
   document.addEventListener('DOMContentLoaded', () => {
+    postScore(null); // 補送上次沒送出去的成績
     const tag = document.getElementById('verTag');
     if (tag) tag.innerText = '🧩 版本 ' + APP_VER + '（若看不到此標籤代表瀏覽器載入舊版）';
     if (window._INAPP_BROWSER) { const bw = document.getElementById('inappWarn'); if (bw) bw.style.display = 'block'; }
@@ -1493,6 +1494,40 @@
 
   // 同一學生同樣進度只送一次（避免重複開「我的成績」就洗板）
   let lastSentSnapshot = '';
+    // ---------- 成績上傳（帶重試與離線補送：送不出去時先存 localStorage，下次開頁自動補送）----------
+  function postScore(payload) {
+    const KEY = 'jolT2_pending_' + TOPIC;
+    let queue = [];
+    try { queue = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { queue = []; }
+    if (payload) queue.push(payload);
+    try { localStorage.setItem(KEY, JSON.stringify(queue)); } catch (e) {}
+    const trySend = (attempt) => {
+      let cur = [];
+      try { cur = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { cur = []; }
+      if (!cur.length) return;
+      const item = cur[0];
+      // With mode:'no-cors', application/json is not a CORS-safelisted Content-Type.
+      // text/plain avoids a preflight and still lets Apps Script parse e.postData.contents as JSON.
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(item)
+      }).then(() => {
+        // 送達瀏覽器排程才算成功，才從佇列移除（no-cors 無法讀回應）
+        let rest = [];
+        try { rest = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { rest = []; }
+        if (rest.length && JSON.stringify(rest[0]) === JSON.stringify(item)) {
+          rest.shift();
+          try { localStorage.setItem(KEY, JSON.stringify(rest)); } catch (e) {}
+        }
+      }).catch(() => {
+        if (attempt < 2) setTimeout(() => trySend(attempt + 1), 3000);
+      });
+    };
+    trySend(1);
+  }
+
   function sendToServer() {
     if (!scriptURL || scriptURL.includes('YOUR_GAS')) return;
     if (!studentName) return;
@@ -1530,14 +1565,7 @@
       sentenceWeak: sentenceStats.weak
     };
 
-    // With mode:'no-cors', application/json is not a CORS-safelisted Content-Type.
-    // text/plain avoids a preflight and still lets Apps Script parse e.postData.contents as JSON.
-    fetch(scriptURL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).catch(err => console.error('上傳失敗', err));
+    postScore(payload);
   }
 
   function showSummary(force) {
@@ -1722,19 +1750,14 @@
     const timeEl = document.getElementById('finalTime');
     if (timeEl) timeEl.innerText = `⏱ 用時 ${formatMatchTime(matchSeconds)}`;
     if (!scriptURL.includes('YOUR_GAS')) {
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          type: 'match',
-          topic: TOPIC,
-          studentName: studentName,
-          score: matchPairsFound,
-          total: MATCH_TOTAL,
-          timeSeconds: matchSeconds
-        })
-      }).catch(e => console.log(e));
+      postScore({
+        type: 'match',
+        topic: TOPIC,
+        studentName: studentName,
+        score: matchPairsFound,
+        total: MATCH_TOTAL,
+        timeSeconds: matchSeconds
+      });
     }
   }
 
@@ -1781,6 +1804,7 @@
     last.appendChild(makeSpellKey("'", "'", 'flex:0.7;'));
     last.appendChild(makeSpellKey('␣ 空白', ' ', 'flex:1.5;'));
     last.appendChild(makeSpellKey('.', '.', 'flex:0.7;'));
+    last.appendChild(makeSpellKey('?', '?', 'flex:0.7;'));
     last.appendChild(makeSpellKey('⌫ 退格', 'BACK', 'flex:1.2;'));
     kb.appendChild(last);
   }
@@ -1898,18 +1922,13 @@
     saveProgress();
     const total = cardsData.length;
     if (!scriptURL.includes('YOUR_GAS')) {
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          type: 'quiz',
-          topic: TOPIC,
-          studentName: studentName,
-          score: spellFirstTryCorrect,
-          total: total
-        })
-      }).catch(e => console.log(e));
+      postScore({
+        type: 'quiz',
+        topic: TOPIC,
+        studentName: studentName,
+        score: spellFirstTryCorrect,
+        total: total
+      });
     }
     const wrap = document.getElementById('matchWrap');
     if (wrap) wrap.style.display = 'none';
