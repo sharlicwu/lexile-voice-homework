@@ -424,7 +424,7 @@
   const TOPIC = 'dogsatworko-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1130';
+  const APP_VER = 'V1131';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -831,10 +831,10 @@
     });
   }
 
-  // ===== 句子模式：語速再放慢一點（0.5）、等待時間拉長至 13 秒（單字維持正常速度）=====
-  const SENT_RATE = 0.5;
+  // ===== 句子模式：語速微調回 0.55、等待時間 12 秒（單字維持正常速度）=====
+  const SENT_RATE = 0.55;
   function speakCardText(item) { speak(mainText(item), (recMode === 'sentence') ? SENT_RATE : 1.0); }
-  function ttsWaitMs() { return (recMode === 'sentence') ? 13000 : 4000; }
+  function ttsWaitMs() { return (recMode === 'sentence') ? 12000 : 4000; }
 
   function speakMain() {
     speakCardText(cardsData[currentIndex]);
