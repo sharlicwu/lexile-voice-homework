@@ -427,7 +427,7 @@
   const TOPIC = 'whatsfordinner-基礎';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1128';
+  const APP_VER = 'V1129';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -835,9 +835,9 @@
   }
 
   // ===== 句子模式：語速放慢 0.7、發音等待時間拉長（單字維持正常速度）=====
-  const SENT_RATE = 0.7;
+  const SENT_RATE = 0.65;
   function speakCardText(item) { speak(mainText(item), (recMode === 'sentence') ? SENT_RATE : 1.0); }
-  function ttsWaitMs() { return (recMode === 'sentence') ? 9000 : 4000; }
+  function ttsWaitMs() { return (recMode === 'sentence') ? 10000 : 4000; }
 
   function speakMain() {
     speakCardText(cardsData[currentIndex]);
