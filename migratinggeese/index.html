@@ -427,7 +427,7 @@
   const TOPIC = 'migratinggeese-初級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1134';
+  const APP_VER = 'V1135';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -919,6 +919,7 @@
     recognition.onerror = (event) => { window._recogError = event.error; console.log('Speech recognition:', event.error); };
     recognition.onend = () => {
       isRecognizing = false;
+      window._recogStarted = false; // 關鍵：不清掉這個旗標，下面條件永遠不成立，一鍵錄音第三題起就抓不到文字
       // Keep one recognition session running across cards; restarting per card can re-trigger permission prompts.
       if (autoPractice || window._recogWant) {
         setTimeout(() => {
