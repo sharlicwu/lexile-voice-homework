@@ -427,7 +427,7 @@
   const TOPIC = 'migratinggeese-初級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1133';
+  const APP_VER = 'V1134';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -809,12 +809,14 @@
     window.speechSynthesis.cancel();
     // 換新的發音時，先結束上一個「等發音結束」的承諾
     if (ttsQuietResolve) { try { ttsQuietResolve(); } catch (e) {} }
+    window._ttsPlaying = true; // 示範朗讀期間，語音辨識結果不可當成學生的聲音
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = (typeof rate === 'number') ? rate : 1.0;
     const p = new Promise(resolve => { ttsQuietResolve = resolve; });
-    utterance.onend = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
-    utterance.onerror = () => { if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
+    utterance.onstart = () => { window._ttsPlaying = true; };
+    utterance.onend = () => { window._ttsPlaying = false; if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
+    utterance.onerror = () => { window._ttsPlaying = false; if (ttsQuietResolve) { ttsQuietResolve(); ttsQuietResolve = null; } };
     p._active = true;
     window.ttsDonePromise = p;
     window.speechSynthesis.speak(utterance);
@@ -827,7 +829,7 @@
     return new Promise(resolve => {
       const tick = () => {
         const busy = synth && (synth.speaking || synth.pending);
-        if (!busy || Date.now() >= deadline) resolve();
+        if (!busy || Date.now() >= deadline) { window._ttsPlaying = false; resolve(); }
         else setTimeout(tick, 120);
       };
       tick();
@@ -889,11 +891,12 @@
           for (let j = 0; j < event.results[i].length; j++) {
             finalAlts.push(event.results[i][j].transcript);
           }
-        } else {
+        } else if (!window._ttsPlaying) {
           window._interim = event.results[i][0].transcript; // 覆蓋舊的暫時結果
         }
       }
-      if (finalText.trim()) {
+      // 示範朗讀播放中不要收最終結果，避免 🔊 的目標字被當成學生唸的，造成假 100
+      if (finalText.trim() && !window._ttsPlaying) {
         const ft = finalText.trim();
         // 顯示用：只保留最後一個最終結果（避免同一句重複出現 5~6 次）
         window._lastSingleFinal = ft;
@@ -1231,7 +1234,7 @@
     while (!hasFinal() && hasAny() && waited < waitFinalMs) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
     transcript = (window._lastTranscript || transcript || window._interim || '').trim() || transcript;
 
-    // 候選答案：主辨識文字＋暫時結果＋所有備選結果，取「得分最高」的那個來評
+    // 候選答案：正常評分只看「主要最終辨識文字」；_finalAlts 只留給安卓完全沒抓到文字時備援
     let candidates = [];
     if (transcript) candidates.push(transcript);
     if (window._interim) candidates.push(window._interim);
@@ -1289,23 +1292,34 @@
       feedback += recogErrHint();
     } else {
       const judge = (recMode === 'word') ? scoreWordMode : scoreSentenceMode;
-      const primaryClean = clean(transcript || window._interim);
-      const judged = candidates.map(c => Object.assign(judge(c), { cand: c }));
-      judged.sort((a, b) => b.score - a.score);
-      best = judged[0];
-      // 回音防呆：最高分的候選剛好「完全等於目標」，但學生自己嘴裡說的（主辨識）卻完全不像
-      // → 多半是示範朗讀被麥克風錄進去，不能給高分，降為 80 並請學生重錄
-      if (primaryClean && best.cand !== primaryClean) {
-        // 只有當學生自己的辨識結果有內容（非空白）時才啟動「回音防呆」降分；
-        // 若 primaryClean 為空（辨識沒抓到學生聲音），跳過降分，直接給真正的高分（90+）
-        const primaryJudge = judged.find(j => j.cand === primaryClean);
-        if (primaryJudge && primaryJudge.score <= 65 && best.score >= 90) {
-          best.score = 80;
-          best.feedback = '聽到的內容不太對喔！等安靜時只唸這個字，再試一次！';
+      // 只信任這次真正聽到的主要文字；不再從 _finalAlts 取最高分。
+      // 舊邏輯會讓「apple/apples」被備選或 🔊 回音的目標字蓋掉，出現有時 100、有時 55。
+      const primaryRaw = window._lastSingleFinal || transcript || window._interim || '';
+      const primaryClean = clean(primaryRaw);
+      let chosen = primaryClean;
+      let fallbackUsed = false;
+      if (!chosen && window._finalAlts && window._finalAlts.length) {
+        // 安卓常常完全沒有主要文字，這時才用備選結果（取最高分當暫代）
+        const alts = [...new Set(window._finalAlts.map(clean).filter(Boolean))];
+        if (alts.length) {
+          const scored = alts.map(a => ({ cand: a, res: judge(a) }));
+          scored.sort((x, y) => y.res.score - x.res.score);
+          chosen = scored[0].cand;
+          fallbackUsed = true;
         }
       }
-      score = best.score;
-      feedback = best.feedback;
+      if (!chosen) {
+        score = isAndroidDev ? 70 : 55;
+        feedback = isAndroidDev
+          ? '安卓版語音辨識沒有抓到文字，這次先給中性分數；請再唸一次確認，或用 Chrome 開啟會更穩定。'
+          : '沒有清楚聽到你唸的單字，請對著麥克風再唸一次！';
+        feedback += recogErrHint();
+      } else {
+        const j = judge(chosen);
+        score = j.score;
+        feedback = j.feedback + (fallbackUsed ? '（這次主要辨識沒有抓到文字，請再唸一次確認）' : '');
+      }
+      best = { score: score, feedback: feedback, cand: chosen };
     }
 
     // 低於 60 分一律保留原分數，交給補錄流程；不再自動墊高到 65
