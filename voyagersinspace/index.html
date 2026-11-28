@@ -426,7 +426,7 @@
   const TOPIC = 'voyagersinspace-中級';
 
   // ---------- 版本標記（用來分辨新舊版，避免瀏覽器快取舊版造成行為不一致）----------
-  const APP_VER = 'V1138';
+  const APP_VER = 'V1139';
   // 偵測 App 內建瀏覽器（LINE/Facebook/Instagram/微信/Android WebView）：這些環境封鎖麥克風，必須改用 Chrome
   window._INAPP_BROWSER = (function () {
     const ua = navigator.userAgent || '';
@@ -914,6 +914,7 @@
       isRecognizing = true;
       window._recogStarted = true;
       if (window._recogStartTimeout) { clearTimeout(window._recogStartTimeout); window._recogStartTimeout = null; }
+      if (window._recogStartResolve) { const r = window._recogStartResolve; window._recogStartResolve = null; r(true); }
     };
     recognition.onerror = (event) => { window._recogError = event.error; console.log('Speech recognition:', event.error); };
     recognition.onend = () => {
@@ -933,6 +934,7 @@
   function safeStartRecognition() {
     return new Promise((resolve) => {
       if (!recognition) { window._recogStartError = 'no-recognition-object'; resolve(false); return; }
+      window._recogStartResolve = resolve;
       window._recogStarted = false;
       let tries = 0;
       const MAX_TRIES = 3;
@@ -949,6 +951,7 @@
               setTimeout(attempt, 600);
             } else {
               window._recogStartError = 'no-onstart-after-' + MAX_TRIES + '-tries';
+              window._recogStartResolve = null;
               resolve(false);
             }
           }
@@ -962,12 +965,24 @@
             setTimeout(attempt, 600);
           } else {
             window._recogStartError = 'start-threw: ' + String(e).slice(0, 60);
+            window._recogStartResolve = null;
             resolve(false);
           }
         }
       }
       attempt();
     });
+  }
+
+  // 每一題錄音前都確認語音辨識引擎還活著；引擎若已結束就重启並真的等它 ready。
+  // 之前只靠 onend 自動重启，第三題起引擎可能已死卻沒重启，造成後面全部沒有文字、固定 55 分。
+  async function ensureRecognition() {
+    if (!recognition) setupRecognition();
+    if (!recognition) return false;
+    if (isRecognizing && window._recogStarted) return true;
+    window._recogWant = true;
+    window._recogError = '';
+    try { return await safeStartRecognition(); } catch (e) { return false; }
   }
 
   async function toggleAutoPractice() {
@@ -990,8 +1005,8 @@
     setupRecognition();
     autoPractice = true;
     window._recogWant = true;
-    // 辨識失敗不阻擋自動練習：fire-and-forget 啟動辨識，直接進入錄音流程
-    safeStartRecognition().catch(() => {});
+    // 先等到辨識引擎真的啟動，再進錄音流程，避免後面題目抓不到聲音
+    await ensureRecognition();
     document.getElementById('autoPracticeBtn').innerText = '⏹️ 停止整組自動練習';
     document.getElementById('autoPracticeStatus').innerText = '自動練習中：請唸出畫面上的內容，停頓後會自動換題';
     document.getElementById('recordBtn').disabled = true;
@@ -1026,6 +1041,7 @@
     // 先等系統朗讀播完再開始錄音，避免麥克風把示範發音錄進去造成假高分
     await waitTtsDone(ttsWaitMs());
     if (!autoPractice) return;
+    await ensureRecognition();
     clearTimeout(silenceTimer);
     speechStarted = false;
     window._lastTranscript = '';
@@ -1129,6 +1145,7 @@
       window._retryCount = 0;
       // 先等示範朗讀播完再開始錄音，避免示範的聲音被麥克風聽成目標字造成假高分
       await waitTtsDone(ttsWaitMs());
+      await ensureRecognition();
       const doneNote = document.getElementById('recDoneNote');
       if (doneNote) doneNote.style.display = 'none';
       try {
@@ -1177,7 +1194,7 @@
       // 所以這裡先發出 safeStartRecognition（fire-and-forget），立即開 MediaRecorder 錄音。
       // 即使辨識沒啟動（iOS 某些版本 onstart 不觸發），也不阻擋錄音；評分時若沒辨識結果會顯示原因。
       window._recogWant = true;
-      safeStartRecognition().catch(() => {});
+      await ensureRecognition();
       mediaRecorder.start();
 
       document.getElementById('recStatus').classList.add('active');
@@ -1257,7 +1274,7 @@
       if (contains) {
         // 有包含目標字但旁邊還有別的字 → 可能是回音/雜音混進來，不能給高分
         if (spokenTokens.length <= targetTokens.length + 1) return { score: 80, feedback: '聽到的內容不太對喔！等安靜時只唸這一個字，再試一次！' };
-        return { score: 55, feedback: '偵測到旁邊有雜音喔！等安靜的時候只唸這個字，再試一次！' };
+        return { score: 80, feedback: '有聽到目標字，但旁邊還有其他聲音；等安靜時只唸這個字，再試一次！' };
       }
       if (sim >= 0.88) return { score: 95, feedback: '非常接近！再多練幾次會更流暢！' };
       if (sim >= 0.75) return { score: 85, feedback: '接近了！再注意開頭的音就更完美！' };
@@ -1275,7 +1292,7 @@
       if (ratio >= 0.99) return { score: 100, feedback: '完美！整句都唸對了，太棒了！🌟' };
       if (ratio >= 0.85) return { score: 90, feedback: '很棒！就是它了，多練幾次可以更流暢！' };
       if (ratio >= 0.6) return { score: 80, feedback: `整句唸對了約 ${Math.round(ratio * 100)}%，有幾個字要再加強！` };
-      if (ratio >= 0.4) return { score: 55, feedback: `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！` };
+      if (ratio >= 0.4) return { score: 80, feedback: `唸對了約 ${Math.round(ratio * 100)}%，先聽 🔊 發音再跟著念一次吧！` };
       return { score: 45, feedback: '這句差滿多的喔！先按 🔊 朗讀聽清楚，一句一句慢慢跟著念！' };
     };
 
